@@ -621,7 +621,12 @@ def	write_output(nodes,ways,adresses,libelle):
 	zip_output.close()
 	shutil.rmtree(dirout)
 def	load_to_db(nodes,ways,adresses,libelle):
+	sload = 'DELETE FROM cumul_adresses WHERE insee_com = \'{:s}\' AND fournisseur = \'{:s}\';\n'.format(code_insee,'cadastre')
+	cur_insert = pgc.cursor()
+	cur_insert.execute(sload)
 	for v in adresses.a:
+		sload = 'INSERT INTO cumul_adresses (geometrie,numero,voie_cadastre,voie_osm,fantoir,insee_com,cadastre_com,dept,code_postal) VALUES'
+		a_values = []
 		if not adresses.a[v]['numeros']:
 			continue
 		# street_name = v.title().encode('utf8')
@@ -637,59 +642,17 @@ def	load_to_db(nodes,ways,adresses,libelle):
 			street_name_fantoir =  dicts.noms_voies[v]['fantoir'].encode('utf8')
 		if v in dicts.fantoir:
 			cle_fantoir = dicts.fantoir[v]
-		print('{:s} - {:s} - {:s} - {:s}').format(street_name_cadastre,street_name_osm,street_name_fantoir,cle_fantoir)
+		# print('{:s} - {:s} - {:s} - {:s}').format(street_name_cadastre,street_name_osm,street_name_fantoir,cle_fantoir)
 		
 	# nodes
 		for num in adresses.a[v]['numeros']:
 			numadresse = adresses.a[v]['numeros'][num]
 			print(numadresse.numero,numadresse.node.attribs['lon'],numadresse.node.attribs['lat'])
-	## 	point adresse isole
-			if not (numadresse.addr_as_building_way or numadresse.addr_as_node_on_building):
-				if not numadresse.node.sent:
-					# fout.write(numadresse.node.get_as_osm_xml_node())
-					numadresse.node.sent = True
-	## 	point adresse reference par un batiment
-			for eb in numadresse.building_for_addr_node:
-				for ebn in ways.w['building'][eb].geom.a_nodes:
-					if not nodes.n[ebn].sent:
-						# fout.write(nodes.n[ebn].get_as_osm_xml_node())
-						nodes.n[ebn].sent = True
-
-
-	# relations	
-		# fout.write("\t<relation id=\""+str(nodes.min_id - 1)+"\" action=\"modify\" visible=\"true\">\n")
-		for num in adresses.a[v]['numeros']:
-			numadresse = adresses.a[v]['numeros'][num]
-			if not (numadresse.addr_as_building_way or numadresse.addr_as_node_on_building):
-				# fout.write("\t\t<member type=\"node\" ref=\""+str(numadresse.node.attribs['id'])+"\" role=\"house\"/>\n")
-				nodes.n[numadresse.node.attribs['id']].sent = False
-			else:
-				for eb in numadresse.addr_as_node_on_building:
-					# fout.write("\t\t<member type=\"node\" ref=\""+str(eb)+"\" role=\"house\"/>\n")
-					nodes.n[eb].sent = False
-				# for eb in numadresse.addr_as_building_way:
-					# fout.write("\t\t<member type=\"way\" ref=\""+str(eb)+"\" role=\"house\"/>\n")
-					
-
+			a_values.append('(ST_PointFromText(\'POINT({:s} {:s})\', 4326),\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\')'.format(numadresse.node.attribs['lon'],numadresse.node.attribs['lat'],numadresse.numero,street_name_cadastre,street_name_osm,cle_fantoir,code_insee,code_cadastre,code_dept,''))
+		sload = sload+','.join(a_values)+';COMMIT;'
 		
-	# ftmpkeys.write(	"---------------- BILAN ----------------\n")
-	# s = 			"Nombre de relations creees  : "+str(nb_voies_total)
-	# print(s)
-	# ftmpkeys.write(s+'\n')
-	# if nb_voies_total > 0:
-		# s = "     avec code FANTOIR      : "+str(nb_voies_fantoir)+" ("+str(int(nb_voies_fantoir*100/nb_voies_total))+"%)"
-		# print(s)
-		# ftmpkeys.write(s+'\n')
-		# s = "     avec rapprochement OSM : "+str(nb_voies_osm)+" ("+str(int(nb_voies_osm*100/nb_voies_total))+"%)"
-		# print(s)
-		# ftmpkeys.write(s+'\n')
-	# ftmpkeys.close()
-
-	# for fosm in glob.glob(dirout+'/*.osm'):
-		# zip_output.write(fosm,os.path.basename(fosm))
-	# zip_output.write(fntmpkeys,os.path.basename(fntmpkeys))
-	# zip_output.close()
-	# shutil.rmtree(dirout)
+		# cur_insert = pgc.cursor()
+		cur_insert.execute(sload)
 def main(args):
 	if len(args) < 2:
 		print('USAGE : python addr_2_db.py <code INSEE> <code Cadastre>')
