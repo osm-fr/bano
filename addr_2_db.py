@@ -625,7 +625,7 @@ def	load_to_db(nodes,ways,adresses,libelle):
 	cur_insert = pgc.cursor()
 	cur_insert.execute(sload)
 	for v in adresses.a:
-		sload = 'INSERT INTO cumul_adresses (geometrie,numero,voie_cadastre,voie_osm,fantoir,insee_com,cadastre_com,dept,code_postal) VALUES'
+		sload = 'INSERT INTO cumul_adresses (geometrie,numero,voie_cadastre,voie_osm,fantoir,insee_com,cadastre_com,dept,code_postal,fournisseur) VALUES'
 		a_values = []
 		if not adresses.a[v]['numeros']:
 			continue
@@ -647,8 +647,9 @@ def	load_to_db(nodes,ways,adresses,libelle):
 	# nodes
 		for num in adresses.a[v]['numeros']:
 			numadresse = adresses.a[v]['numeros'][num]
-			print(numadresse.numero,numadresse.node.attribs['lon'],numadresse.node.attribs['lat'])
-			a_values.append('(ST_PointFromText(\'POINT({:s} {:s})\', 4326),\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\')'.format(numadresse.node.attribs['lon'],numadresse.node.attribs['lat'],numadresse.numero,street_name_cadastre,street_name_osm,cle_fantoir,code_insee,code_cadastre,code_dept,''))
+			# print(numadresse.numero,numadresse.node.attribs['lon'],numadresse.node.attribs['lat'])
+			print('.'),
+			a_values.append('(ST_PointFromText(\'POINT({:s} {:s})\', 4326),\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\')'.format(numadresse.node.attribs['lon'],numadresse.node.attribs['lat'],numadresse.numero,street_name_cadastre.replace("'","''"),street_name_osm.replace("'","''"),cle_fantoir,code_insee,code_cadastre,code_dept,'','cadastre'))
 		sload = sload+','.join(a_values)+';COMMIT;'
 		
 		# cur_insert = pgc.cursor()
@@ -670,9 +671,9 @@ def main(args):
 	dicts = Dicts()
 	dicts.load_all(code_insee)
 	
-	dict_objets_pour_output = {'1':{},'2':{}}
+	dict_objets_pour_output = {'1':{}}
 	dict_objets_pour_output['1']['libelle_pour_fichiers'] = 'adresse_point_sur_batiment'
-	dict_objets_pour_output['2']['libelle_pour_fichiers'] = 'adresse_tag_sur_batiment'
+	# dict_objets_pour_output['2']['libelle_pour_fichiers'] = 'adresse_tag_sur_batiment'
 
 	rep_parcelles_adresses = 'parcelles_adresses'
 	rep_parcelles_adresses = 'parcelles_adresses'
@@ -848,70 +849,13 @@ def main(args):
 	dict_objets_pour_output['1']['nodes']	= nodes
 	dict_objets_pour_output['1']['ways'] 	= ways
 	dict_objets_pour_output['1']['adresses']= adresses
-	dict_objets_pour_output['2']['nodes'] 	= copy.deepcopy(nodes)
-	dict_objets_pour_output['2']['ways'] 	= copy.deepcopy(ways)
-	dict_objets_pour_output['2']['adresses']= copy.deepcopy(adresses)
+	# dict_objets_pour_output['2']['nodes'] 	= copy.deepcopy(nodes)
+	# dict_objets_pour_output['2']['ways'] 	= copy.deepcopy(ways)
+	# dict_objets_pour_output['2']['adresses']= copy.deepcopy(adresses)
 	
 	for k in dict_objets_pour_output.viewkeys():
 		load_to_db(dict_objets_pour_output[k]['nodes'],dict_objets_pour_output[k]['ways'],dict_objets_pour_output[k]['adresses'],dict_objets_pour_output[k]['libelle_pour_fichiers'])
 
-		# tierce == '1':
-	print('Report des adresses sur les buildings en tant que nouveaux points...')
-	sys.stdout.flush()
-	cur_addr_node_building = pgc.cursor()
-	str_query = '''SELECT 	lon,
-							lat,
-							id_building::integer,
-							indice_node_1,
-							numero,
-							voie,
-							id_adresse::integer
-					FROM points_adresse_sur_building_'''+code_insee+''';'''
-	cur_addr_node_building.execute(str_query)
-	for c in cur_addr_node_building:
-		dict_objets_pour_output['1']['nodes'].n[str(c[6])].move_to(c[0],c[1])
-		dict_objets_pour_output['1']['ways'].w['building'][str(c[2])].insert_new_point(str(c[6]),c[3])
-		dict_objets_pour_output['1']['adresses'].a[c[5]]['numeros'][c[4]].add_addr_as_node_on_building(str(c[6]))
-		dict_objets_pour_output['1']['adresses'].a[c[5]]['numeros'][c[4]].add_building_for_addr_node(str(c[2]))
-		
-	# tierce == '2':
-	print('Report des adresses sur les buildings en tant que nouveau tag...')
-	sys.stdout.flush()
-	# batiments modifies
-	cur_addr_way_building = pgc.cursor()
-	str_query = '''SELECT id_building::integer,
-							id_adresse::integer,
-							numero,
-							voie
-					FROM adresse_sur_buildings_'''+code_insee+''';'''
-	cur_addr_way_building.execute(str_query)
-	for c in cur_addr_way_building:
-		dict_objets_pour_output['2']['ways'].w['building'][str(c[0])].add_tag('addr:housenumber',c[2])
-		dict_objets_pour_output['2']['adresses'].a[c[3]]['numeros'][c[2]].add_addr_as_building(str(c[0]))
-
-	print('Ajout des autres buildings de la voie...')
-	sys.stdout.flush()
-	# autres batiments des parcelles de la voie
-	cur_addr_building_comp = pgc.cursor()
-	str_query = '''SELECT id_building::integer,
-							voie
-					FROM buildings_complementaires_'''+code_insee+'''
-					EXCEPT
-					SELECT id_building::integer,
-							voie
-					FROM adresse_sur_buildings_'''+code_insee+''';'''
-	cur_addr_building_comp.execute(str_query)
-
-	for c in cur_addr_building_comp:
-		for k in dict_objets_pour_output.viewkeys():
-			dict_objets_pour_output[k]['adresses'].add_batiment_complementaire(c[1],str(c[0]))
-
-	for k in dict_objets_pour_output.viewkeys():
-		load_to_db(dict_objets_pour_output[k]['nodes'],dict_objets_pour_output[k]['ways'],dict_objets_pour_output[k]['adresses'],dict_objets_pour_output[k]['libelle_pour_fichiers'])
-
-	# Menage en prod
-	if socket.gethostname() == 'osm104':
-		purge_pg_tables(code_insee)
 	fin_total = time.time()
 	print('Execution en '+str(int(fin_total - debut_total))+' s.')
 	# mode 1 : addr:housenumber comme tag du building
