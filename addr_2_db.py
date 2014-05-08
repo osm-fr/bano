@@ -432,7 +432,7 @@ def download_addresses_from_overpass(fn):
 	download_data(d_url,fn)
 	# os._exit(0)
 def download_vector_from_cadastre(code_insee,code_cadastre,fn,suffixe):
-	d_url = 'http://cadastre.openstreetmap.fr/data/'+code_dept+'/'+code_cadastre+'/'+code_cadastre+'-'+suffixe+'.osm'
+	d_url = '/data/work/cadastre.openstreetmap.fr/hidden/'+code_dept+'/'+code_cadastre+'/'+code_cadastre+'-'+suffixe+'.osm'
 	download_data(d_url,fn)
 def get_api_domaine_by_dept(code_dept):
 	s_domaine = 'oapi-fr.openstreetmap.fr/oapi'
@@ -707,7 +707,7 @@ def main(args):
 	global root_dir_out
 	root_dir_out = 'osm_output'
 	if socket.gethostname() == 'osm104':
-		rep_parcelles_adresses = 'data/'+code_dept+'/'+code_cadastre
+		rep_parcelles_adresses = '/data/work/cadastre.openstreetmap.fr/hidden/'+code_dept+'/'+code_cadastre
 		root_dir_out = rep_parcelles_adresses
 	else:
 		if not os.path.exists(rep_parcelles_adresses):

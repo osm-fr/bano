@@ -1,6 +1,6 @@
 DROP TABLE IF EXISTS cumul_adresses CASCADE;
 CREATE TABLE cumul_adresses
-(	geometrie		geometry (POINT,4326),
+(	geometrie		geometry ,
 	numero 			character varying (10),
 	voie_cadastre	character varying (300),
 	voie_osm		character varying (300),
