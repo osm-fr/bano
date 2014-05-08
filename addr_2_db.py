@@ -413,9 +413,25 @@ def download_ways_from_overpass(way_type,fn):
 	d_url = d_url.replace('way._','way%2E%5F').replace('area:','area%3A')
 #node(area:3600076381);rel(bn);(relation._["type"="associatedStreet"];);(._;>;);out meta;;
 	download_data(d_url,fn)
+def download_addresses_from_overpass(fn):
+	s_domaine = get_api_domaine_by_dept(code_dept)
+	# 3600076381)["type"="associatedStreet"];node(area:3600076381)["addr:housenumber"];way(area:3600076381)["addr:housenumber"];);(._;<;);(._;>;);out meta;;
+	# d_url = urllib.quote('http://'+s_domaine+'/interpreter?data=node(area:'+str(3600000000+dicts.osm_insee[code_insee])+');way(bn);(way._["'+way_type+'"];node(w););out meta;',':/?=')
+	# d_url = urllib.quote('http://'+s_domaine+'/interpreter?data=(relation(area:'+str(3600000000+dicts.osm_insee[code_insee])+');way(bn);(way._["'+way_type+'"];node(w););out meta;',':/?=')
+	d_url = urllib.quote('http://'+s_domaine+'/interpreter?data=(relation(area:'+str(3600000000+dicts.osm_insee[code_insee])+')["type"="associatedStreet"];node(area:'+str(3600000000+dicts.osm_insee[code_insee])+')["addr:housenumber"];way(area:'+str(3600000000+dicts.osm_insee[code_insee])+')["addr:housenumber"];);(._;<;);(._;>;);out meta;',':/?=')
+	print(d_url)
+	d_url = d_url.replace('._','way%2E%5F').replace('area:','area%3A').replace('addr:','addr%3A')
+	print(d_url)
+	download_data(d_url,fn)
+	os._exit(0)
 def download_vector_from_cadastre(code_insee,code_cadastre,fn,suffixe):
 	d_url = 'http://cadastre.openstreetmap.fr/data/'+code_dept+'/'+code_cadastre+'/'+code_cadastre+'-'+suffixe+'.osm'
 	download_data(d_url,fn)
+def get_api_domaine_by_dept(code_dept):
+	s_domaine = 'oapi-fr.openstreetmap.fr/oapi'
+	if code_dept[0:2] == '97':
+		s_domaine = 'overpass-api.de/api'
+	return s_domaine
 def download_data(st_url,fn):
 	print(u'Telechargement depuis '+urllib.unquote(st_url))
 	sys.stdout.flush()
