@@ -388,6 +388,13 @@ class Adresses:
 		if not cle in self.a:
 			self.a[cle] = {'numeros':{},'batiments_complementaires':[]}
 		self.a[cle]['batiments_complementaires'] = self.a[cle]['batiments_complementaires'] + [b_id]
+def get_code_cadastre_from_insee(insee):
+	str_query = 'SELECT code_cadastre FROM code_cadastre WHERE insee_com = \'{:s}\';'.format(insee)
+	cur = pgc.cursor()
+	cur.execute(str_query)
+	for c in cur:
+		code_cadastre = c[0]
+	return code_cadastre
 def load_nodes_from_xml_parse(xmlp):
 	for n in xmlp.iter('node'):
 		dtags = get_tags(n)
@@ -423,7 +430,7 @@ def download_addresses_from_overpass(fn):
 	d_url = d_url.replace('._','way%2E%5F').replace('area:','area%3A').replace('addr:','addr%3A')
 	print(d_url)
 	download_data(d_url,fn)
-	os._exit(0)
+	# os._exit(0)
 def download_vector_from_cadastre(code_insee,code_cadastre,fn,suffixe):
 	d_url = 'http://cadastre.openstreetmap.fr/data/'+code_dept+'/'+code_cadastre+'/'+code_cadastre+'-'+suffixe+'.osm'
 	download_data(d_url,fn)
@@ -637,7 +644,7 @@ def	write_output(nodes,ways,adresses,libelle):
 	zip_output.close()
 	shutil.rmtree(dirout)
 def	load_to_db(nodes,ways,adresses,libelle):
-	sload = 'DELETE FROM cumul_adresses WHERE insee_com = \'{:s}\' AND fournisseur = \'{:s}\';\n'.format(code_insee,'cadastre')
+	sload = 'DELETE FROM cumul_adresses WHERE insee_com = \'{:s}\' AND fournisseur = \'{:s}\';\n'.format(code_insee,source)
 	cur_insert = pgc.cursor()
 	cur_insert.execute(sload)
 	for v in adresses.a:
@@ -665,14 +672,19 @@ def	load_to_db(nodes,ways,adresses,libelle):
 			numadresse = adresses.a[v]['numeros'][num]
 			# print(numadresse.numero,numadresse.node.attribs['lon'],numadresse.node.attribs['lat'])
 			print('.'),
-			a_values.append('(ST_PointFromText(\'POINT({:s} {:s})\', 4326),\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\')'.format(numadresse.node.attribs['lon'],numadresse.node.attribs['lat'],numadresse.numero,street_name_cadastre.replace("'","''"),street_name_osm.replace("'","''"),cle_fantoir,code_insee,code_cadastre,code_dept,'','cadastre'))
+			a_values.append('(ST_PointFromText(\'POINT({:s} {:s})\', 4326),\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\')'.format(numadresse.node.attribs['lon'],numadresse.node.attribs['lat'],numadresse.numero,street_name_cadastre.replace("'","''"),street_name_osm.replace("'","''"),cle_fantoir,code_insee,code_cadastre,code_dept,'',source))
 		sload = sload+','.join(a_values)+';COMMIT;'
 		
 		# cur_insert = pgc.cursor()
 		cur_insert.execute(sload)
 def main(args):
-	if len(args) < 2:
-		print('USAGE : python addr_2_db.py <code INSEE> <code Cadastre>')
+	if len(args) < 3:
+		print('USAGE : python addr_2_db.py <code INSEE> <code Cadastre> <OSM|CADASTRE>')
+		os._exit(0)
+	global source
+	source = args[3].upper()
+	if source not in ['OSM','CADASTRE']:
+		print('USAGE : python addr_2_db.py <code INSEE> <code Cadastre> <OSM|CADASTRE>')
 		os._exit(0)
 	global pgc
 	pgc = get_pgc()
@@ -692,7 +704,6 @@ def main(args):
 	# dict_objets_pour_output['2']['libelle_pour_fichiers'] = 'adresse_tag_sur_batiment'
 
 	rep_parcelles_adresses = 'parcelles_adresses'
-	rep_parcelles_adresses = 'parcelles_adresses'
 	global root_dir_out
 	root_dir_out = 'osm_output'
 	if socket.gethostname() == 'osm104':
@@ -704,13 +715,17 @@ def main(args):
 		if not os.path.exists(root_dir_out):
 			os.mkdir(root_dir_out)
 
-	fnparcelles = rep_parcelles_adresses+'/'+code_cadastre+'-parcelles.osm'
-	fnadresses = rep_parcelles_adresses+'/'+code_cadastre+'-adresses.osm'
-	if not os.path.exists(fnparcelles):
-		download_vector_from_cadastre(code_insee,code_cadastre,fnparcelles,'parcelles')
-	if not os.path.exists(fnadresses):
-		download_vector_from_cadastre(code_insee,code_cadastre,fnadresses,'adresses')
-		
+	# fnparcelles = rep_parcelles_adresses+'/'+code_cadastre+'-parcelles.osm'
+	# if not os.path.exists(fnparcelles):
+		# download_vector_from_cadastre(code_insee,code_cadastre,fnparcelles,'parcelles')
+	if source == 'CADASTRE':
+		fnadresses = rep_parcelles_adresses+'/'+code_cadastre+'-adresses.osm'
+		if not os.path.exists(fnadresses):
+			download_vector_from_cadastre(code_insee,code_cadastre,fnadresses,'adresses')
+	if source == 'OSM':
+		fnadresses = rep_parcelles_adresses+'/'+code_cadastre+'-adresses-'+source+'.osm'
+		if not os.path.exists(fnadresses):
+			download_addresses_from_overpass(fnadresses)
 	# building_rep = 'cache_buildings'
 	# if not os.path.exists(building_rep):
 		# os.mkdir(building_rep)
@@ -719,76 +734,6 @@ def main(args):
 	nodes = Nodes()
 	ways = Ways()
 	adresses = Adresses()
-
-	# fnbuilding = building_rep+'/buildings_'+code_insee+'.osm'
-	# if not os.path.exists(fnbuilding):
-		# download_ways_from_overpass('building',fnbuilding)
-			
-	# print('mise en cache des buildings...')
-	# sys.stdout.flush()
-	# xmlbuldings = ET.parse(fnbuilding)
-	# print('nodes...')
-	# sys.stdout.flush()
-	# load_nodes_from_xml_parse(xmlbuldings)
-	# print('buildings...')
-	# sys.stdout.flush()
-	# load_ways_from_xml_parse(xmlbuldings,'building')
-	# del xmlbuldings
-	# gc.collect()
-
-	# executeSQL_INSEE('create_tables__com__.sql',code_insee)
-
-	# print('chargement des polygones...')
-	# sys.stdout.flush()
-	# cur_buildings = pgc.cursor()
-	# str_query = ""
-	# for idx,id in enumerate(ways.w['building']):
-		# if not ways.w['building'][id].is_valid:
-			# continue
-		# str_query = str_query+ways.w['building'][id].get_as_SQL_import_building()
-		# if idx%100 == 0 and str_query != "":
-			# cur_buildings.execute(str_query+"COMMIT;")
-			# str_query = ""
-	# if str_query != "":
-		# cur_buildings.execute(str_query+"COMMIT;")
-
-	# print('chargement des segments...')
-	# sys.stdout.flush()
-	# str_query = ""
-	# for idx,id in enumerate(ways.w['building']):
-		# if not ways.w['building'][id].is_valid:
-			# continue
-		# for nn in range(0,len(ways.w['building'][id].geom.a_nodes)-1):
-			# str_query = str_query+ways.w['building'][id].get_as_SQL_import_building_segment(nn)
-		# if idx%100 == 0 and str_query != "":
-			# cur_buildings.execute(str_query+"COMMIT;")
-			# str_query = ""
-	# if str_query != "":
-		# cur_buildings.execute(str_query+"COMMIT;")
-	# str_query = ""
-
-	# print('mise en cache des parcelles...')
-	# print('nodes...')
-	# sys.stdout.flush()
-	# xmlparcelles = ET.parse(fnparcelles)
-	# load_nodes_from_xml_parse(xmlparcelles)
-	# print('parcelles...')
-	# sys.stdout.flush()
-	# load_ways_from_xml_parse(xmlparcelles,'parcelle')
-	# del xmlparcelles
-	# gc.collect()
-
-	# print('chargement...')
-	# sys.stdout.flush()
-	# cur_parcelles = pgc.cursor()
-	# str_query = ""
-	# for idx,id in enumerate(ways.w['parcelle']):
-		# str_query = str_query+ways.w['parcelle'][id].get_as_SQL_import_parcelle()
-		# if idx%100 == 0:
-			# cur_parcelles.execute(str_query+"COMMIT;")
-			# str_query = ""
-	# if str_query != "":
-		# cur_parcelles.execute(str_query+"COMMIT;")
 
 	print('mise en cache des points adresses...')
 	print('nodes...')
