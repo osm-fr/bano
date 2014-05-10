@@ -16,7 +16,29 @@ import xml.sax.saxutils as XSS
 import zipfile
 
 debut_total = time.time()
-
+def batch_start_log():
+	t = time.localtime()
+	th =  time.strftime('%d-%m-%Y %H:%M:%S',t)
+	t = round(time.mktime(t),0)
+	cur = pgc.cursor()
+	whereclause = 'cadastre_com = \'{:s}\' AND source = \'{:s}\''.format(code_cadastre,source)
+	str_query = 'INSERT INTO batch_historique (SELECT * FROM batch WHERE {:s});'.format(whereclause)
+	str_query = str_query+'DELETE FROM batch WHERE {:s};'.format(whereclause)
+	str_query = str_query+'INSERT INTO batch (source,"timestamp",date_en_clair,cadastre_com,nombre_adresses) VALUES(\'{:s}\',{:f},\'{:s}\',\'{:s}\',0);'.format(source,t,th,code_cadastre)
+	# print(str_query)
+	cur.execute(str_query)
+	str_query = 'SELECT id_batch FROM batch WHERE {:s};'.format(whereclause)
+	cur.execute(str_query)
+	c = cur.fetchone()
+	
+	return c[0]
+	
+def batch_end_log(nb):
+	cur = pgc.cursor()
+	whereclause = 'id_batch = {:d}'.format(batch_id)
+	str_query = 'UPDATE batch SET nombre_adresses = {:d} WHERE {:s};'.format(nb,whereclause)
+	cur.execute(str_query)
+	
 class Dicts:
 	def __init__(self):
 		self.lettre_a_lettre = {}
@@ -426,9 +448,9 @@ def download_addresses_from_overpass(fn):
 	# d_url = urllib.quote('http://'+s_domaine+'/interpreter?data=node(area:'+str(3600000000+dicts.osm_insee[code_insee])+');way(bn);(way._["'+way_type+'"];node(w););out meta;',':/?=')
 	# d_url = urllib.quote('http://'+s_domaine+'/interpreter?data=(relation(area:'+str(3600000000+dicts.osm_insee[code_insee])+');way(bn);(way._["'+way_type+'"];node(w););out meta;',':/?=')
 	d_url = urllib.quote('http://'+s_domaine+'/interpreter?data=(relation(area:'+str(3600000000+dicts.osm_insee[code_insee])+')["type"="associatedStreet"];node(area:'+str(3600000000+dicts.osm_insee[code_insee])+')["addr:housenumber"];way(area:'+str(3600000000+dicts.osm_insee[code_insee])+')["addr:housenumber"];);(._;<;);(._;>;);out meta;',':/?=')
-	print(d_url)
+	# print(d_url)
 	d_url = d_url.replace('._','way%2E%5F').replace('area:','area%3A').replace('addr:','addr%3A')
-	print(d_url)
+	# print(d_url)
 	download_data(d_url,fn)
 	# os._exit(0)
 def download_vector_from_cadastre(code_insee,code_cadastre,fn,suffixe):
@@ -644,11 +666,12 @@ def	write_output(nodes,ways,adresses,libelle):
 	zip_output.close()
 	shutil.rmtree(dirout)
 def	load_to_db(nodes,ways,adresses,libelle):
-	sload = 'DELETE FROM cumul_adresses WHERE insee_com = \'{:s}\' AND fournisseur = \'{:s}\';\n'.format(code_insee,source)
+	sload = 'DELETE FROM cumul_adresses WHERE insee_com = \'{:s}\' AND source = \'{:s}\';\n'.format(code_insee,source)
 	cur_insert = pgc.cursor()
 	cur_insert.execute(sload)
+	nb_rec = 0
 	for v in adresses.a:
-		sload = 'INSERT INTO cumul_adresses (geometrie,numero,voie_cadastre,voie_osm,fantoir,insee_com,cadastre_com,dept,code_postal,fournisseur) VALUES'
+		sload = 'INSERT INTO cumul_adresses (geometrie,numero,voie_cadastre,voie_osm,fantoir,insee_com,cadastre_com,dept,code_postal,source) VALUES'
 		a_values = []
 		if not adresses.a[v]['numeros']:
 			continue
@@ -671,17 +694,19 @@ def	load_to_db(nodes,ways,adresses,libelle):
 		for num in adresses.a[v]['numeros']:
 			numadresse = adresses.a[v]['numeros'][num]
 			# print(numadresse.numero,numadresse.node.attribs['lon'],numadresse.node.attribs['lat'])
-			print('.'),
 			a_values.append('(ST_PointFromText(\'POINT({:s} {:s})\', 4326),\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\')'.format(numadresse.node.attribs['lon'],numadresse.node.attribs['lat'],numadresse.numero,street_name_cadastre.replace("'","''"),street_name_osm.replace("'","''"),cle_fantoir,code_insee,code_cadastre,code_dept,'',source))
+			nb_rec +=1
 		sload = sload+','.join(a_values)+';COMMIT;'
 		
-		# cur_insert = pgc.cursor()
 		cur_insert.execute(sload)
+		
+		batch_end_log(nb_rec)
 def main(args):
 	if len(args) < 3:
 		print('USAGE : python addr_2_db.py <code INSEE> <code Cadastre> <OSM|CADASTRE>')
 		os._exit(0)
-	global source
+	global source,batch_id
+	
 	source = args[3].upper()
 	if source not in ['OSM','CADASTRE']:
 		print('USAGE : python addr_2_db.py <code INSEE> <code Cadastre> <OSM|CADASTRE>')
@@ -689,12 +714,16 @@ def main(args):
 	global pgc
 	pgc = get_pgc()
 	
+	
 	global code_insee,code_cadastre,code_dept
 	code_insee = args[1]
 	code_cadastre = args[2]
 	code_dept = '0'+code_insee[0:2]
 	if code_insee[0:2] == '97':
 		code_dept = code_insee[0:3]
+	
+	batch_id = batch_start_log()
+	
 	global dicts
 	dicts = Dicts()
 	dicts.load_all(code_insee)
