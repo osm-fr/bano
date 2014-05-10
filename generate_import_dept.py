@@ -9,14 +9,16 @@ cur_dept = pgc.cursor()
 cur_comm = pgc.cursor()
 
 str_query = 'SELECT DISTINCT dept FROM code_cadastre WHERE dept IS NOT NULL;'
+# str_query = 'SELECT DISTINCT dept FROM code_cadastre WHERE dept =\'090\';'
 cur_dept.execute(str_query)
 for d in cur_dept:
 	str_query = 'SELECT cadastre_com,nom_com FROM code_cadastre WHERE dept = \'{:s}\' ORDER BY 1;'.format(d[0])
 	cur_comm.execute(str_query)
 	fn = 'import_{:s}.sh'.format(d[0])
 	f = open(fn,'wb')
-	f.write('cd /data/project/cadastre.openstreetmap.fr/export-cadastre/bin\n')
+	f.write('#!/bin/bash\n')
+	f.write('cd /data/project/cadastre.openstreetmap.fr/export-cadastre/bin/cadastre-housenumber/bano\n')
 	for c in cur_comm:
-		f.write('./import-adresses.sh {:s} {:s} "{:s}" true\n'.format(d[0],c[0],c[1]))
+		f.write('./import-bano.sh {:s} {:s} "{:s}" true\n'.format(d[0],c[0],c[1]))
 	f.close()
 	os.chmod(fn,0777)

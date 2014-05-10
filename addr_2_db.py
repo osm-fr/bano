@@ -32,13 +32,11 @@ def batch_start_log():
 	c = cur.fetchone()
 	
 	return c[0]
-	
 def batch_end_log(nb):
 	cur = pgc.cursor()
 	whereclause = 'id_batch = {:d}'.format(batch_id)
 	str_query = 'UPDATE batch SET nombre_adresses = {:d} WHERE {:s};'.format(nb,whereclause)
 	cur.execute(str_query)
-	
 class Dicts:
 	def __init__(self):
 		self.lettre_a_lettre = {}
@@ -170,12 +168,19 @@ def replace_type_voie(s,nb):
 	spf = ' '.join(sp[nb:len(sp)])
 	s = dicts.abrev_type_voie[spd]+' '+spf
 	return s
+def is_valid_housenumber(hsnr):
+	is_valid = True
+	if len(hsnr.encode('utf8')) > 10:
+		is_valid = False
+	return is_valid
 def normalize(s):
+	# print(s)
 	# s = s.encode('ascii','ignore')
 	s = s.upper()				# tout en majuscules
 	s = s.replace('-',' ')		# separateur espace
 	s = s.replace('\'',' ')		# separateur espace
 	s = s.replace('/',' ')		# separateur espace
+	s = s.replace(':',' ')		# separateur deux points
 	s = ' '.join(s.split())		# separateur : 1 espace
 	for l in iter(dicts.lettre_a_lettre):
 		for ll in dicts.lettre_a_lettre[l]:
@@ -694,7 +699,7 @@ def	load_to_db(nodes,ways,adresses,libelle):
 		for num in adresses.a[v]['numeros']:
 			numadresse = adresses.a[v]['numeros'][num]
 			# print(numadresse.numero,numadresse.node.attribs['lon'],numadresse.node.attribs['lat'])
-			a_values.append('(ST_PointFromText(\'POINT({:s} {:s})\', 4326),\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\')'.format(numadresse.node.attribs['lon'],numadresse.node.attribs['lat'],numadresse.numero,street_name_cadastre.replace("'","''"),street_name_osm.replace("'","''"),cle_fantoir,code_insee,code_cadastre,code_dept,'',source))
+			a_values.append('(ST_PointFromText(\'POINT({:s} {:s})\', 4326),\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\')'.format(numadresse.node.attribs['lon'],numadresse.node.attribs['lat'],numadresse.numero.encode('utf8'),street_name_cadastre.replace("'","''"),street_name_osm.replace("'","''"),cle_fantoir,code_insee,code_cadastre,code_dept,'',source))
 			nb_rec +=1
 		sload = sload+','.join(a_values)+';COMMIT;'
 		
@@ -768,25 +773,44 @@ def main(args):
 	print('nodes...')
 	sys.stdout.flush()
 	xmladresses = ET.parse(fnadresses)
+	# nodes sur relations associatedStreet
 	dict_node_relations = {}
 	for asso in xmladresses.iter('relation'):
+		is_type_associatedStreet = False
+		for t in asso.iter('tag'):
+			if t.get('k') == 'type' and t.get('v') == 'associatedStreet':
+				is_type_associatedStreet = True
+				break
+		if not is_type_associatedStreet:
+			continue
 		for t in asso.iter('tag'):
 			if t.get('k') == 'name':
 				for n in asso.iter('member'):
 					if not n.get('ref') in dict_node_relations:
 						dict_node_relations[n.get('ref')] = []
 					dict_node_relations[n.get('ref')] = dict_node_relations[n.get('ref')]+[normalize(t.get('v'))]
-			dicts.add_voie('adresse',t.get('v'))
+				dicts.add_voie('adresse',t.get('v'))
 	load_nodes_from_xml_parse(xmladresses)
 	for n in xmladresses.iter('node'):
 		dtags = get_tags(n)
+		if 'addr:street' in dtags:
+			dicts.add_voie('adresse',dtags['addr:street'])
 		n_id = n.get('id')
 		nodes.n[n_id].modified = True
-		if 'addr:housenumber' in nodes.n[n_id].tags and n_id in dict_node_relations:
-			for v in dict_node_relations[n_id]:
-				ad = Adresse(nodes.n[n_id],dtags['addr:housenumber'],v)
+		if 'addr:housenumber' in dtags and n_id in dict_node_relations:
+			if is_valid_housenumber(dtags['addr:housenumber']):
+				for v in dict_node_relations[n_id]:
+					ad = Adresse(nodes.n[n_id],dtags['addr:housenumber'],v)
+					adresses.add_adresse(ad)
+			else:
+				print('Numero invalide : {:s}'.format(dtags['addr:housenumber'].encode('utf8')))
+		if 'addr:housenumber' in dtags and 'addr:street' in dtags :
+			if is_valid_housenumber(dtags['addr:housenumber']):
+				ad = Adresse(nodes.n[n_id],dtags['addr:housenumber'],normalize(dtags['addr:street']))
 				adresses.add_adresse(ad)
-				
+			else:
+				print('Numero invalide : {:s}'.format(dtags['addr:housenumber'].encode('utf8')))
+	
 	# print('chargement...')
 	# sys.stdout.flush()
 	# cur_adresses = pgc.cursor()
