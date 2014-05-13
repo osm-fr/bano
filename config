@@ -1,7 +1,7 @@
 #!/bin/bash
 
-work_dir="/data/work/cadastre.openstreetmap.fr/"
-data_dir="$work_dir/data"
-hidden_dir="$work_dir/hidden"
-log_dir="$work_dir/logs"
-bin_dir="/data/project/cadastre.openstreetmap.fr/bin"
+WORK_DIR=${WORK_DIR:-"/data/work/cadastre.openstreetmap.fr"}
+DATA_DIR=${DATA_DIR:-"$WORK_DIR/data"}
+HIDDEN_DIR=${HIDDEN_DIR:-"$WORK_DIR/hidden"}
+LOG_DIR=${LOG_DIR:-"$WORK_DIR/logs"}
+BIN_DIR=${BIN_DIR:-"/data/project/cadastre.openstreetmap.fr/bin"}
