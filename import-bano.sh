@@ -38,8 +38,8 @@ fi
 # Lance la génération des adresses:
 #
 
-depdir="$data_dir/$code_departement"
-communedir="$hidden_dir/$code_departement/$code_commune"
+depdir="$DATA_DIR/$code_departement"
+communedir="$HIDDEN_DIR/$code_departement/$code_commune"
 if [ "$bis" = "false" ] ; then
   nobis="-nobis"
 fi
