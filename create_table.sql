@@ -16,17 +16,25 @@ DROP TABLE IF EXISTS batch CASCADE;
 CREATE TABLE batch
 (	id_batch 		serial,
 	source			character varying (100),
-	"timestamp"		float,
-	date_en_clair		character varying (100),
-	cadastre_com		character (5),
-	nombre_adresses		integer);
+	etape			character varying (100),
+	timestamp_debut	float,
+	date_debut		character varying (100),
+	date_fin		character varying (100),
+	dept			character varying (3),
+	cadastre_com	character (5),
+	nom_com			character varying(250),
+	nombre_adresses	integer);
 
 DROP TABLE IF EXISTS batch_historique CASCADE;
 CREATE TABLE batch_historique
 (       id_batch                integer,
-        source          	character varying (100),
-        "timestamp"             float,
-        date_en_clair           character varying (100),
-        cadastre_com            character (5),
-        nombre_adresses         integer);
+ 	source			character varying (100),
+	etape			character varying (100),
+	timestamp_debut	float,
+	date_debut		character varying (100),
+	date_fin		character varying (100),
+	dept			character varying (3),
+	cadastre_com	character (5),
+	nom_com			character varying(250),
+	nombre_adresses	integer);
 

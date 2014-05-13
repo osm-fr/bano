@@ -14,7 +14,7 @@ cur_dept.execute(str_query)
 for d in cur_dept:
 	str_query = 'SELECT cadastre_com,nom_com FROM code_cadastre WHERE dept = \'{:s}\' ORDER BY 1;'.format(d[0])
 	cur_comm.execute(str_query)
-	fn = 'import_{:s}.sh'.format(d[0])
+	fn = 'import_v2_{:s}.sh'.format(d[0])
 	f = open(fn,'wb')
 	f.write('#!/bin/bash\n')
 	f.write('cd /data/project/cadastre.openstreetmap.fr/export-cadastre/bin/cadastre-housenumber/bano\n')

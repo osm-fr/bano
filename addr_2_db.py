@@ -14,28 +14,57 @@ import time
 import xml.etree.ElementTree as ET
 import xml.sax.saxutils as XSS
 import zipfile
-
+# from batch_logs import batch_start_log
+# from batch_logs import batch_end_log
 debut_total = time.time()
-def batch_start_log():
+# def batch_start_log():
+	# t = time.localtime()
+	# th =  time.strftime('%d-%m-%Y %H:%M:%S',t)
+	# t = round(time.mktime(t),0)
+	# cur = pgc.cursor()
+	# whereclause = 'cadastre_com = \'{:s}\' AND source = \'{:s}\''.format(code_cadastre,source)
+	# str_query = 'INSERT INTO batch_historique (SELECT * FROM batch WHERE {:s});'.format(whereclause)
+	# str_query = str_query+'DELETE FROM batch WHERE {:s};'.format(whereclause)
+	# str_query = str_query+'INSERT INTO batch (source,"timestamp",date_en_clair,cadastre_com,nombre_adresses) VALUES(\'{:s}\',{:f},\'{:s}\',\'{:s}\',0);'.format(source,t,th,code_cadastre)
+	# print(str_query)
+	# cur.execute(str_query)
+	# str_query = 'SELECT id_batch FROM batch WHERE {:s};'.format(whereclause)
+	# cur.execute(str_query)
+	# c = cur.fetchone()
+	
+	# return c[0]
+# def batch_end_log(nb):
+	# cur = pgc.cursor()
+	# whereclause = 'id_batch = {:d}'.format(batch_id)
+	# str_query = 'UPDATE batch SET nombre_adresses = {:d} WHERE {:s};'.format(nb,whereclause)
+	# cur.execute(str_query)
+def batch_start_log(source,etape,code_cadastre):
 	t = time.localtime()
 	th =  time.strftime('%d-%m-%Y %H:%M:%S',t)
 	t = round(time.mktime(t),0)
+	pgc = get_pgc()
 	cur = pgc.cursor()
-	whereclause = 'cadastre_com = \'{:s}\' AND source = \'{:s}\''.format(code_cadastre,source)
+	whereclause = 'cadastre_com = \'{:s}\' AND source = \'{:s}\' AND etape = \'{:s}\''.format(code_cadastre,source,etape)
 	str_query = 'INSERT INTO batch_historique (SELECT * FROM batch WHERE {:s});'.format(whereclause)
 	str_query = str_query+'DELETE FROM batch WHERE {:s};'.format(whereclause)
-	str_query = str_query+'INSERT INTO batch (source,"timestamp",date_en_clair,cadastre_com,nombre_adresses) VALUES(\'{:s}\',{:f},\'{:s}\',\'{:s}\',0);'.format(source,t,th,code_cadastre)
+	str_query = str_query+'INSERT INTO batch (source,etape,timestamp_debut,date_debut,dept,cadastre_com,nom_com,nombre_adresses) SELECT \'{:s}\',\'{:s}\',{:f},\'{:s}\',dept,cadastre_com,nom_com,0 FROM code_cadastre WHERE cadastre_com = \'{:s}\';'.format(source,etape,t,th,code_cadastre)
+	str_query = str_query+'COMMIT;'
 	# print(str_query)
 	cur.execute(str_query)
-	str_query = 'SELECT id_batch FROM batch WHERE {:s};'.format(whereclause)
+	# print(str_query)
+	str_query = 'SELECT id_batch::integer FROM batch WHERE {:s};'.format(whereclause)
 	cur.execute(str_query)
 	c = cur.fetchone()
-	
 	return c[0]
-def batch_end_log(nb):
+	
+def batch_end_log(nb,batch_id):
+	pgc = get_pgc()
 	cur = pgc.cursor()
+	t = time.localtime()
+	th =  time.strftime('%d-%m-%Y %H:%M:%S',t)
 	whereclause = 'id_batch = {:d}'.format(batch_id)
-	str_query = 'UPDATE batch SET nombre_adresses = {:d} WHERE {:s};'.format(nb,whereclause)
+	str_query = 'UPDATE batch SET nombre_adresses = {:d},date_fin = \'{:s}\' WHERE {:s};COMMIT;'.format(nb,th,whereclause)
+	# print(str_query)
 	cur.execute(str_query)
 class Dicts:
 	def __init__(self):
@@ -705,7 +734,7 @@ def	load_to_db(nodes,ways,adresses,libelle):
 		
 		cur_insert.execute(sload)
 		
-		batch_end_log(nb_rec)
+	batch_end_log(nb_rec,batch_id)
 def main(args):
 	if len(args) < 3:
 		print('USAGE : python addr_2_db.py <code INSEE> <code Cadastre> <OSM|CADASTRE>')
@@ -727,7 +756,7 @@ def main(args):
 	if code_insee[0:2] == '97':
 		code_dept = code_insee[0:3]
 	
-	batch_id = batch_start_log()
+	batch_id = batch_start_log(source,'loadCumul',code_cadastre)
 	
 	global dicts
 	dicts = Dicts()
@@ -743,11 +772,11 @@ def main(args):
 	if socket.gethostname() == 'osm104':
 		rep_parcelles_adresses = '/data/work/cadastre.openstreetmap.fr/hidden/'+code_dept+'/'+code_cadastre
 		root_dir_out = rep_parcelles_adresses
-	else:
-		if not os.path.exists(rep_parcelles_adresses):
-			os.mkdir(rep_parcelles_adresses)
-		if not os.path.exists(root_dir_out):
-			os.mkdir(root_dir_out)
+	# else:
+	if not os.path.exists(rep_parcelles_adresses):
+		os.mkdir(rep_parcelles_adresses)
+		# if not os.path.exists(root_dir_out):
+			# os.mkdir(root_dir_out)
 
 	# fnparcelles = rep_parcelles_adresses+'/'+code_cadastre+'-parcelles.osm'
 	# if not os.path.exists(fnparcelles):
