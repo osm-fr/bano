@@ -318,6 +318,15 @@ class WayGeom:
 			a_n.append(str(nodes.n[ni].attribs['lon'])+' '+str(nodes.n[ni].attribs['lat']))
 		res = res+','.join(a_n)+')\''
 		return res	
+	def get_centroid(self):
+		x = 0
+		y = 0
+		for ni in self.a_nodes:
+			x += float(nodes.n[ni].attribs['lon'])
+			y += float(nodes.n[ni].attribs['lat'])
+		x = str(x/len(self.a_nodes))
+		y = str(y/len(self.a_nodes))
+		return [x,y]	
 class Way:
 	def __init__(self,geom,tags,attrib,osm_key):
 		self.geom = geom
@@ -414,7 +423,8 @@ class Ways:
 	def __init__(self):
 		self.w = {'highway':{},
 				'building':{},
-				'parcelle':{}}
+				'parcelle':{},
+				'centroid_building':{}}
 	def add_way(self,w,id,osm_key):
 		self.w[osm_key][id] = w
 class Adresse:
@@ -470,6 +480,9 @@ def get_tags(xmlo):
 	return dtags
 def download_ways_from_overpass(way_type,fn):
 	s_domaine = 'oapi-fr.openstreetmap.fr/oapi'
+        s_domaine = 'api.openstreetmap.fr/oapi'
+        s_domaine = 'api-fr.openstreetmap.fr/oapi'
+        s_domaine = 'overpass-api.de/api'
 	if code_dept[0:2] == '97':
 		s_domaine = 'overpass-api.de/api'
 	d_url = urllib.quote('http://'+s_domaine+'/interpreter?data=node(area:'+str(3600000000+dicts.osm_insee[code_insee])+');way(bn);(way._["'+way_type+'"];node(w););out meta;',':/?=')
@@ -491,7 +504,10 @@ def download_vector_from_cadastre(code_insee,code_cadastre,fn,suffixe):
 	d_url = '/data/work/cadastre.openstreetmap.fr/hidden/'+code_dept+'/'+code_cadastre+'/'+code_cadastre+'-'+suffixe+'.osm'
 	download_data(d_url,fn)
 def get_api_domaine_by_dept(code_dept):
-	s_domaine = 'oapi-fr.openstreetmap.fr/oapi'
+        s_domaine = 'oapi-fr.openstreetmap.fr/oapi'
+        s_domaine = 'api.openstreetmap.fr/oapi'
+	s_domaine = 'api-fr.openstreetmap.fr/oapi'
+        s_domaine = 'overpass-api.de/api'
 	if code_dept[0:2] == '97':
 		s_domaine = 'overpass-api.de/api'
 	return s_domaine
@@ -770,6 +786,9 @@ def main(args):
 	global root_dir_out
 	root_dir_out = 'osm_output'
 	if socket.gethostname() == 'osm104':
+                hidden_dept_dir = '/data/work/cadastre.openstreetmap.fr/hidden/'+code_dept
+	        if not os.path.exists(hidden_dept_dir):
+	                os.mkdir(hidden_dept_dir)
 		rep_parcelles_adresses = '/data/work/cadastre.openstreetmap.fr/hidden/'+code_dept+'/'+code_cadastre
 		root_dir_out = rep_parcelles_adresses
 	# else:
@@ -804,6 +823,7 @@ def main(args):
 	xmladresses = ET.parse(fnadresses)
 	# nodes sur relations associatedStreet
 	dict_node_relations = {}
+	dict_ways_relations = {}
 	for asso in xmladresses.iter('relation'):
 		is_type_associatedStreet = False
 		for t in asso.iter('tag'):
@@ -815,9 +835,14 @@ def main(args):
 		for t in asso.iter('tag'):
 			if t.get('k') == 'name':
 				for n in asso.iter('member'):
-					if not n.get('ref') in dict_node_relations:
-						dict_node_relations[n.get('ref')] = []
-					dict_node_relations[n.get('ref')] = dict_node_relations[n.get('ref')]+[normalize(t.get('v'))]
+					if n.get('type') == 'node':
+						if not n.get('ref') in dict_node_relations:
+							dict_node_relations[n.get('ref')] = []
+						dict_node_relations[n.get('ref')] = dict_node_relations[n.get('ref')]+[normalize(t.get('v'))]
+					if n.get('type') == 'way':
+						if not n.get('ref') in dict_ways_relations:
+							dict_ways_relations[n.get('ref')] = []
+						dict_ways_relations[n.get('ref')] = dict_ways_relations[n.get('ref')]+[normalize(t.get('v'))]
 				dicts.add_voie('adresse',t.get('v'))
 	load_nodes_from_xml_parse(xmladresses)
 	for n in xmladresses.iter('node'):
@@ -836,6 +861,30 @@ def main(args):
 		if 'addr:housenumber' in dtags and 'addr:street' in dtags :
 			if is_valid_housenumber(dtags['addr:housenumber']):
 				ad = Adresse(nodes.n[n_id],dtags['addr:housenumber'],normalize(dtags['addr:street']))
+				adresses.add_adresse(ad)
+			else:
+				print('Numero invalide : {:s}'.format(dtags['addr:housenumber'].encode('utf8')))
+	load_ways_from_xml_parse(xmladresses,'centroid_building')
+	for n in xmladresses.iter('way'):
+		dtags = get_tags(n)
+		if 'addr:street' in dtags:
+			dicts.add_voie('adresse',dtags['addr:street'])
+		n_id = n.get('id')
+		if 'addr:housenumber' in dtags and n_id in dict_ways_relations:
+			if is_valid_housenumber(dtags['addr:housenumber']):
+				for v in dict_ways_relations[n_id]:
+					new_node_geom = ways.w['centroid_building'][n_id].geom.get_centroid()
+					new_node = nodes.add_new_node(new_node_geom[0],new_node_geom[1],{'addr:housenumber':dtags['addr:housenumber']})
+					ad = Adresse(nodes.n[new_node],dtags['addr:housenumber'],v)
+					adresses.add_adresse(ad)
+			else:
+				print('Numero invalide : {:s}'.format(dtags['addr:housenumber'].encode('utf8')))
+		if 'addr:housenumber' in dtags and 'addr:street' in dtags :
+			if is_valid_housenumber(dtags['addr:housenumber']):
+				# for v in dict_ways_relations[n_id]:
+				new_node_geom = ways.w['centroid_building'][n_id].geom.get_centroid()
+				new_node = nodes.add_new_node(new_node_geom[0],new_node_geom[1],{'addr:housenumber':dtags['addr:housenumber']})
+				ad = Adresse(nodes.n[new_node],dtags['addr:housenumber'],normalize(dtags['addr:street']))
 				adresses.add_adresse(ad)
 			else:
 				print('Numero invalide : {:s}'.format(dtags['addr:housenumber'].encode('utf8')))
@@ -907,3 +956,4 @@ def main(args):
 	#			sinon point adresse seul à la place fournie en entree
 if __name__ == '__main__':
     main(sys.argv)
+
