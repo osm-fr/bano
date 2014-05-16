@@ -77,6 +77,11 @@ from bis_ter_quater import determine_osm_adresses_bis_ter_quater
 from bis_ter_quater import determine_osm_parcelles_bis_ter_quater
 from bis_ter_quater import RE_NUMERO_CADASTRE
 
+# test de branchement des logs
+from pg_connexion import get_pgc
+from addr_2_db import batch_start_log
+from addr_2_db import batch_end_log
+
 import bbox_vers_osm_box
 
 ATTENTE_EN_SECONDE_ENTRE_DOWNLOAD = 2
@@ -983,6 +988,7 @@ def cadastre_vers_adresses(argv):
 
 
 if __name__ == '__main__':
+    batch_id = batch_start_log('CADASTRE','recupCadastre',sys.argv[2])
     cadastre_vers_adresses(sys.argv)
-
+    batch_end_log(-1,batch_id)
 
