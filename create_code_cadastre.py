@@ -1,35 +1,40 @@
 #!/usr/bin/env python
 # coding: UTF-8
 
-# Version rapide de récup des codes Cadastre communaux à partir des csv
-# générés ici : http://suivi.openstreetmap.fr/communes/stats-cadastre/
-# liste à vérifier / compléter / méthode à revoir
-
-import urllib2
-import os
-
-outfile = open('code_cadastre.csv','wb')
-dict_codes_cadastre = {}
+import urllib, urllib2, cookielib
+import time
+import xml.etree.ElementTree as ET
 
 a_depts = ['2A','2B']
 for n in range(1,20)+range(21,96)+range(971,975):
-	a_depts.append(str(n).rjust(2,'0'))
-
-for d in a_depts:
-	url = 'http://suivi.openstreetmap.fr/communes/stats-cadastre/{:s}.csv'.format(d)
-	try:
-		r = urllib2.urlopen(url)
-#		s = r.read()
-		for line in r:
-			code_cadastre = line.split(',')[2]
-#			print(line)
-#			print(line.split(','))
-#			os._exit(0)
-			if code_cadastre not in dict_codes_cadastre:
-				outfile.write(('{:s},{:s},{:s}').format(d,d.rjust(3,'0'),line))
-				dict_codes_cadastre[code_cadastre]=1
-	except urllib2.HTTPError:
-		print ('*** Echec sur {:s}'.format(url))
-
-outfile.close()
+        a_depts.append(str(n).rjust(2,'0'))
+a_0_depts = [a.rjust(3,'0') for a in a_depts]
+f_output = open('code_cadastre.csv','wb')
+cookieJar = cookielib.CookieJar()
+opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookieJar))
+request = urllib2.Request('http://www.cadastre.gouv.fr/scpc/rechercherPlan.do')
+for i,d in enumerate(a_0_depts):
+	fname = 'dept_'+a_0_depts[i]+'.xml'
+	time.sleep(1)
+	opener.open(request)
+	request = urllib2.Request('http://www.cadastre.gouv.fr/scpc/listerCommune.do?codeDepartement='+d+'&libelle=&keepVolatileSession=&offset=5000')
+	response = opener.open(request)
+	rep = response.read()
+	f = open(fname,'wb')
+	f.write(rep)
+	f.close()
+	file = open(fname,'r')
+	for line in file:
+		lsplit = line.split('listerFeuillesParcommune')
+		lsplit = line.split('ajoutArticle(')
+		if len(lsplit) > 1:
+			code_commune = lsplit[1][1:6]
+			format = lsplit[1][9:13]
+			commune_cp = lsplit[0].split('td class="nom"')[1].split('feuille')[0].split('strong')[1]
+			nom_commune = commune_cp[1:-11]
+			cp = commune_cp[-9:-4]
+			# print(code_commune,format,nom_commune,cp)
+			f_output.write('{:s},{:s},{:s},{:s},{:s},{:s}\n'.format(a_depts[i],d,nom_commune,cp,code_commune,format))
+		f_output.flush()
+f_output.close()
 

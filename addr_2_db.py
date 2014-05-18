@@ -14,30 +14,9 @@ import time
 import xml.etree.ElementTree as ET
 import xml.sax.saxutils as XSS
 import zipfile
-# from batch_logs import batch_start_log
-# from batch_logs import batch_end_log
+
 debut_total = time.time()
-# def batch_start_log():
-	# t = time.localtime()
-	# th =  time.strftime('%d-%m-%Y %H:%M:%S',t)
-	# t = round(time.mktime(t),0)
-	# cur = pgc.cursor()
-	# whereclause = 'cadastre_com = \'{:s}\' AND source = \'{:s}\''.format(code_cadastre,source)
-	# str_query = 'INSERT INTO batch_historique (SELECT * FROM batch WHERE {:s});'.format(whereclause)
-	# str_query = str_query+'DELETE FROM batch WHERE {:s};'.format(whereclause)
-	# str_query = str_query+'INSERT INTO batch (source,"timestamp",date_en_clair,cadastre_com,nombre_adresses) VALUES(\'{:s}\',{:f},\'{:s}\',\'{:s}\',0);'.format(source,t,th,code_cadastre)
-	# print(str_query)
-	# cur.execute(str_query)
-	# str_query = 'SELECT id_batch FROM batch WHERE {:s};'.format(whereclause)
-	# cur.execute(str_query)
-	# c = cur.fetchone()
-	
-	# return c[0]
-# def batch_end_log(nb):
-	# cur = pgc.cursor()
-	# whereclause = 'id_batch = {:d}'.format(batch_id)
-	# str_query = 'UPDATE batch SET nombre_adresses = {:d} WHERE {:s};'.format(nb,whereclause)
-	# cur.execute(str_query)
+
 def batch_start_log(source,etape,code_cadastre):
 	t = time.localtime()
 	th =  time.strftime('%d-%m-%Y %H:%M:%S',t)
@@ -825,6 +804,13 @@ def main(args):
 	dict_node_relations = {}
 	dict_ways_relations = {}
 	for asso in xmladresses.iter('relation'):
+	        is_name_vide = False
+                for t in asso.iter('tag'):
+                        if t.get('k') == 'name' and len(t.get('v')) < 2:
+                                is_name_vide = True
+                                break
+                if is_name_vide:
+                        continue
 		is_type_associatedStreet = False
 		for t in asso.iter('tag'):
 			if t.get('k') == 'type' and t.get('v') == 'associatedStreet':
@@ -921,6 +907,8 @@ def main(args):
 
 	for w in xmlways.iter('way'):
 		for t in w.iter('tag'):
+			if t.get('k') == 'name' and  len(t.get('v')) < 2:
+				break
 			if t.get('k') == 'name':
 				name_osm = t.get('v')
 				dicts.add_voie('OSM',name_osm)
