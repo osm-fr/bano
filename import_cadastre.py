@@ -21,3 +21,4 @@ for c in cur:
 	print(c[2])
 	if not os.path.exists('/data/work/cadastre.openstreetmap.fr/hidden/{:s}/{:s}/{:s}-adresses.osm'.format(num_dept_cadastre,c[1],c[1])):
 		subprocess.call('./import-bano.sh {:s} {:s} "{:s}"  true'.format(num_dept_cadastre,c[1],c[2]),shell=True)
+	subprocess.call('chmod -R g+w /data/work/cadastre.openstreetmap.fr/hidden/{:s}/{:s}'.format(num_dept_cadastre,c[1]),shell=True)

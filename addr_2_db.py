@@ -28,7 +28,7 @@ def batch_start_log(source,etape,code_cadastre):
 	str_query = str_query+'DELETE FROM batch WHERE {:s};'.format(whereclause)
 	str_query = str_query+'INSERT INTO batch (source,etape,timestamp_debut,date_debut,dept,cadastre_com,nom_com,nombre_adresses) SELECT \'{:s}\',\'{:s}\',{:f},\'{:s}\',dept,cadastre_com,nom_com,0 FROM code_cadastre WHERE cadastre_com = \'{:s}\';'.format(source,etape,t,th,code_cadastre)
 	str_query = str_query+'COMMIT;'
-	# print(str_query)
+	#print(str_query)
 	cur.execute(str_query)
 	# print(str_query)
 	str_query = 'SELECT id_batch::integer FROM batch WHERE {:s};'.format(whereclause)
@@ -92,7 +92,9 @@ class Dicts:
 							['9','NEUF'],
 							[' DIX ',' UNZERO '],
 							[' ONZE ',' UNUN '],
-							[' DOUZE ',' UNDEUX ']]
+                                                        [' DOUZE ',' UNDEUX '],
+                                                        [' TREIZE ',' UNTROIS '],
+							[' QUATORZE ',' UNQUATRE ']]
 	def load_mot_a_blanc(self):
 		self.mot_a_blanc = ['DE LA',
 							'DU',
@@ -108,7 +110,10 @@ class Dicts:
 							['GENERAL','GAL'],
 							['COMMANDANT','CDT'],
 							['CAPITAINE','CAP'],
-							['REGIMENT','REGT'],
+                                                        ['LIEUTENANT','LT'],
+                                                        ['REGIMENT','REGT'],
+							['PROFESSEUR','PROF'],
+                                                        ['JEAN-BAPTISTE','J BTE'],
 							['SAINTE','STE'],
 							['SAINT','ST']]
 	def load_chiffres_romains(self):
@@ -428,6 +433,17 @@ class Adresses:
 		if not cle in self.a:
 			self.a[cle] = {'numeros':{},'batiments_complementaires':[]}
 		self.a[cle]['numeros'][ad.numero] = ad
+	def add_fantoir(self,cle,fantoir,source):
+		if not cle in self.a:
+			self.a[cle] = {'numeros':{},'batiments_complementaires':[]}
+		self.a[cle]['fantoir'] = {'code':fantoir,'source':source}
+	def has_fantoir(self,cle):
+		res = False
+		if 'fantoir' in self.a[cle]:
+			res = True
+		return res
+	def get_fantoir(self,cle):
+		return self.a[cle]['fantoir']
 	def add_batiment_complementaire(self,cle,b_id):
 		cle = normalize(cle)
 		if not cle in self.a:
@@ -480,7 +496,7 @@ def download_addresses_from_overpass(fn):
 	download_data(d_url,fn)
 	# os._exit(0)
 def download_vector_from_cadastre(code_insee,code_cadastre,fn,suffixe):
-	d_url = '/data/work/cadastre.openstreetmap.fr/hidden/'+code_dept+'/'+code_cadastre+'/'+code_cadastre+'-'+suffixe+'.osm'
+	d_url = '/data/work/cadastre.openstreetmap.fr/bano_cache/'+code_dept+'/'+code_cadastre+'/'+code_cadastre+'-'+suffixe+'.osm'
 	download_data(d_url,fn)
 def get_api_domaine_by_dept(code_dept):
         s_domaine = 'oapi-fr.openstreetmap.fr/oapi'
@@ -708,16 +724,18 @@ def	load_to_db(nodes,ways,adresses,libelle):
 		street_name_cadastre = ''
 		street_name_osm = ''
 		street_name_fantoir = ''
-		cle_fantoir = '0'
+		cle_fantoir = ''
 		if 'adresse' in dicts.noms_voies[v]:
 			street_name_cadastre = dicts.noms_voies[v]['adresse'].encode('utf8')
 		if 'OSM' in dicts.noms_voies[v]:
 			street_name_osm =  dicts.noms_voies[v]['OSM'].encode('utf8')
 		if 'fantoir' in dicts.noms_voies[v]:
 			street_name_fantoir =  dicts.noms_voies[v]['fantoir'].encode('utf8')
-		if v in dicts.fantoir:
-			cle_fantoir = dicts.fantoir[v]
-		# print('{:s} - {:s} - {:s} - {:s}').format(street_name_cadastre,street_name_osm,street_name_fantoir,cle_fantoir)
+		if 'fantoir' in adresses.a[v]:
+			cle_fantoir = adresses.get_fantoir(v)['code']
+		else:
+			if v in dicts.fantoir:
+				cle_fantoir = dicts.fantoir[v]
 		
 	# nodes
 		for num in adresses.a[v]['numeros']:
@@ -765,10 +783,10 @@ def main(args):
 	global root_dir_out
 	root_dir_out = 'osm_output'
 	if socket.gethostname() == 'osm104':
-                hidden_dept_dir = '/data/work/cadastre.openstreetmap.fr/hidden/'+code_dept
+                hidden_dept_dir = '/data/work/cadastre.openstreetmap.fr/bano_cache/'+code_dept
 	        if not os.path.exists(hidden_dept_dir):
 	                os.mkdir(hidden_dept_dir)
-		rep_parcelles_adresses = '/data/work/cadastre.openstreetmap.fr/hidden/'+code_dept+'/'+code_cadastre
+		rep_parcelles_adresses = '/data/work/cadastre.openstreetmap.fr/bano_cache/'+code_dept+'/'+code_cadastre
 		root_dir_out = rep_parcelles_adresses
 	# else:
 	if not os.path.exists(rep_parcelles_adresses):
@@ -804,32 +822,27 @@ def main(args):
 	dict_node_relations = {}
 	dict_ways_relations = {}
 	for asso in xmladresses.iter('relation'):
-	        is_name_vide = False
-                for t in asso.iter('tag'):
-                        if t.get('k') == 'name' and len(t.get('v')) < 2:
-                                is_name_vide = True
-                                break
-                if is_name_vide:
-                        continue
-		is_type_associatedStreet = False
-		for t in asso.iter('tag'):
-			if t.get('k') == 'type' and t.get('v') == 'associatedStreet':
-				is_type_associatedStreet = True
-				break
-		if not is_type_associatedStreet:
+		dtags = get_tags(asso)
+		if not 'type' in dtags:
 			continue
-		for t in asso.iter('tag'):
-			if t.get('k') == 'name':
-				for n in asso.iter('member'):
-					if n.get('type') == 'node':
-						if not n.get('ref') in dict_node_relations:
-							dict_node_relations[n.get('ref')] = []
-						dict_node_relations[n.get('ref')] = dict_node_relations[n.get('ref')]+[normalize(t.get('v'))]
-					if n.get('type') == 'way':
-						if not n.get('ref') in dict_ways_relations:
-							dict_ways_relations[n.get('ref')] = []
-						dict_ways_relations[n.get('ref')] = dict_ways_relations[n.get('ref')]+[normalize(t.get('v'))]
-				dicts.add_voie('adresse',t.get('v'))
+		if dtags['type'] != 'associatedStreet':
+			continue
+		if not 'name' in dtags:
+			continue
+		if len(dtags['name']) < 2:
+			continue
+		if 'ref:FR:FANTOIR' in dtags:
+			adresses.add_fantoir(normalize(dtags['name']),dtags['ref:FR:FANTOIR'],source)
+		for n in asso.iter('member'):
+			if n.get('type') == 'node':
+				if not n.get('ref') in dict_node_relations:
+					dict_node_relations[n.get('ref')] = []
+				dict_node_relations[n.get('ref')] = dict_node_relations[n.get('ref')]+[normalize(dtags['name'])]
+			if n.get('type') == 'way':
+				if not n.get('ref') in dict_ways_relations:
+					dict_ways_relations[n.get('ref')] = []
+				dict_ways_relations[n.get('ref')] = dict_ways_relations[n.get('ref')]+[normalize(dtags['name'])]
+		dicts.add_voie('adresse',dtags['name'])
 	load_nodes_from_xml_parse(xmladresses)
 	for n in xmladresses.iter('node'):
 		dtags = get_tags(n)
