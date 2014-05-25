@@ -803,7 +803,7 @@ def main(args):
 			download_vector_from_cadastre(code_insee,code_cadastre,fnadresses,'adresses')
 	if source == 'OSM':
 		fnadresses = rep_parcelles_adresses+'/'+code_cadastre+'-adresses-'+source+'.osm'
-		if not os.path.exists(fnadresses):
+		if not os.path.exists(fnadresses) or (debut_total - os.path.getmtime(fnadresses)) > 86400 :
 			download_addresses_from_overpass(fnadresses)
 	# building_rep = 'cache_buildings'
 	# if not os.path.exists(building_rep):
@@ -909,7 +909,7 @@ def main(args):
 	if not os.path.exists(highway_rep):
 		os.mkdir(highway_rep)
 	fnhighway = highway_rep+'/highways_'+code_insee+'.osm'
-	if not os.path.exists(fnhighway):
+	if not os.path.exists(fnhighway)  or (debut_total - os.path.getmtime(fnhighway)) > (86400 * 3) :
 		download_ways_from_overpass('highway',fnhighway)
 	
 	# print('mise en cache des voies...')

@@ -2,8 +2,9 @@
 # coding: UTF-8
 
 import addr_2_db as a
+import log_2_file as e
 import sys
-import os
+import os,os.path
 
 if len(sys.argv) != 3:
 	print('Mauvais nombre d\'arguments')
@@ -17,6 +18,8 @@ if source != 'OSM' and source != 'CADASTRE':
 
 num_dept_cadastre = ('000'+sys.argv[1])[-3:]
 
+f_log = e.start_log_to_file(source,os.path.basename(sys.argv[0]).split('.')[0],num_dept_cadastre)
+
 clause_vecteur = ''
 if source == 'CADASTRE':
 	clause_vecteur = ' AND format_cadastre = \'VECT\' '
@@ -28,5 +31,10 @@ for c in cur:
 	print(c[2])
 	try:
 		a.main(['',c[0],c[1],source])
-	except ValueError:
-		print('****** load KO ********')
+	except :
+		e.write_log_to_file(f_log,'Commune : {:s}\n'.format(c[2]))
+		e.write_log_to_file(f_log,str(sys.exc_info()[0]))
+		e.write_log_to_file(f_log,str(sys.exc_info()[1]))
+		e.write_sep_to_file(f_log)
+e.end_log_to_file(f_log,True)
+

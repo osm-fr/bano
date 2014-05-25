@@ -38,3 +38,13 @@ CREATE TABLE batch_historique
 	nom_com			character varying(250),
 	nombre_adresses	integer);
 
+DROP TABLE IF EXISTS code_cadastre CASCADE;
+CREATE TABLE code_cadastre (
+        dept character varying(3),
+        cadastre_dept character (3),
+        nom_com character varying(250),
+        cadastre_com character(5),
+        insee_com character(5),
+        code_postal character(5),
+        format_cadastre character varying(10));
+
