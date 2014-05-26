@@ -239,7 +239,8 @@ def polygones_et_index_des_limite_parcelles(limite_parcelles):
     def already_present(p):
         # FIXME: cette recherche vas être quadratique si les intersections sont importantes,
         # comme à Apatou en Guyane:
-        for i in index.intersection(p.centroid.coords[0]):
+        center = shapely.geometry.box(*(p.bounds)).centroid.coords[0]
+        for i in index.intersection(center):
             if p.almost_equals(polygones[i], LIMITE_ALMOST_EQUALS_DECIMAL):
                 return True
         return False
