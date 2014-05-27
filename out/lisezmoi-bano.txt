@@ -1,4 +1,4 @@
-###Descriptif du contenu des fichiers "BANO"
+﻿###Descriptif du contenu des fichiers "BANO"
 
 **Qu'est-ce que BANO ?**
 
@@ -50,7 +50,7 @@ Pour chaque adresse:
 - id (unique) : code_insee + codefantoir + numero
 - numero : numéro dans la voie avec suffixe (ex: 1, 1BIS, 1D)
 - voie : nom de voie
-- cp : code postal sur 5 caractères
+- code_post : code postal sur 5 caractères
 - nom_comm : nom de la commune
 - source : OSM = donnée directement issue d'OpenStreetMap, OD = données provenant de source opendata locales, CAD = données directement issue du cadastre, C+O = donnée du cadastre en richie par OSM (nom de voie par exemple)
 - lat : latitude en degrés décimaux WGS84
