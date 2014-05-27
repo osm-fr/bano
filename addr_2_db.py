@@ -436,7 +436,10 @@ class Adresses:
 	def add_fantoir(self,cle,fantoir,source):
 		if not cle in self.a:
 			self.a[cle] = {'numeros':{},'batiments_complementaires':[]}
-		self.a[cle]['fantoir'] = {'code':fantoir,'source':source}
+		if len(fantoir) == 10:
+			self.a[cle]['fantoir'] = {'code':fantoir,'source':source}
+		else:
+			print(u'Code Fantoir non conforme : {:s}'.format(fantoir))
 	def has_fantoir(self,cle):
 		res = False
 		if 'fantoir' in self.a[cle]:
@@ -694,7 +697,7 @@ def	write_output(nodes,ways,adresses,libelle):
 		
 	ftmpkeys.write(	"---------------- BILAN ----------------\n")
 	s = 			"Nombre de relations creees  : "+str(nb_voies_total)
-	print(s)
+	# print(s)
 	ftmpkeys.write(s+'\n')
 	if nb_voies_total > 0:
 		s = "     avec code FANTOIR      : "+str(nb_voies_fantoir)+" ("+str(int(nb_voies_fantoir*100/nb_voies_total))+"%)"
@@ -740,11 +743,12 @@ def	load_to_db(nodes,ways,adresses,libelle):
 	# nodes
 		for num in adresses.a[v]['numeros']:
 			numadresse = adresses.a[v]['numeros'][num]
+			# print(numadresse.numero+'\n')
 			# print(numadresse.numero,numadresse.node.attribs['lon'],numadresse.node.attribs['lat'])
 			a_values.append('(ST_PointFromText(\'POINT({:s} {:s})\', 4326),\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\')'.format(numadresse.node.attribs['lon'],numadresse.node.attribs['lat'],numadresse.numero.encode('utf8'),street_name_cadastre.replace("'","''"),street_name_osm.replace("'","''"),cle_fantoir,code_insee,code_cadastre,code_dept,'',source))
 			nb_rec +=1
 		sload = sload+','.join(a_values)+';COMMIT;'
-		
+		# print(sload)	
 		cur_insert.execute(sload)
 		
 	batch_end_log(nb_rec,batch_id)
