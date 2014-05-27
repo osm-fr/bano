@@ -105,6 +105,8 @@ PARCELLE_LIMITE_MATCH_AREA_TOLERANCE   = 10 # expressed in cadastre reference ~=
 # elles sont à cheval.
 # Nombre de décimal à comparer (après la virgule en mètre) pour éliminer les doublons:
 LIMITE_ALMOST_EQUALS_DECIMAL = 1
+if sys.argv[1] == '973':
+    LIMITE_ALMOST_EQUALS_DECIMAL = 0
 
 SOURCE_TAG = u"cadastre-dgi-fr source : Direction Générale des Finances Publiques - Cadastre. Mise à jour : " + time.strftime("%Y")
 
@@ -171,19 +173,19 @@ def parse_adresses_of_parcelles_info_pdfs(pdfs, code_commune):
     adresses_parcelles = {}
     code_postal_re =  re.compile("(.*)^[0-9]{5}.*", re.S|re.M)
     for filename in pdfs:
-        txt = subprocess.check_output(["pdftotext", filename, "-"])
+        txt = subprocess.check_output(["pdftotext", filename, "-"]).decode("utf-8")
         mode_adresse = False
         for line in txt.splitlines():
             line = line.strip()
-            if line.startswith("Service de la Documentation Nationale du Cadastre") \
-                    or line.startswith("82, rue du Maréchal Lyautey - 78103 Saint-Germain-en-Laye Cedex") \
-                    or line.startswith("SIRET 16000001400011") \
-                    or line.startswith("Informations sur la feuille éditée par internet le ") \
-                    or line.startswith("©201"): # ©2012 Ministère de l'Économie et des Finances
+            if line.startswith(u"Service de la Documentation Nationale du Cadastre") \
+                    or line.startswith(u"82, rue du Maréchal Lyautey - 78103 Saint-Germain-en-Laye Cedex") \
+                    or line.startswith(u"SIRET 16000001400011") \
+                    or line.startswith(u"Informations sur la feuille éditée par internet le ") \
+                    or line.startswith(u"©201"): # ©2012 Ministère de l'Économie et des Finances
                 continue
             #print line
-            if line.startswith("Références de la parcelle "):
-                ids = line[len("Références de la parcelle "):].strip()
+            if line.startswith(u"Références de la parcelle "):
+                ids = line[len(u"Références de la parcelle "):].strip()
                 if len(ids.split(" ")) == 2:
                     # Cas rencontré sur la commune de Mauves, Ardèche
                     # Seulement 2 ids, on assume la valeur 0 pour le 3ème:
@@ -198,7 +200,7 @@ def parse_adresses_of_parcelles_info_pdfs(pdfs, code_commune):
                 adresses = []
                 adresses_parcelles[id_parcelle] = adresses
                 mode_adresse = False
-            elif line == "Adresse":
+            elif line == u"Adresse":
                 adresses.append("")
                 mode_adresse = True
             elif mode_adresse and len(line) > 0:
@@ -213,6 +215,13 @@ def parse_adresses_of_parcelles_info_pdfs(pdfs, code_commune):
     # a deux fois exactement la même adresse, cela vas faire planter l'algo 
     # de la fonction match_parcelles_et_numeros
     # comme par exemple à Beauvais (département 60 code commune O0057)
+    # Remplace aussi les adresses du type
+    #    1 à 3 RUE DE LA NEUVILLE
+    #    02510 IRON
+    # par deux adresses:
+    #    1 RUE DE LA NEUVILLE
+    #    3 RUE DE LA NEUVILLE
+    NUM_1_A_NUM_2_RE = re.compile("^(" + RE_NUMERO_CADASTRE.pattern + u") \xe0 (" + RE_NUMERO_CADASTRE.pattern[1:] + ")\s(.*)$")
     for id_parcelle, adresses in adresses_parcelles.iteritems():
         set_adresses = set()
         for adresse in adresses:
@@ -220,7 +229,23 @@ def parse_adresses_of_parcelles_info_pdfs(pdfs, code_commune):
             if match_code_postal:
                 adresse = match_code_postal.group(1)
             adresse = adresse.replace("\n"," ").strip()
-            set_adresses.add(adresse)
+            num_1_a_num_2_match = NUM_1_A_NUM_2_RE.match(adresse)
+            if num_1_a_num_2_match:
+                sys.stdout.write((u"ATTENTION: adresse comportant un intervalle: " + adresse + "\n").encode("utf-8"))
+                # On a une adresse du type "1 à 3 RUE DE LA NEUVILLE"
+                NUM_1_GROUP_INDEX = 1
+                NUM_2_GROUP_INDEX = NUM_1_GROUP_INDEX + RE_NUMERO_CADASTRE.pattern.count("(") + 1
+                RUE_GROUP_INDEX = NUM_2_GROUP_INDEX + RE_NUMERO_CADASTRE.pattern.count("(") + 1
+                num1 = int(num_1_a_num_2_match.group(NUM_1_GROUP_INDEX))
+                num2 = int(num_1_a_num_2_match.group(NUM_2_GROUP_INDEX))
+                rue = num_1_a_num_2_match.group(RUE_GROUP_INDEX)
+                for i in range(num1, num2 + 2, 2):
+                    adr_i = u"%d %s" % (i, rue)
+                    sys.stdout.write((u"    ajoute l'adresse: " + adr_i + "\n").encode("utf-8"))
+                    set_adresses.add(adr_i)
+                sys.stdout.flush()
+            else:
+				set_adresses.add(adresse)
         adresses_parcelles[id_parcelle] = list(set_adresses)
 
     return adresses_parcelles
@@ -1029,6 +1054,10 @@ def cadastre_vers_adresses(argv):
 
 if __name__ == '__main__':
     batch_id = batch_start_log('CADASTRE','recupCadastre',sys.argv[2])
+    # if sys.argv[1] == '973':
+        # LIMITE_ALMOST_EQUALS_DECIMAL = 0
+        # print('0')
+        # os._exit(0)
     cadastre_vers_adresses(sys.argv)
     batch_end_log(-1,batch_id)
 
