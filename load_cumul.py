@@ -2,6 +2,7 @@
 # coding: UTF-8
 
 import addr_2_db as a
+import addr_osm_2_db as o
 import log_2_file as e
 import sys
 import os,os.path
@@ -16,13 +17,19 @@ if source != 'OSM' and source != 'CADASTRE':
 	print('USAGE : python load_cumul.py <numero de dept> <OSM|CADASTRE>')
         os._exit(0)
 
+if source == 'CADASTRE':
+	import addr_2_db as a
+	clause_vecteur = ' AND format_cadastre = \'VECT\' '
+if source == 'OSM':
+	import addr_osm_2_db as a
+
 num_dept_cadastre = ('000'+sys.argv[1])[-3:]
 
 f_log = e.start_log_to_file(source,os.path.basename(sys.argv[0]).split('.')[0],num_dept_cadastre)
 
 clause_vecteur = ''
-if source == 'CADASTRE':
-	clause_vecteur = ' AND format_cadastre = \'VECT\' '
+#if source == 'CADASTRE':
+#	clause_vecteur = ' AND format_cadastre = \'VECT\' '
 pgc = a.get_pgc()
 str_query = 'SELECT insee_com,cadastre_com,nom_com FROM code_cadastre WHERE cadastre_dept = \'{:s}\' {:s} ORDER BY 3;'.format(num_dept_cadastre,clause_vecteur)
 cur = pgc.cursor()
