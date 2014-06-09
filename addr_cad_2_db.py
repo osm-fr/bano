@@ -15,6 +15,21 @@ import time
 import xml.etree.ElementTree as ET
 import xml.sax.saxutils as XSS
 import zipfile
+from outils_de_gestion import batch_start_log
+from outils_de_gestion import batch_end_log
+# from outils_communs_import import Dicts
+# from outils_communs_import import Adresse as Adresse
+# from outils_communs_import import Adresses as Adresses
+from outils_communs_import import get_part_debut
+# from outils_communs_import import replace_type_voie
+from outils_communs_import import get_data_from_pg
+from outils_communs_import import get_code_cadastre_from_insee
+# from outils_communs_import import load_highways_from_pg_osm
+from outils_communs_import import load_to_db
+from outils_communs_import import is_valid_housenumber
+# from outils_communs_import import add_fantoir_to_hsnr
+# from outils_communs_import import load_to_db
+debut_total = time.time()
 
 class Dicts:
 	def __init__(self):
@@ -23,6 +38,7 @@ class Dicts:
 		self.code_fantoir_vers_nom_fantoir = {}
 		self.osm_insee = {}
 		self.abrev_type_voie = {}
+		# self.abrev_type_voie = []
 		self.expand_titres = {}
 		self.abrev_titres = {}
 		self.chiffres = []
@@ -92,6 +108,7 @@ class Dicts:
 							['CAPITAINE','CAP'],
 							['LIEUTENANT','LT'],
 							['REGIMENT','REGT'],
+							['DOCTEUR','DOC'],
 							['PROFESSEUR','PROF'],
                             ['JEAN-BAPTISTE','J BTE'],
 							['SAINTE','STE'],
@@ -126,7 +143,10 @@ class Dicts:
 		for l in f:
 			c = (l.splitlines()[0]).split('\t')
 			self.abrev_type_voie[c[0]] = c[1]
+			# self.abrev_type_voie.append([c[0],c[1]])
 		f.close()
+		# print(self.abrev_type_voie)
+		# os._exit(0)
 	def load_osm_insee(self):
 		finsee_path = os.path.join(os.path.dirname(__file__),'osm_id_ref_insee.csv')
 		finsee = open(finsee_path,'r')
@@ -327,20 +347,12 @@ class Adresse:
 		self.numero = num
 		self.voie = voie
 		self.fantoir = fantoir
-		self.addr_as_building_way = []
-		self.addr_as_node_on_building = []
-		self.building_for_addr_node = []
-	def add_addr_as_building(self,b_id):
-		self.addr_as_building_way = self.addr_as_building_way+[b_id]
-	def add_addr_as_node_on_building(self, n_id):
-		self.addr_as_node_on_building = self.addr_as_node_on_building+[n_id]
-	def add_building_for_addr_node(self,b_id):
-		self.building_for_addr_node = self.building_for_addr_node+[b_id]
 class Adresses:
 	def __init__(self):
 		self.a = {}
 	def register(self,voie):
 		cle = normalize(voie)
+		# print(cle+' '+voie)
 		if not cle in self.a:
 			self.a[cle] = {'numeros':{},'voies':{},'fantoirs':{}}
 	def add_fantoir(self,cle,fantoir,source):
@@ -351,9 +363,8 @@ class Adresses:
 			print(u'Code Fantoir non conforme : {:s}'.format(fantoir))
 	def add_voie(self,voie,source):
 		cle = normalize(voie)
-		self.register(voie)
 		self.a[cle]['voies'][source] = voie
-	def add_adresse(self,ad):
+	def add_adresse(self,ad,source):
 		""" une adresses est considérée dans la commune si sans Fantoir ou avec un Fantoir de la commune"""
 		if (ad.fantoir == '' or (is_valid_fantoir(ad.fantoir) and ad.fantoir[0:5] == code_insee)) and is_valid_housenumber(ad.numero):
 			cle = normalize(ad.voie)
@@ -376,93 +387,11 @@ class Adresses:
 						cle = c
 						break
 		return cle
-	# def has_fantoir(self,cle):
-		# res = False
-		# if 'fantoir' in self.a[cle]:
-			# res = True
-		# return res
-class Pg_hsnr:
-	def __init__(self,d):
-		self.x = d[0]
-		self.y = d[1]
-		self.provenance = d[2]
-		self.osm_id = d[3]
-		self.numero = d[4]
-		self.voie = d[5]
-		# self.voie = d[5].decode('utf8')
-		self.tags = tags_list_as_dict(d[6])
-		self.fantoir = ''
-		if self.provenance == '3' or self.provenance == '4':
-			self.set_street_name()
-		self.set_fantoir()
-	def set_street_name(self):
-		# dtags = tags_list_as_dict(self.tags)
-		if 'type' in self.tags and self.tags['type'] == 'associatedStreet' and 'name' in self.tags:
-			self.voie = self.tags['name']
-			# print('******'+self.voie+' $$$$$$$$ '+self.tags['name'])
-		# str_tags = '#'+'#'.join(self.tags)+'#'
-		# s1 = str_tags.split('type#associatedStreet#')
-		# if len(s1) == 2:
-			# s2 = s1.split(
-		# if str_tags.find('type#associatedStreet') in self.tags and str_tags.find('name#'):
-			# self.voie = str_tags.split('name#')[1].split('#')[0]
-	def set_fantoir(self):
-		if 'ref:FR:FANTOIR' in self.tags and len(self.tags['ref:FR:FANTOIR']) == 10:
-			self.fantoir = self.tags['ref:FR:FANTOIR']
-def batch_start_log(source,etape,code_cadastre):
-	t = time.localtime()
-	th =  time.strftime('%d-%m-%Y %H:%M:%S',t)
-	t = round(time.mktime(t),0)
-	pgc = get_pgc()
-	cur = pgc.cursor()
-	whereclause = 'cadastre_com = \'{:s}\' AND source = \'{:s}\' AND etape = \'{:s}\''.format(code_cadastre,source,etape)
-	str_query = 'INSERT INTO batch_historique (SELECT * FROM batch WHERE {:s});'.format(whereclause)
-	str_query = str_query+'DELETE FROM batch WHERE {:s};'.format(whereclause)
-	str_query = str_query+'INSERT INTO batch (source,etape,timestamp_debut,date_debut,dept,cadastre_com,nom_com,nombre_adresses) SELECT \'{:s}\',\'{:s}\',{:f},\'{:s}\',dept,cadastre_com,nom_com,0 FROM code_cadastre WHERE cadastre_com = \'{:s}\';'.format(source,etape,t,th,code_cadastre)
-	str_query = str_query+'COMMIT;'
-	#print(str_query)
-	cur.execute(str_query)
-	# print(str_query)
-	str_query = 'SELECT id_batch::integer FROM batch WHERE {:s};'.format(whereclause)
-	cur.execute(str_query)
-	c = cur.fetchone()
-	return c[0]
-def batch_end_log(nb,batch_id):
-	pgc = get_pgc()
-	cur = pgc.cursor()
-	t = time.localtime()
-	th =  time.strftime('%d-%m-%Y %H:%M:%S',t)
-	whereclause = 'id_batch = {:d}'.format(batch_id)
-	str_query = 'UPDATE batch SET nombre_adresses = {:d},date_fin = \'{:s}\' WHERE {:s};COMMIT;'.format(nb,th,whereclause)
-	# print(str_query)
-	cur.execute(str_query)
-def get_part_debut(s,nb_parts):
-	resp = ''
-	if get_nb_parts(s) > nb_parts:
-		resp = ' '.join(s.split()[0:nb_parts])
-	return resp
-def get_nb_parts(s):
-	return len(s.split())
-def replace_type_voie(s,nb):
-	sp = s.split()
-	spd = ' '.join(sp[0:nb])
-	spf = ' '.join(sp[nb:len(sp)])
-	s = dicts.abrev_type_voie[spd]+' '+spf
-	return s
-def is_valid_housenumber(hsnr):
-	is_valid = True
-	if len(hsnr.encode('utf8')) > 10:
-		is_valid = False
-	return is_valid
-def is_valid_fantoir(f):
-	res = True
-	if len(f) != 10:
-		res = False
-	return res
 def normalize(s):
 	# print(s)
 	# s = s.encode('ascii','ignore')
 	s = s.upper()				# tout en majuscules
+	s = s.split(' (')[0]		# parenthèses : on coupe avant
 	s = s.replace('-',' ')		# separateur espace
 	s = s.replace('\'',' ')		# separateur espace
 	s = s.replace('/',' ')		# separateur espace
@@ -475,13 +404,19 @@ def normalize(s):
 	
 	# type de voie
 	abrev_trouvee = False
-	p = 0
-	while (not abrev_trouvee) and p < 3:
-		p+= 1
+	# p = 0
+	# while (not abrev_trouvee) and p < 3:
+		# p+= 1
+		# if get_part_debut(s,p) in dicts.abrev_type_voie:
+			# s = replace_type_voie(s,p)
+			# abrev_trouvee = True
+	# abrev_trouvee = False
+	p = 3
+	while (not abrev_trouvee) and p > -1:
+		p-= 1
 		if get_part_debut(s,p) in dicts.abrev_type_voie:
 			s = replace_type_voie(s,p)
 			abrev_trouvee = True
-
 	# ordinal
 	s = s.replace(' EME ','EME ')
 
@@ -507,46 +442,12 @@ def normalize(s):
 		s = ' '.join(sp)
 			
 	return s
-def get_line_in_st_line_format(nodelist):
-	s = 'ST_LineFromText(\'LINESTRING('
-	l_coords = []
-	for id in nodelist:
-		l_coords.append(str(nodes.n[id].attribs['lon'])+' '+str(nodes.n[id].attribs['lat']))
-	s = s+','.join(l_coords)+')\')'
+def replace_type_voie(s,nb):
+	sp = s.split()
+	spd = ' '.join(sp[0:nb])
+	spf = ' '.join(sp[nb:len(sp)])
+	s = dicts.abrev_type_voie[spd]+' '+spf
 	return s
-def tags_list_as_dict(ltags):
-	# print(ltags)
-	res = {}
-	for i in range(0,int(len(ltags)/2)):
-		res[ltags[i*2]] = ltags[i*2+1]
-	# print('res : ')
-	# print(res)
-	return res
-def get_best_fantoir(cle):
-	res = ''
-	if 'FANTOIR' in adresses.a[cle]['fantoirs']:
-		res = adresses.a[cle]['fantoirs']['FANTOIR']
-	if 'OSM' in adresses.a[cle]['fantoirs']:
-		res = adresses.a[cle]['fantoirs']['OSM']
-	return res
-def get_code_cadastre_from_insee(insee):
-	str_query = 'SELECT cadastre_com FROM code_cadastre WHERE insee_com = \'{:s}\';'.format(insee)
-	cur = pgc.cursor()
-	cur.execute(str_query)
-	for c in cur:
-		code_cadastre = c[0]
-	return code_cadastre
-def get_data_from_pg(data_type,insee):
-	fq = open('sql/{:s}.sql'.format(data_type),'rb')
-	str_query = fq.read().replace('__com__',insee)
-	fq.close()
-	# print(str_query)
-
-	cur = pgcl.cursor()
-	cur.execute(str_query)
-	res = cur.fetchall()
-	cur.close()
-	return res
 def load_highways_from_pg_osm(insee):
 	data = get_data_from_pg('highway_insee',insee)
 	for lt in data:
@@ -568,76 +469,110 @@ def load_highways_from_pg_osm(insee):
 			if l[3] != None and l[3][0:5] == insee:
 				fantoir = l[3]
 				adresses.add_fantoir(cle,l[3],'OSM')
+		adresses.register(name)
 		adresses.add_voie(name,'OSM')
-def load_hsnr_from_pg_osm(insee):
-	data = get_data_from_pg('hsnr_insee',insee)
-	for l in data:
-		oa = Pg_hsnr(list(l))
-		n = Node({'id':oa.osm_id,'lon':oa.x,'lat':oa.y},{})
-		# print(list(l))
-		if oa.voie == None:
-			# print('***none******')
+def	load_hsnr_from_cad_file(fnadresses,source):
+	xmladresses = ET.parse(fnadresses)
+	dict_node_relations = {}
+	for asso in xmladresses.iter('relation'):
+		dtags = get_tags(asso)
+		if not 'type' in dtags:
 			continue
-		# adresses.add_adresse(Adresse(n,oa.numero,oa.voie.decode('utf8').encode('utf8'),oa.fantoir))
-		adresses.add_adresse(Adresse(n,oa.numero.decode('utf8'),oa.voie.decode('utf8'),oa.fantoir))
-def add_fantoir_to_hsnr():
-	for v in adresses.a:
-		if v in dicts.fantoir:
-			adresses.a[v]['fantoirs']['FANTOIR'] = dicts.fantoir[v]
-			adresses.a[v]['voies']['FANTOIR'] = dicts.code_fantoir_vers_nom_fantoir[dicts.fantoir[v]]
-		else:
-			if 'OSM' in adresses.a[v]['fantoirs']:
-				adresses.a[v]['voies']['FANTOIR'] = dicts.code_fantoir_vers_nom_fantoir[adresses.a[v]['fantoirs']['OSM']]
-def purge_pg_tables(code_insee):
-	str_query = '''SELECT	tablename
-					FROM 	pg_tables
-					WHERE	upper(tablename) like \'%'''+code_insee.upper()+'''\';'''
-	cur_sql = pgc.cursor()
-	cur_sql.execute(str_query)
-	str_del = ''
-	for c in cur_sql:
-		str_del = str_del+'DROP TABLE IF EXISTS '+c[0]+' CASCADE;'
-	cur_sql.execute(str_del)
-	cur_sql.close()
-def	load_to_db(adresses):
-	sload = 'DELETE FROM cumul_adresses WHERE insee_com = \'{:s}\' AND source = \'{:s}\';\n'.format(code_insee,source)
+		if dtags['type'] != 'associatedStreet':
+			continue
+		if not 'name' in dtags:
+			continue
+		if len(dtags['name']) < 2:
+			continue
+		# if 'ref:FR:FANTOIR' in dtags:
+			# adresses.add_fantoir(normalize(dtags['name']),dtags['ref:FR:FANTOIR'],source)
+		adresses.register(dtags['name'])
+		adresses.add_voie(dtags['name'],'CADASTRE')
+		for n in asso.iter('member'):
+			if n.get('type') == 'node':
+				if not n.get('ref') in dict_node_relations:
+					dict_node_relations[n.get('ref')] = []
+					# print(dtags['name'])
+					# print(normalize(dtags['name']))
+				dict_node_relations[n.get('ref')].append(normalize(dtags['name']))
+	for n in xmladresses.iter('node'):
+		dtags = get_tags(n)
+		n_id = n.get('id')
+		if 'addr:housenumber' in dtags and n_id in dict_node_relations:
+			if is_valid_housenumber(dtags['addr:housenumber']):
+				for v in dict_node_relations[n_id]:
+					nd = Node({'id':n_id,'lon':n.get('lon'),'lat':n.get('lat')},{})
+					adresses.add_adresse(Adresse(nd,dtags['addr:housenumber'],adresses.a[v]['voies']['CADASTRE'],''),source)
+					# adresses.add_adresse(Adresse(nd,dtags['addr:housenumber'],v,''),source)
+			else:
+				print('Numero invalide : {:s}'.format(dtags['addr:housenumber'].encode('utf8')))
+def get_tags(xmlo):
+	dtags = {}
+	for tg in xmlo.iter('tag'):
+		dtags[tg.get('k')] = tg.get('v')
+	return dtags
+def	load_to_db(adresses,code_insee,source,code_cadastre,code_dept):
+	table_dest = 'cumul_adresses'
+	sload = 'DELETE FROM {:s} WHERE insee_com = \'{:s}\' AND source = \'{:s}\';\n'.format(table_dest,code_insee,source)
 	cur_insert = pgc.cursor()
 	cur_insert.execute(sload)
 	nb_rec = 0
 	for v in adresses.a:
 		# print(v)
-		sload = 'INSERT INTO cumul_adresses (geometrie,numero,voie_cadastre,voie_osm,fantoir,insee_com,cadastre_com,dept,code_postal,source) VALUES'
+		# print(adresses.a[v])
+		sload = 'INSERT INTO {:s} (geometrie,numero,voie_cadastre,voie_osm,voie_fantoir,fantoir,insee_com,cadastre_com,dept,code_postal,source) VALUES'.format(table_dest)
 		a_values = []
 		if not adresses.a[v]['numeros']:
 			continue
-		# street_name = v.title().encode('utf8')
 		street_name_cadastre = ''
 		street_name_osm = ''
 		street_name_fantoir = ''
 		cle_fantoir = get_best_fantoir(v)
-		# if 'adresse' in dicts.noms_voies[v]:
-			# street_name_cadastre = dicts.noms_voies[v]['adresse'].encode('utf8')
 		if 'OSM' in adresses.a[v]['voies']:
 			street_name_osm =  adresses.a[v]['voies']['OSM'].encode('utf8')
-			# print(street_name_osm)
 		if 'FANTOIR' in adresses.a[v]['voies']:
 			street_name_fantoir =  adresses.a[v]['voies']['FANTOIR'].encode('utf8')
-		if street_name_osm == '' and street_name_fantoir == '':
+		if 'CADASTRE' in adresses.a[v]['voies']:
+			street_name_cadastre =  adresses.a[v]['voies']['CADASTRE'].encode('utf8')
+		if street_name_osm == '' and street_name_cadastre == '':
 			print('****** voies muettes '+v)
 	# nodes
 		for num in adresses.a[v]['numeros']:
 			numadresse = adresses.a[v]['numeros'][num]
-			a_values.append('(ST_PointFromText(\'POINT({:s} {:s})\', 4326),\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\')'.format(numadresse.node.attribs['lon'],numadresse.node.attribs['lat'],numadresse.numero.encode('utf8'),street_name_fantoir.replace("'","''"),street_name_osm.replace("'","''"),cle_fantoir,code_insee,code_cadastre,code_dept,'',source))
+			a_values.append('(ST_PointFromText(\'POINT({:s} {:s})\', 4326),\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\')'.format(numadresse.node.attribs['lon'],numadresse.node.attribs['lat'],numadresse.numero.encode('utf8'),street_name_cadastre.replace("'","''"),street_name_osm.replace("'","''"),street_name_fantoir.replace("'","''"),cle_fantoir,code_insee,code_cadastre,code_dept,'',source))
 			nb_rec +=1
 		sload = sload+','.join(a_values)+';COMMIT;'
-		# print(sload)	
 		cur_insert.execute(sload)
-	
-	batch_end_log(nb_rec,batch_id)
+		# if v == 'RUE PDT KENNEDY':
+			# print(sload)
+			# os._exit(0)
+	# print(adresses.a['RUE PDT KENNEDY'])
+	return(nb_rec)
+def add_fantoir_to_hsnr():
+	for v in adresses.a:
+		if v in dicts.fantoir:
+			adresses.a[v]['fantoirs']['FANTOIR'] = dicts.fantoir[v]
+			adresses.a[v]['voies']['FANTOIR'] = dicts.code_fantoir_vers_nom_fantoir[dicts.fantoir[v]]
+			# print(v)
+			# print(adresses.a[v]['voies']['FANTOIR'])
+			# if 'OSM' in adresses.a[v]['voies']:
+				# print(adresses.a[v]['voies']['OSM'])
+			# else:
+				# print('***')
+		else:
+			if 'OSM' in adresses.a[v]['fantoirs']:
+				adresses.a[v]['voies']['FANTOIR'] = dicts.code_fantoir_vers_nom_fantoir[adresses.a[v]['fantoirs']['OSM']]
+def get_best_fantoir(cle):
+	res = ''
+	if 'FANTOIR' in adresses.a[cle]['fantoirs']:
+		res = adresses.a[cle]['fantoirs']['FANTOIR']
+	if 'OSM' in adresses.a[cle]['fantoirs']:
+		res = adresses.a[cle]['fantoirs']['OSM']
+	return res
 def main(args):
 	debut_total = time.time()
 	if len(args) < 2:
-		print('USAGE : python addr_osm_2_db.py <code INSEE>')
+		print('USAGE : python addr_cad_2_db.py <code INSEE>')
 		os._exit(0)
 
 	global source,batch_id
@@ -645,9 +580,10 @@ def main(args):
 	global code_insee,code_cadastre,code_dept
 	global dicts
 	global nodes,ways,adresses
-
-	source = 'OSM'
-
+	
+	adresses = Adresses()
+	source = 'CADASTRE'
+	
 	pgc = get_pgc()
 	pgcl = get_pgc_layers()
 	
@@ -659,22 +595,18 @@ def main(args):
 	
 	batch_id = batch_start_log(source,'loadCumul',code_cadastre)
 	
-	adresses = Adresses()
 	dicts = Dicts()
 	dicts.load_all(code_insee)
-	
+	rep_parcelles_adresses = '/data/work/cadastre.openstreetmap.fr/bano_cache/'+code_dept+'/'+code_cadastre
+	fnadresses = rep_parcelles_adresses+'/'+code_cadastre+'-adresses.osm'
+	load_hsnr_from_cad_file(fnadresses,source)
 	load_highways_from_pg_osm(code_insee)
-	load_hsnr_from_pg_osm(code_insee)
 	add_fantoir_to_hsnr()
-	load_to_db(adresses)
-
+	nb_rec = load_to_db(adresses,code_insee,source,code_cadastre,code_dept)
+	
+	batch_end_log(nb_rec,batch_id)
 	fin_total = time.time()
 	print('Execution en '+str(int(fin_total - debut_total))+' s.')
-	# mode 1 : addr:housenumber comme tag du building
-	#			sinon point adresse seul à la place fournie en entree
-	# mode 2 : addr:housenumber comme point à mi-longueur du plus proche coté du point initial
-	#			sinon point adresse seul à la place fournie en entree
 if __name__ == '__main__':
     main(sys.argv)
-
 
