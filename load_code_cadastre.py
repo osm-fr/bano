@@ -3,6 +3,7 @@
 
 import urllib, urllib2, cookielib
 import time
+import os
 import xml.etree.ElementTree as ET
 
 a_depts = ['2A','2B']
@@ -20,11 +21,11 @@ for i,d in enumerate(a_0_depts):
 	request = urllib2.Request('http://www.cadastre.gouv.fr/scpc/listerCommune.do?codeDepartement='+d+'&libelle=&keepVolatileSession=&offset=5000')
 	response = opener.open(request)
 	rep = response.read()
-	f = open(fname,'wb')
-	f.write(rep)
-	f.close()
-	file = open(fname,'r')
-	for line in file:
+	fw = open(fname,'wb')
+	fw.write(rep)
+	fw.close()
+	fr = open(fname,'r')
+	for line in fr:
 		lsplit = line.split('listerFeuillesParcommune')
 		lsplit = line.split('ajoutArticle(')
 		if len(lsplit) > 1:
@@ -36,5 +37,7 @@ for i,d in enumerate(a_0_depts):
 			# print(code_commune,format,nom_commune,cp)
 			f_output.write('{:s},{:s},{:s},{:s},{:s},{:s}\n'.format(a_depts[i],d,nom_commune,cp,code_commune,format))
 		f_output.flush()
+	fr.close()
+	os.remove(fname)
 f_output.close()
 
