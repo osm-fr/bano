@@ -36,6 +36,7 @@ class Dicts:
 		self.lettre_a_lettre = {}
 		self.fantoir = {}
 		self.code_fantoir_vers_nom_fantoir = {}
+		self.code_fantoir_vers_noms = {}
 		self.osm_insee = {}
 		self.abrev_type_voie = {}
 		# self.abrev_type_voie = []
@@ -169,6 +170,17 @@ class Dicts:
 		if not cle in self.noms_voies:
 			self.noms_voies[cle] = {}
 		self.noms_voies[cle][origine] = nom
+	def add_fantoir_name(self,fantoir,name,source):
+		if not fantoir in self.code_fantoir_vers_noms:
+			self.code_fantoir_vers_noms[fantoir] = {}
+		if not source in self.code_fantoir_vers_noms[fantoir]:
+			self.code_fantoir_vers_noms[fantoir][source] = name
+	def get_fantoir_name(self,fantoir,source):
+		res = ''
+		if fantoir in self.code_fantoir_vers_noms:
+			if source in self.code_fantoir_vers_noms[fantoir]:
+				res = self.code_fantoir_vers_noms[fantoir][source]
+		return res
 class Node:
 	def __init__(self,attribs,tags):
 		self.attribs = attribs
@@ -387,6 +399,11 @@ class Adresses:
 						cle = c
 						break
 		return cle
+	def has_already_fantoir(self,cle,source):
+		has = False
+		if source in self.a[cle]['fantoirs']:
+			has = True
+		return has
 def normalize(s):
 	# print(s)
 	# s = s.encode('ascii','ignore')
@@ -411,7 +428,7 @@ def normalize(s):
 			# s = replace_type_voie(s,p)
 			# abrev_trouvee = True
 	# abrev_trouvee = False
-	p = 3
+	p = 4
 	while (not abrev_trouvee) and p > -1:
 		p-= 1
 		if get_part_debut(s,p) in dicts.abrev_type_voie:
@@ -455,7 +472,12 @@ def load_highways_from_pg_osm(insee):
 		name = l[0].decode('utf8')
 		if len(name) < 2:
 			continue
+		adresses.register(name)
 		cle = normalize(name)
+		if adresses.has_already_fantoir(cle,'OSM'):
+			# print(cle)
+			# print(l)
+			continue
 		fantoir = ''
 		if len(l)>1:
 			if l[1] != None and l[1][0:5] == insee:
@@ -469,7 +491,8 @@ def load_highways_from_pg_osm(insee):
 			if l[3] != None and l[3][0:5] == insee:
 				fantoir = l[3]
 				adresses.add_fantoir(cle,l[3],'OSM')
-		adresses.register(name)
+		if fantoir != '':
+			dicts.add_fantoir_name(fantoir,name,'OSM')
 		adresses.add_voie(name,'OSM')
 def	load_hsnr_from_cad_file(fnadresses,source):
 	xmladresses = ET.parse(fnadresses)
@@ -530,6 +553,9 @@ def	load_to_db(adresses,code_insee,source,code_cadastre,code_dept):
 		cle_fantoir = get_best_fantoir(v)
 		if 'OSM' in adresses.a[v]['voies']:
 			street_name_osm =  adresses.a[v]['voies']['OSM'].encode('utf8')
+		else :
+			street_name_osm = dicts.get_fantoir_name(cle_fantoir,'OSM').encode('utf8')
+			# print(street_name_osm)
 		if 'FANTOIR' in adresses.a[v]['voies']:
 			street_name_fantoir =  adresses.a[v]['voies']['FANTOIR'].encode('utf8')
 		if 'CADASTRE' in adresses.a[v]['voies']:
@@ -546,7 +572,8 @@ def	load_to_db(adresses,code_insee,source,code_cadastre,code_dept):
 		# if v == 'RUE PDT KENNEDY':
 			# print(sload)
 			# os._exit(0)
-	# print(adresses.a['RUE PDT KENNEDY'])
+	# print(adresses.a['AV GUY MAUPASSANT'])
+	# print(adresses.a['AV G MAUPASSANT CAP'])
 	return(nb_rec)
 def add_fantoir_to_hsnr():
 	for v in adresses.a:
