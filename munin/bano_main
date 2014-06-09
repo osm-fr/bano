@@ -8,7 +8,8 @@ case $1 in
 graph_title BANO - Contenu
 graph_vlabel BANO
 graph_category bano
-cumul.label Cumul
+cumul.label Cumul toutes sources
+dedup.label Sortie dedupliquee BANO .csv/.shp
 cadastre.label Source cadastre
 match.label Source cadastre rapprochee avec OSM
 nomatch.label Source cadastre non rapprochee avec OSM
@@ -19,6 +20,8 @@ EOM
 esac
 
 psql cadastre -c "select concat('cumul.value ',count(*)::text) from cumul_adresses;" -At
+echo "dedup.value `head /data/work/bano.openstreetmap.fr/bano-data/comptage.txt -n 1`"
+#psql cadastre -c "select concat('dedup.value ',count(*)::text) from (select fantoir,num from (select *,replace(replace(replace(replace(replace(replace(replace(regexp_replace(upper(numero),'^0*',''),'BIS','B'),'TER','T'),'QUATER','Q'),'QUAT','Q'),' ',''),'à','-'),';',',') as num from cumul_adresses where fantoir is not null and source in ('CADASTRE','OSM')) as a group by fantoir,num) as f;" -At
 psql cadastre -c "select concat('cadastre.value ',count(*)::text) from cumul_adresses where source='CADASTRE';" -At
 psql cadastre -c "select concat('match.value ',count(*)::text) from cumul_adresses where source='CADASTRE' and voie_osm != '';" -At
 psql cadastre -c "select concat('nomatch.value ',count(*)::text) from cumul_adresses where source='CADASTRE' and (voie_osm = '' or voie_osm is null);" -At
