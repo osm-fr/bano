@@ -1,5 +1,17 @@
-TRUNCATE TABLE code_cadastre;
-\copy code_cadastre (dept,cadastre_dept,nom_com,code_postal,cadastre_com,format_cadastre) FROM './code_cadastre.csv' WITH CSV DELIMITER ','
-UPDATE code_cadastre set insee_com = dept||substr(cadastre_com,3,3) WHERE length(dept) = 2;
-UPDATE code_cadastre set insee_com = dept||substr(cadastre_com,4,2) WHERE length(dept) = 3;
+TRUNCATE TABLE tmp_code_cadastre;
+\copy tmp_code_cadastre (dept,cadastre_dept,nom_com,code_postal,cadastre_com,format_cadastre) FROM './code_cadastre.csv' WITH CSV DELIMITER ','
+UPDATE tmp_code_cadastre SET insee_com = dept||substr(cadastre_com,3,3) WHERE length(dept) = 2;
+UPDATE tmp_code_cadastre SET insee_com = dept||substr(cadastre_com,4,2) WHERE length(dept) = 3;
+UPDATE tmp_code_cadastre SET date_maj = (SELECT to_char(n,'YYMMDD')::integer FROM (SELECT now() AS n)a);
 
+DELETE FROM code_cadastre
+WHERE cadastre_com IN (SELECT cadastre_com FROM tmp_code_cadastre WHERE format_cadastre = 'VECT' AND nom_com != ''
+						INTERSECT
+						SELECT cadastre_com FROM code_cadastre WHERE format_cadastre = 'IMAG');
+INSERT INTO code_cadastre
+SELECT t.*
+FROM tmp_code_cadastre t
+LEFT OUTER JOIN code_cadastre c
+ON t.cadastre_com = c.cadastre_com
+WHERE c.cadastre_com IS NULL AND
+		t.nom_com != '';

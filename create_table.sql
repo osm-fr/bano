@@ -46,5 +46,9 @@ CREATE TABLE code_cadastre (
         cadastre_com character(5),
         insee_com character(5),
         code_postal character(5),
-        format_cadastre character varying(10));
+        format_cadastre character varying(10),
+		date_maj integer);
 
+DROP TABLE IF EXISTS tmp_code_cadastre CASCADE;
+CREATE TABLE tmp_code_cadastre
+AS SELECT * FROM code_cadastre LIMIT 0;
