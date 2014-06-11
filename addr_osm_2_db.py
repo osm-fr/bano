@@ -587,7 +587,8 @@ def add_fantoir_to_hsnr():
 			adresses.a[v]['voies']['FANTOIR'] = dicts.code_fantoir_vers_nom_fantoir[dicts.fantoir[v]]
 		else:
 			if 'OSM' in adresses.a[v]['fantoirs']:
-				adresses.a[v]['voies']['FANTOIR'] = dicts.code_fantoir_vers_nom_fantoir[adresses.a[v]['fantoirs']['OSM']]
+				if adresses.a[v]['fantoirs']['OSM'] in dicts.code_fantoir_vers_nom_fantoir:
+					adresses.a[v]['voies']['FANTOIR'] = dicts.code_fantoir_vers_nom_fantoir[adresses.a[v]['fantoirs']['OSM']]
 def purge_pg_tables(code_insee):
 	str_query = '''SELECT	tablename
 					FROM 	pg_tables

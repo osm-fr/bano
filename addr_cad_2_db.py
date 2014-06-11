@@ -588,7 +588,8 @@ def add_fantoir_to_hsnr():
 				# print('***')
 		else:
 			if 'OSM' in adresses.a[v]['fantoirs']:
-				adresses.a[v]['voies']['FANTOIR'] = dicts.code_fantoir_vers_nom_fantoir[adresses.a[v]['fantoirs']['OSM']]
+				if adresses.a[v]['fantoirs']['OSM'] in dicts.code_fantoir_vers_nom_fantoir:
+					adresses.a[v]['voies']['FANTOIR'] = dicts.code_fantoir_vers_nom_fantoir[adresses.a[v]['fantoirs']['OSM']]
 def get_best_fantoir(cle):
 	res = ''
 	if 'FANTOIR' in adresses.a[cle]['fantoirs']:
