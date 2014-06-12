@@ -39,7 +39,6 @@ class Dicts:
 		self.code_fantoir_vers_noms = {}
 		self.osm_insee = {}
 		self.abrev_type_voie = {}
-		# self.abrev_type_voie = []
 		self.expand_titres = {}
 		self.abrev_titres = {}
 		self.chiffres = []
@@ -234,25 +233,6 @@ class Nodes:
 		self.n[id].modified = True
 		self.min_id = min(self.min_id,int(id))
 		return id
-class WayGeom:
-	def __init__(self,a_nodes):
-		self.a_nodes = a_nodes
-	def get_geom_as_linestring_text(self):
-		res = '\'LINESTRING('
-		a_n = []
-		for ni in self.a_nodes:
-			a_n.append(str(nodes.n[ni].attribs['lon'])+' '+str(nodes.n[ni].attribs['lat']))
-		res = res+','.join(a_n)+')\''
-		return res	
-	def get_centroid(self):
-		x = 0
-		y = 0
-		for ni in self.a_nodes:
-			x += float(nodes.n[ni].attribs['lon'])
-			y += float(nodes.n[ni].attribs['lat'])
-		x = str(x/len(self.a_nodes))
-		y = str(y/len(self.a_nodes))
-		return [x,y]	
 class Way:
 	def __init__(self,geom,tags,attrib,osm_key):
 		self.geom = geom
@@ -494,6 +474,27 @@ def load_highways_from_pg_osm(insee):
 		if fantoir != '':
 			dicts.add_fantoir_name(fantoir,name,'OSM')
 		adresses.add_voie(name,'OSM')
+def load_highways_relations_from_pg_osm(insee):
+	data = get_data_from_pg('highway_relation_insee',insee)
+	for lt in data:
+		l = list(lt)
+		name = l[0].decode('utf8')
+		if len(name) < 2:
+			continue
+		adresses.register(name)
+		cle = normalize(name)
+		if adresses.has_already_fantoir(cle,'OSM'):
+			# print(cle)
+			# print(l)
+			continue
+		fantoir = ''
+		tags = tags_list_as_dict(l[1])
+		if 'ref:FR:FANTOIR' in tags:
+			if tags['ref:FR:FANTOIR'][0:5] == code_insee and len(tags['ref:FR:FANTOIR']) == 10:
+				fantoir = tags['ref:FR:FANTOIR']
+		if fantoir != '':
+			dicts.add_fantoir_name(fantoir,name,'OSM')
+		adresses.add_voie(name,'OSM')
 def	load_hsnr_from_cad_file(fnadresses,source):
 	xmladresses = ET.parse(fnadresses)
 	dict_node_relations = {}
@@ -529,6 +530,11 @@ def	load_hsnr_from_cad_file(fnadresses,source):
 					# adresses.add_adresse(Adresse(nd,dtags['addr:housenumber'],v,''),source)
 			else:
 				print('Numero invalide : {:s}'.format(dtags['addr:housenumber'].encode('utf8')))
+def tags_list_as_dict(ltags):
+	res = {}
+	for i in range(0,int(len(ltags)/2)):
+		res[ltags[i*2]] = ltags[i*2+1]
+	return res
 def get_tags(xmlo):
 	dtags = {}
 	for tg in xmlo.iter('tag'):
@@ -629,6 +635,7 @@ def main(args):
 	fnadresses = rep_parcelles_adresses+'/'+code_cadastre+'-adresses.osm'
 	load_hsnr_from_cad_file(fnadresses,source)
 	load_highways_from_pg_osm(code_insee)
+	load_highways_relations_from_pg_osm(code_insee)
 	add_fantoir_to_hsnr()
 	nb_rec = load_to_db(adresses,code_insee,source,code_cadastre,code_dept)
 	
