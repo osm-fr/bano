@@ -17,18 +17,12 @@ import xml.sax.saxutils as XSS
 import zipfile
 from outils_de_gestion import batch_start_log
 from outils_de_gestion import batch_end_log
-# from outils_communs_import import Dicts
-# from outils_communs_import import Adresse as Adresse
-# from outils_communs_import import Adresses as Adresses
 from outils_communs_import import get_part_debut
-# from outils_communs_import import replace_type_voie
 from outils_communs_import import get_data_from_pg
 from outils_communs_import import get_code_cadastre_from_insee
-# from outils_communs_import import load_highways_from_pg_osm
 from outils_communs_import import load_to_db
 from outils_communs_import import is_valid_housenumber
-# from outils_communs_import import add_fantoir_to_hsnr
-# from outils_communs_import import load_to_db
+
 debut_total = time.time()
 
 class Dicts:
@@ -39,6 +33,7 @@ class Dicts:
 		self.code_fantoir_vers_noms = {}
 		self.osm_insee = {}
 		self.abrev_type_voie = {}
+		self.expand_noms_propres = {}
 		self.expand_titres = {}
 		self.abrev_titres = {}
 		self.chiffres = []
@@ -85,8 +80,8 @@ class Dicts:
 							['9','NEUF'],
 							[' DIX ',' UNZERO '],
 							[' ONZE ',' UNUN '],
-                                                        [' DOUZE ',' UNDEUX '],
-                                                        [' TREIZE ',' UNTROIS '],
+							[' DOUZE ',' UNDEUX '],
+							[' TREIZE ',' UNTROIS '],
 							[' QUATORZE ',' UNQUATRE ']]
 	def load_mot_a_blanc(self):
 		self.mot_a_blanc = ['DE LA',
@@ -100,6 +95,8 @@ class Dicts:
 	def load_expand_titres(self):
 		self.expand_titres = [['CPT','CAPITAINE'],
 							['GEN','GENERAL']]
+	def load_expand_noms_propres(self):
+		self.expand_noms_propres = [['CHARLES DE GAUL','CHARLES DE GAULLE']]
 	def load_abrev_titres(self):
 		self.abrev_titres = [['MARECHAL','MAL'],
 							['PRESIDENT','PDT'],
@@ -157,6 +154,7 @@ class Dicts:
 	def load_all(self,code_insee_commune):
 		self.load_lettre_a_lettre()
 		self.load_abrev_type_voie()
+		self.load_expand_noms_propres()
 		self.load_expand_titres()
 		self.load_abrev_titres()
 		self.load_chiffres()
@@ -401,14 +399,7 @@ def normalize(s):
 	
 	# type de voie
 	abrev_trouvee = False
-	# p = 0
-	# while (not abrev_trouvee) and p < 3:
-		# p+= 1
-		# if get_part_debut(s,p) in dicts.abrev_type_voie:
-			# s = replace_type_voie(s,p)
-			# abrev_trouvee = True
-	# abrev_trouvee = False
-	p = 4
+	p = 5
 	while (not abrev_trouvee) and p > -1:
 		p-= 1
 		if get_part_debut(s,p) in dicts.abrev_type_voie:
@@ -421,15 +412,19 @@ def normalize(s):
 	for c in dicts.chiffres:
 		s = s.replace(c[0],c[1])
 
-	# articles
-	for c in dicts.mot_a_blanc:
-		s = s.replace(' '+c+' ',' ')
-
 	# titres, etc.
+	# for r in dicts.expand_noms_propres:
+		# s = s.replace(' '+r[0]+' ',' '+r[1]+' ')
+		# if s[-len(r[0]):] == r[0]:
+			# s = s.replace(' '+r[0],' '+r[1])
 	for r in dicts.expand_titres:
 		s = s.replace(' '+r[0]+' ',' '+r[1]+' ')
 	for r in dicts.abrev_titres:
 		s = s.replace(' '+r[0]+' ',' '+r[1]+' ')
+
+	# articles
+	for c in dicts.mot_a_blanc:
+		s = s.replace(' '+c+' ',' ')
 
 	# chiffres romains
 	sp = s.split()
