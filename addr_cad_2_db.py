@@ -35,11 +35,10 @@ class Dicts:
 		self.abrev_type_voie = {}
 		self.expand_noms_propres = {}
 		self.expand_titres = {}
-		self.abrev_titres = {}
+		self.abrev_titres = []
 		self.chiffres = []
-		self.chiffres_romains = []
+		self.chiffres_romains = {}
 		self.mot_a_blanc = []
-		self.abrev_titres = {}
 		self.noms_voies = {}
 		self.ways_osm = {}
 
@@ -63,7 +62,6 @@ class Dicts:
 			cle = ' '.join(c[1].replace('-',' ').split())
 			cle = normalize(cle)
 			self.fantoir[cle] = c[0]
-			# self.add_voie('fantoir',cle)
 	def load_addr_from_fantoir(self):
 		for k in self.fantoir:
 			adresses.add_fantoir(k,self.fantoir[k],'FANTOIR')
@@ -98,59 +96,33 @@ class Dicts:
 	def load_expand_noms_propres(self):
 		self.expand_noms_propres = [['CHARLES DE GAUL','CHARLES DE GAULLE']]
 	def load_abrev_titres(self):
-		self.abrev_titres = [['MARECHAL','MAL'],
-							['PRESIDENT','PDT'],
-							['GENERAL','GAL'],
-							['COMMANDANT','CDT'],
-							['CAPITAINE','CAP'],
-							['LIEUTENANT','LT'],
-							['REGIMENT','REGT'],
-							['DOCTEUR','DOC'],
-							['PROFESSEUR','PROF'],
-                            ['JEAN-BAPTISTE','J BTE'],
-							['SAINTE','STE'],
-							['SAINT','ST']]
+		fn = os.path.join(os.path.dirname(__file__),'dictionnaires','abrev_titres.txt')
+		f = open(fn)
+		for l in f:
+			c = (l.splitlines()[0]).split('\t')
+			self.abrev_titres.append(c)
+		f.close()
 	def load_chiffres_romains(self):
-		self.chiffres_romains = {	'XXIII':'DEUXTROIS',
-									'XXII' :'DEUXDEUX',
-									'XXI'  :'DEUXUN',
-									'XX'   :'DEUXZERO',
-									'XIX'  :'UNNEUF',
-									'XVIII':'UNHUIT',
-									'XVII' :'UNSEPT',
-									'XVI'  :'UNSIX',
-									'XV'   :'UNCINQ',
-									'XIV'  :'UNQUATRE',
-									'XIII' :'UNTROIS',
-									'XII'  :'UNDEUX',
-									'XI'   :'UNUN',
-									'X'    :'UNZERO',
-									'IX'   :'NEUF',
-									'VIII' :'HUIT',
-									'VII'  :'SEPT',
-									'VI'   :'SIX',
-									'V'    :'CINQ',
-									'IV'   :'QUATRE',
-									'III'  :'TROIS',
-									'II'   :'DEUX',
-									'I'    :'UN'}
+		fn = os.path.join(os.path.dirname(__file__),'dictionnaires','chiffres_romains.txt')
+		f = open(fn)
+		for l in f:
+			c = (l.splitlines()[0]).split('\t')
+			self.chiffres_romains[c[0]] = c[1]
+		f.close()
 	def load_abrev_type_voie(self):
-		fn = os.path.join(os.path.dirname(__file__), 'abrev_type_voie.txt')
+		fn = os.path.join(os.path.dirname(__file__),'dictionnaires','abrev_type_voie.txt')
 		f = open(fn)
 		for l in f:
 			c = (l.splitlines()[0]).split('\t')
 			self.abrev_type_voie[c[0]] = c[1]
-			# self.abrev_type_voie.append([c[0],c[1]])
 		f.close()
-		# print(self.abrev_type_voie)
-		# os._exit(0)
-	def load_osm_insee(self):
-		finsee_path = os.path.join(os.path.dirname(__file__),'osm_id_ref_insee.csv')
-		finsee = open(finsee_path,'r')
-		for e in finsee:
-			c = (e.splitlines()[0]).split(',')
-			self.osm_insee[str(c[1])] = int(c[0])
-		finsee.close()
+	# def load_osm_insee(self):
+		# finsee_path = os.path.join(os.path.dirname(__file__),'osm_id_ref_insee.csv')
+		# finsee = open(finsee_path,'r')
+		# for e in finsee:
+			# c = (e.splitlines()[0]).split(',')
+			# self.osm_insee[str(c[1])] = int(c[0])
+		# finsee.close()
 	def load_all(self,code_insee_commune):
 		self.load_lettre_a_lettre()
 		self.load_abrev_type_voie()
@@ -160,7 +132,7 @@ class Dicts:
 		self.load_chiffres()
 		self.load_chiffres_romains()
 		self.load_mot_a_blanc()
-		self.load_osm_insee()
+		# self.load_osm_insee()
 		self.load_fantoir(code_insee_commune)
 	def add_voie(self,origine,nom):
 		cle = normalize(nom)
