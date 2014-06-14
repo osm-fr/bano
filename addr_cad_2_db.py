@@ -33,8 +33,8 @@ class Dicts:
 		self.code_fantoir_vers_noms = {}
 		self.osm_insee = {}
 		self.abrev_type_voie = {}
-		self.expand_noms_propres = {}
-		self.expand_titres = {}
+		self.expand_noms = []
+		self.expand_titres = []
 		self.abrev_titres = []
 		self.chiffres = []
 		self.chiffres_romains = {}
@@ -91,10 +91,19 @@ class Dicts:
 							'DE',
 							'D']
 	def load_expand_titres(self):
-		self.expand_titres = [['CPT','CAPITAINE'],
-							['GEN','GENERAL']]
-	def load_expand_noms_propres(self):
-		self.expand_noms_propres = [['CHARLES DE GAUL','CHARLES DE GAULLE']]
+		fn = os.path.join(os.path.dirname(__file__),'dictionnaires','expand_titres.txt')
+		f = open(fn)
+		for l in f:
+			c = (l.splitlines()[0]).split('\t')
+			self.expand_titres.append(c)
+		f.close()
+	def load_expand_noms(self):
+		fn = os.path.join(os.path.dirname(__file__),'dictionnaires','expand_noms.txt')
+		f = open(fn)
+		for l in f:
+			c = (l.splitlines()[0]).split('\t')
+			self.expand_noms.append(c)
+		f.close()
 	def load_abrev_titres(self):
 		fn = os.path.join(os.path.dirname(__file__),'dictionnaires','abrev_titres.txt')
 		f = open(fn)
@@ -126,7 +135,7 @@ class Dicts:
 	def load_all(self,code_insee_commune):
 		self.load_lettre_a_lettre()
 		self.load_abrev_type_voie()
-		self.load_expand_noms_propres()
+		self.load_expand_noms()
 		self.load_expand_titres()
 		self.load_abrev_titres()
 		self.load_chiffres()
@@ -355,8 +364,8 @@ class Adresses:
 			has = True
 		return has
 def normalize(s):
-	# print(s)
-	# s = s.encode('ascii','ignore')
+	# if s[0:2] == 'BD' or s[0:4] == 'Boul':
+		# print(s)
 	s = s.upper()				# tout en majuscules
 	s = s.split(' (')[0]		# parenthèses : on coupe avant
 	s = s.replace('-',' ')		# separateur espace
@@ -379,16 +388,17 @@ def normalize(s):
 			abrev_trouvee = True
 	# ordinal
 	s = s.replace(' EME ','EME ')
+	s = s.replace(' 1ER ',' PREMIER ')
 
 	# chiffres
 	for c in dicts.chiffres:
 		s = s.replace(c[0],c[1])
 
 	# titres, etc.
-	# for r in dicts.expand_noms_propres:
-		# s = s.replace(' '+r[0]+' ',' '+r[1]+' ')
-		# if s[-len(r[0]):] == r[0]:
-			# s = s.replace(' '+r[0],' '+r[1])
+	for r in dicts.expand_noms:
+		s = s.replace(' '+r[0]+' ',' '+r[1]+' ')
+		if s[-len(r[0]):] == r[0]:
+			s = s.replace(' '+r[0],' '+r[1])
 	for r in dicts.expand_titres:
 		s = s.replace(' '+r[0]+' ',' '+r[1]+' ')
 	for r in dicts.abrev_titres:
@@ -404,7 +414,8 @@ def normalize(s):
 	if sp[-1] in dicts.chiffres_romains:
 		sp[-1] = dicts.chiffres_romains[sp[-1]]
 		s = ' '.join(sp)
-			
+	# if s[0:2] == 'BD' or s[0:4] == 'Boul':
+		# print(s)
 	return s
 def replace_type_voie(s,nb):
 	sp = s.split()
@@ -542,11 +553,12 @@ def	load_to_db(adresses,code_insee,source,code_cadastre,code_dept):
 			nb_rec +=1
 		sload = sload+','.join(a_values)+';COMMIT;'
 		cur_insert.execute(sload)
-		# if v == 'RUE PDT KENNEDY':
-			# print(sload)
+		# if v == 'RUE PREMIER BATAILLON CHASSEURS A PIEDS':
+			# print(adresses.a[v]['voies'])
 			# os._exit(0)
 	# print(adresses.a['AV GUY MAUPASSANT'])
 	# print(adresses.a['AV G MAUPASSANT CAP'])
+	# print(dicts.expand_noms)
 	return(nb_rec)
 def add_fantoir_to_hsnr():
 	for v in adresses.a:
