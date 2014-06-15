@@ -199,7 +199,7 @@ def replace_type_voie(s,nb):
 	return s
 def is_valid_housenumber(hsnr):
 	is_valid = True
-	if len(hsnr.encode('utf8')) > 10:
+	if len(hsnr.encode('utf8')) > 11:
 		is_valid = False
 	return is_valid
 def normalize(s):
