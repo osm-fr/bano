@@ -18,7 +18,6 @@ import zipfile
 from outils_de_gestion import batch_start_log
 from outils_de_gestion import batch_end_log
 from outils_communs_import import get_part_debut
-from outils_communs_import import get_data_from_pg
 from outils_communs_import import get_code_cadastre_from_insee
 from outils_communs_import import load_to_db
 from outils_communs_import import is_valid_housenumber
@@ -94,6 +93,8 @@ class Dicts:
 		fn = os.path.join(os.path.dirname(__file__),'dictionnaires','expand_titres.txt')
 		f = open(fn)
 		for l in f:
+			if l[0:1] == '#':
+				continue
 			c = (l.splitlines()[0]).split('\t')
 			self.expand_titres.append(c)
 		f.close()
@@ -101,6 +102,8 @@ class Dicts:
 		fn = os.path.join(os.path.dirname(__file__),'dictionnaires','expand_noms.txt')
 		f = open(fn)
 		for l in f:
+			if l[0:1] == '#':
+				continue
 			c = (l.splitlines()[0]).split('\t')
 			self.expand_noms.append(c)
 		f.close()
@@ -108,6 +111,8 @@ class Dicts:
 		fn = os.path.join(os.path.dirname(__file__),'dictionnaires','abrev_titres.txt')
 		f = open(fn)
 		for l in f:
+			if l[0:1] == '#':
+				continue
 			c = (l.splitlines()[0]).split('\t')
 			self.abrev_titres.append(c)
 		f.close()
@@ -115,6 +120,8 @@ class Dicts:
 		fn = os.path.join(os.path.dirname(__file__),'dictionnaires','chiffres_romains.txt')
 		f = open(fn)
 		for l in f:
+			if l[0:1] == '#':
+				continue
 			c = (l.splitlines()[0]).split('\t')
 			self.chiffres_romains[c[0]] = c[1]
 		f.close()
@@ -122,16 +129,11 @@ class Dicts:
 		fn = os.path.join(os.path.dirname(__file__),'dictionnaires','abrev_type_voie.txt')
 		f = open(fn)
 		for l in f:
+			if l[0:1] == '#':
+				continue
 			c = (l.splitlines()[0]).split('\t')
 			self.abrev_type_voie[c[0]] = c[1]
 		f.close()
-	# def load_osm_insee(self):
-		# finsee_path = os.path.join(os.path.dirname(__file__),'osm_id_ref_insee.csv')
-		# finsee = open(finsee_path,'r')
-		# for e in finsee:
-			# c = (e.splitlines()[0]).split(',')
-			# self.osm_insee[str(c[1])] = int(c[0])
-		# finsee.close()
 	def load_all(self,code_insee_commune):
 		self.load_lettre_a_lettre()
 		self.load_abrev_type_voie()
@@ -423,6 +425,33 @@ def replace_type_voie(s,nb):
 	spf = ' '.join(sp[nb:len(sp)])
 	s = dicts.abrev_type_voie[spd]+' '+spf
 	return s
+def get_data_from_pg(data_type,insee):
+	cache_file = get_cache_filename(data_type,insee)
+	# print(cache_file)
+	# if not os.path.exists(cache_file) or (time.time() - os.path.getmtime(cache_file)) > 86400 :
+	fq = open('sql/{:s}.sql'.format(data_type),'rb')
+	str_query = fq.read().replace('__com__',insee)
+	fq.close()
+	cur = pgcl.cursor()
+	cur.execute(str_query)
+	res = cur.fetchall()
+	cur.close()
+		# f = open(cache_file,'wb')
+		# for lt in res:
+			# l = list(lt)
+			# f.write(lt)
+		# f.close()
+	return res
+def get_cadastre_code_dept_from_insee(insee):
+	code_dept = '0'+code_insee[0:2]
+	if code_insee[0:2] == '97':
+		code_dept = code_insee[0:3]
+	return code_dept
+def get_cache_filename(data_type,insee):
+	cadastre_com = get_code_cadastre_from_insee(insee)
+	cadastre_dep = get_cadastre_code_dept_from_insee(insee)
+	cache_filename = os.path.join('/data/work/cadastre.openstreetmap.fr/bano_cache/',cadastre_dep,cadastre_com,'{:s}-{:s}.csv'.format(cadastre_com,data_type))
+	return cache_filename
 def load_highways_from_pg_osm(insee):
 	data = get_data_from_pg('highway_insee',insee)
 	for lt in data:
@@ -553,12 +582,6 @@ def	load_to_db(adresses,code_insee,source,code_cadastre,code_dept):
 			nb_rec +=1
 		sload = sload+','.join(a_values)+';COMMIT;'
 		cur_insert.execute(sload)
-		# if v == 'RUE PREMIER BATAILLON CHASSEURS A PIEDS':
-			# print(adresses.a[v]['voies'])
-			# os._exit(0)
-	# print(adresses.a['AV GUY MAUPASSANT'])
-	# print(adresses.a['AV G MAUPASSANT CAP'])
-	# print(dicts.expand_noms)
 	return(nb_rec)
 def add_fantoir_to_hsnr():
 	for v in adresses.a:
@@ -610,8 +633,7 @@ def main(args):
 	
 	dicts = Dicts()
 	dicts.load_all(code_insee)
-	rep_parcelles_adresses = '/data/work/cadastre.openstreetmap.fr/bano_cache/'+code_dept+'/'+code_cadastre
-	fnadresses = rep_parcelles_adresses+'/'+code_cadastre+'-adresses.osm'
+	fnadresses = os.path.join('/data/work/cadastre.openstreetmap.fr/bano_cache',code_dept,code_cadastre,code_cadastre+'-adresses.osm')
 	load_hsnr_from_cad_file(fnadresses,source)
 	load_highways_from_pg_osm(code_insee)
 	load_highways_relations_from_pg_osm(code_insee)
