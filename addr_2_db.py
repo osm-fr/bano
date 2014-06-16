@@ -404,7 +404,7 @@ def load_highways_relations_from_pg_osm(insee):
 			dicts.add_fantoir_name(fantoir,name,'OSM')
 		adresses.add_voie(name,'OSM')
 def	load_to_db(adresses,code_insee,source,code_cadastre,code_dept):
-	table_dest = 'cumul_adresses_dev'
+	table_dest = 'cumul_adresses'
 	sload = 'DELETE FROM {:s} WHERE insee_com = \'{:s}\' AND source = \'{:s}\';\n'.format(table_dest,code_insee,source)
 	cur_insert = pgc.cursor()
 	cur_insert.execute(sload)
