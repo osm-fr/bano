@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: UTF-8
 
-# import addr_2_db as a
+import addr_2_db as a
 # import addr_osm_2_db as o
 import log_2_file as e
 import sys
@@ -18,11 +18,12 @@ if source != 'OSM' and source != 'CADASTRE':
 	print(str_usage)
         os._exit(0)
 
+clause_vecteur = ''
 if source == 'CADASTRE':
-	import addr_cad_2_db as a
+#	import addr_cad_2_db as a
 	clause_vecteur = ' AND format_cadastre = \'VECT\' '
-if source == 'OSM':
-	import addr_osm_2_db as a
+#if source == 'OSM':
+#	import addr_osm_2_db as a
 
 pgc = a.get_pgc()
 
@@ -41,15 +42,15 @@ for c_loop in cur_loop:
 	clause_vecteur = ''
 	if source == 'CADASTRE':
 		clause_vecteur = ' AND format_cadastre = \'VECT\' '
-	str_query = 'SELECT insee_com,cadastre_com,nom_com FROM code_cadastre WHERE cadastre_dept = \'{:s}\' {:s} ORDER BY 3;'.format(num_dept_cadastre,clause_vecteur)
+	str_query = 'SELECT insee_com,nom_com FROM code_cadastre WHERE cadastre_dept = \'{:s}\' {:s} ORDER BY 2;'.format(num_dept_cadastre,clause_vecteur)
 	cur = pgc.cursor()
 	cur.execute(str_query)
 	for c in cur:
-		print(c[2])
+		print('{:s} - {:s}'.format(c[0],c[1]))
 		try:
-			a.main(['',c[0],c[1],source])
+			a.main(['',c[0],source])
 		except :
-			e.write_log_to_file(f_log,'Commune : {:s}\n'.format(c[2]))
+			e.write_log_to_file(f_log,'Commune : {:s}\n'.format(c[1]))
 			e.write_log_to_file(f_log,str(sys.exc_info()[0]))
 			e.write_log_to_file(f_log,str(sys.exc_info()[1]))
 			e.write_sep_to_file(f_log)
