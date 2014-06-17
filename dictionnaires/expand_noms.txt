@@ -1,6 +1,7 @@
 # Format des lignes : <chaine a trouver><tabulation><chaine de remplacement>
 B.C.P	BATAILLON DE CHASSEURS A PIEDS
 CHARLES DE GAUL	CHARLES DE GAULLE
+CHP	CHAMP
 ENFTS	ENFANTS
 FBG	FAUBOURG
 GDS	GRANDS
