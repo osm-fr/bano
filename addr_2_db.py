@@ -82,7 +82,8 @@ class Dicts:
 						'E':[u'È',u'Ê',u'É',u'Ë'],
 						'I':[u'Ï',u'Î'],
 						'O':[u'Ö',u'Ô'],
-						'U':[u'Û',u'Ü']}
+						'U':[u'Û',u'Ü'],
+						'OE':[u'Œ']}
 	def load_fantoir(self,insee):
 		str_query = '''	SELECT 	code_insee||id_voie||cle_rivoli,
 								nature_voie||' '||libelle_voie
