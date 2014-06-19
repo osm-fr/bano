@@ -283,19 +283,24 @@ def get_code_cadastre_from_insee(insee):
 def get_data_from_pg(data_type,insee):
 	cache_file = get_cache_filename(data_type,insee)
 	# print(cache_file)
-	# if not os.path.exists(cache_file) or (time.time() - os.path.getmtime(cache_file)) > 86400 :
-	fq = open('sql/{:s}.sql'.format(data_type),'rb')
-	str_query = fq.read().replace('__com__',insee)
-	fq.close()
-	cur = pgcl.cursor()
-	cur.execute(str_query)
-	res = cur.fetchall()
-	cur.close()
-		# f = open(cache_file,'wb')
-		# for lt in res:
-			# l = list(lt)
-			# f.write(lt)
-		# f.close()
+	if not os.path.exists(cache_file) or (time.time() - os.path.getmtime(cache_file)) > 86400 :
+		fq = open('sql/{:s}.sql'.format(data_type),'rb')
+		str_query = fq.read().replace('__com__',insee)
+		fq.close()
+		cur = pgcl.cursor()
+		cur.execute(str_query)
+		f = open(cache_file,'w+')
+		for lt in cur:
+			l = list(lt)
+			f.write(str(l)+'\n')
+		cur.close()
+		f.seek(0)
+	else :
+		f = open(cache_file,'r')
+	res = []
+	for l in f:
+		res.append(eval(l))
+	f.close()
 	return res
 def get_nb_parts(s):
 	return len(s.split())
@@ -352,7 +357,8 @@ def	load_hsnr_from_cad_file(fnadresses,source):
 def load_hsnr_from_pg_osm(insee):
 	data = get_data_from_pg('hsnr_insee',insee)
 	for l in data:
-		oa = Pg_hsnr(list(l))
+		# oa = Pg_hsnr(list(l))
+		oa = Pg_hsnr(l)
 		n = Node({'id':oa.osm_id,'lon':oa.x,'lat':oa.y},{})
 		if oa.voie == None:
 			continue
@@ -360,8 +366,8 @@ def load_hsnr_from_pg_osm(insee):
 		adresses.add_adresse(Adresse(n,oa.numero.decode('utf8'),oa.voie.decode('utf8'),oa.fantoir),source)
 def load_highways_from_pg_osm(insee):
 	data = get_data_from_pg('highway_insee',insee)
-	for lt in data:
-		l = list(lt)
+	for l in data:
+		# l = list(lt)
 		name = l[0].decode('utf8')
 		if len(name) < 2:
 			continue
@@ -387,8 +393,8 @@ def load_highways_from_pg_osm(insee):
 		adresses.add_voie(name,'OSM')
 def load_highways_relations_from_pg_osm(insee):
 	data = get_data_from_pg('highway_relation_insee',insee)
-	for lt in data:
-		l = list(lt)
+	for l in data:
+		# l = list(lt)
 		name = l[0].decode('utf8')
 		if len(name) < 2:
 			continue
