@@ -12,7 +12,7 @@ from addr_2_db import get_tags
 from addr_2_db import is_valid_housenumber
 from addr_2_db import Node
 from addr_2_db import Adresse
-from addr_2_db import Adresses
+# from addr_2_db import Adresses
 import xml.etree.ElementTree as ET
 
 class Adresses:
@@ -59,6 +59,24 @@ class Adresses:
 		if source in self.a[cle]['fantoirs']:
 			has = True
 		return has
+def collect_adresses_points(sel):
+	kres = {}
+	for k in sel:
+		kres[k] = []
+		for vv in sel[k]['liste']:
+			for a in adresses.a[vv]['numeros']:
+				# print(a)
+				kres[k].append('{:s} {:s}'.format(adresses.a[vv]['numeros'][a].node.attribs['lon'][0:8],adresses.a[vv]['numeros'][a].node.attribs['lat'][0:8]))
+	return kres
+def load_hameaux_2_db(adds):
+	f = open('q.txt','wb')
+	cur = pgc.cursor()
+	for h in adds:
+		str_query = 'DELETE FROM hameaux WHERE libelle_hameau = \'{:s}\' and insee_com = \'{:s}\';'.format(h.replace("'","''").encode('utf8'),code_insee)
+		str_query += 'INSERT INTO hameaux (SELECT ST_ConvexHull(ST_Collect(ST_GeomFromText(\'MULTIPOINT({:s})\',4326))),\'{:s}\',\'{:s}\');COMMIT;'.format(','.join(adds[h]),code_insee,h.replace("'","''").encode('utf8'))
+		cur.execute(str_query)
+		f.write(str_query+'\n')
+	f.close()
 def	load_hsnr_from_cad_file(fnadresses):
 	xmladresses = ET.parse(fnadresses)
 	dict_node_relations = {}
@@ -89,10 +107,9 @@ def	load_hsnr_from_cad_file(fnadresses):
 					adresses.add_adresse(Adresse(nd,dtags['addr:housenumber'],adresses.a[v]['voies']['CADASTRE'],''),source)
 			else:
 				print('Numero invalide : {:s}'.format(dtags['addr:housenumber'].encode('utf8')))
-# def geom_by_name():
-
 def name_frequency():
 	freq = {}
+	# mots = {}
 	for v in adresses.a:
 		s = v.split()
 		if len(s)>4:
@@ -102,23 +119,38 @@ def name_frequency():
 			else:
 				freq[k]['nombre'] +=1
 				freq[k]['liste'].append(v)
+			# mots[s[-2]] = 1
+			# mots[s[-1]] = 1
+		# print(mots)
 		if len(s)>3:
 			k = v.split()[-1]
+			# if k in mots:
+				# print(k)
+				# continue
 			if k not in freq:
 				freq[k] = {'nombre':1,'liste':[v]}
 			else:
 				freq[k]['nombre'] +=1
 				freq[k]['liste'].append(v)
 	return freq
-def	select_street_names_by_name(freq):
-	sel = {}
-	for k in freq:
-		if freq[k]['nombre'] > 5:
-			sel[k] = freq[k]
-	return sel
 def normalize(s):
 
 	return s
+def	select_street_names_by_name(freq):
+	sel = {}
+	mots = {}
+	for k in freq:
+		ks = k.split()
+		if freq[k]['nombre'] > 5 and len(ks) > 1:
+			mots[ks[0]] = 1
+			mots[ks[1]] = 1
+			sel[k] = freq[k]
+	for k in freq:
+		ks = k.split()
+		if freq[k]['nombre'] > 5 and len(ks) == 1 and k not in mots:
+			sel[k] = freq[k]
+	print(sel)
+	return sel
 def main(args):
 	debut_total = time.time()
 	usage = 'USAGE : python hameaux_depuis_noms_de_voies.py <code INSEE>'
@@ -126,8 +158,8 @@ def main(args):
 		print(usage)
 		os._exit(0)
 
+	global pgc,dicts,adresses,source,code_insee
 	pgc = get_pgc()
-	global dicts,adresses,source
 	source = 'CADASTRE'
 	adresses = Adresses()
 	code_insee = args[1]
@@ -138,10 +170,14 @@ def main(args):
 	load_hsnr_from_cad_file(fnadresses)
 	freq = name_frequency()
 	sel = select_street_names_by_name(freq)
-	if len(sel)>0:
-		for k in sel:
-			print(k,sel[k]['nombre'])
-			print(sel[k]['liste'])
+	adds = collect_adresses_points(sel)
+	load_hameaux_2_db(adds)
+	
+	# print(adds)
+	# if len(sel)>0:
+		# for k in sel:
+			# print(k,sel[k]['nombre'])
+			# print(sel[k]['liste'])
 	# print (freq)
 	# geom_by_name()
 	# load_geom_2_db()
