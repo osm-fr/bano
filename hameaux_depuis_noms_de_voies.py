@@ -66,17 +66,20 @@ def collect_adresses_points(sel):
 		for vv in sel[k]['liste']:
 			for a in adresses.a[vv]['numeros']:
 				# print(a)
-				kres[k].append('{:s} {:s}'.format(adresses.a[vv]['numeros'][a].node.attribs['lon'][0:8],adresses.a[vv]['numeros'][a].node.attribs['lat'][0:8]))
+				# kres[k].append('{:s} {:s}'.format(adresses.a[vv]['numeros'][a].node.attribs['lon'][0:8],adresses.a[vv]['numeros'][a].node.attribs['lat'][0:8]))
+				kres[k].append('SELECT \'{:s}\' hameau,\'{:s}\' code_insee,ST_BUFFER(ST_PointFromText(\'POINT({:s} {:s})\',4326),0.0015,1) as g'.format(k.replace("'","''").encode('utf8'),code_insee,adresses.a[vv]['numeros'][a].node.attribs['lon'][0:8],adresses.a[vv]['numeros'][a].node.attribs['lat'][0:8]))
 	return kres
 def load_hameaux_2_db(adds):
 	f = open('q.txt','wb')
 	cur = pgc.cursor()
 	for h in adds:
 		str_query = 'DELETE FROM hameaux WHERE libelle_hameau = \'{:s}\' and insee_com = \'{:s}\';'.format(h.replace("'","''").encode('utf8'),code_insee)
-		str_query += 'INSERT INTO hameaux (SELECT ST_ConvexHull(ST_Collect(ST_GeomFromText(\'MULTIPOINT({:s})\',4326))),\'{:s}\',\'{:s}\');COMMIT;'.format(','.join(adds[h]),code_insee,h.replace("'","''").encode('utf8'))
+		str_query += 'INSERT INTO hameaux SELECT ST_ConvexHull((ST_Dump(gu)).geom),code_insee,hameau FROM (SELECT ST_Union(g) gu,code_insee,hameau FROM({:s})a GROUP BY 2,3)a;COMMIT;'.format(' UNION ALL '.join(adds[h]))
+		str_query+= 'DELETE FROM hameaux WHERE insee_com = \'{:s}\' and libelle_hameau = \'{:s}\' and st_area(geometrie) < (select sum(st_area(geometrie))/5 from hameaux a where insee_com = \'{:s}\' and libelle_hameau = \'{:s}\');COMMIT;'.format(code_insee,h.replace("'","''").encode('utf8'),code_insee,h.replace("'","''").encode('utf8'))
 		cur.execute(str_query)
 		f.write(str_query+'\n')
 	f.close()
+	# cur.execute(str_query)
 def	load_hsnr_from_cad_file(fnadresses):
 	xmladresses = ET.parse(fnadresses)
 	dict_node_relations = {}
