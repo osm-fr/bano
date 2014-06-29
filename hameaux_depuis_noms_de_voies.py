@@ -6,13 +6,15 @@ import os,os.path
 from pg_connexion import get_pgc
 from pg_connexion import get_pgc_layers
 from addr_2_db import get_code_cadastre_from_insee
+from addr_2_db import get_cadastre_code_dept_from_insee
 from addr_2_db import get_nb_parts
 from addr_2_db import get_part_debut
 from addr_2_db import get_tags
 from addr_2_db import is_valid_housenumber
 from addr_2_db import Node
 from addr_2_db import Adresse
-# from addr_2_db import Adresses
+from outils_de_gestion import batch_start_log
+from outils_de_gestion import batch_end_log
 import xml.etree.ElementTree as ET
 
 class Adresses:
@@ -70,15 +72,19 @@ def collect_adresses_points(sel):
 				kres[k].append('SELECT \'{:s}\' hameau,\'{:s}\' code_insee,ST_BUFFER(ST_PointFromText(\'POINT({:s} {:s})\',4326),0.0015,1) as g'.format(k.replace("'","''").encode('utf8'),code_insee,adresses.a[vv]['numeros'][a].node.attribs['lon'][0:8],adresses.a[vv]['numeros'][a].node.attribs['lat'][0:8]))
 	return kres
 def load_hameaux_2_db(adds):
+	nb_res = 0
 	f = open('q.txt','wb')
 	cur = pgc.cursor()
 	for h in adds:
+		print('\t{:s}'.format(h.encode('utf8')))
 		str_query = 'DELETE FROM hameaux WHERE libelle_hameau = \'{:s}\' and insee_com = \'{:s}\';'.format(h.replace("'","''").encode('utf8'),code_insee)
 		str_query += 'INSERT INTO hameaux SELECT ST_ConvexHull((ST_Dump(gu)).geom),code_insee,hameau FROM (SELECT ST_Union(g) gu,code_insee,hameau FROM({:s})a GROUP BY 2,3)a;COMMIT;'.format(' UNION ALL '.join(adds[h]))
 		str_query+= 'DELETE FROM hameaux WHERE insee_com = \'{:s}\' and libelle_hameau = \'{:s}\' and st_area(geometrie) < (select sum(st_area(geometrie))/5 from hameaux a where insee_com = \'{:s}\' and libelle_hameau = \'{:s}\');COMMIT;'.format(code_insee,h.replace("'","''").encode('utf8'),code_insee,h.replace("'","''").encode('utf8'))
 		cur.execute(str_query)
 		f.write(str_query+'\n')
+		nb_res+=len(adds[h])
 	f.close()
+	return nb_res
 	# cur.execute(str_query)
 def	load_hsnr_from_cad_file(fnadresses):
 	xmladresses = ET.parse(fnadresses)
@@ -152,7 +158,7 @@ def	select_street_names_by_name(freq):
 		ks = k.split()
 		if freq[k]['nombre'] > 5 and len(ks) == 1 and k not in mots:
 			sel[k] = freq[k]
-	print(sel)
+	# print(sel)
 	return sel
 def main(args):
 	debut_total = time.time()
@@ -167,15 +173,20 @@ def main(args):
 	adresses = Adresses()
 	code_insee = args[1]
 	code_cadastre = get_code_cadastre_from_insee(code_insee)
+	code_dept = get_cadastre_code_dept_from_insee(code_insee)
+	
+	batch_id = batch_start_log(source,'detecteHameaux',code_cadastre)
 
-	# fnadresses = os.path.join('/data/work/cadastre.openstreetmap.fr/bano_cache',code_dept,code_cadastre,code_cadastre+'-adresses.osm')
-	fnadresses = os.path.join('C:\\Users\\vincent\\Documents\\GitHub',code_cadastre+'-adresses.osm')
+	fnadresses = os.path.join('/data/work/cadastre.openstreetmap.fr/bano_cache',code_dept,code_cadastre,code_cadastre+'-adresses.osm')
+	# fnadresses = os.path.join('C:\\Users\\vincent\\Documents\\GitHub',code_cadastre+'-adresses.osm')
 	load_hsnr_from_cad_file(fnadresses)
 	freq = name_frequency()
 	sel = select_street_names_by_name(freq)
 	adds = collect_adresses_points(sel)
-	load_hameaux_2_db(adds)
-	
+	nb_rec = load_hameaux_2_db(adds)
+		
+	batch_end_log(nb_rec,batch_id)
+
 	# print(adds)
 	# if len(sel)>0:
 		# for k in sel:

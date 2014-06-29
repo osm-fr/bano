@@ -52,3 +52,10 @@ CREATE TABLE code_cadastre (
 DROP TABLE IF EXISTS tmp_code_cadastre CASCADE;
 CREATE TABLE tmp_code_cadastre
 AS SELECT * FROM code_cadastre LIMIT 0;
+
+DROP TABLE IF EXISTS hameaux CASCADE;
+CREATE TABLE hameaux (
+		geometrie geometry,
+		insee_com 		character(5),
+		libelle_hameau 	character varying(100)
+);
