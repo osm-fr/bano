@@ -268,9 +268,9 @@ def get_cache_filename(data_type,insee):
 	cache_filename = os.path.join('/data/work/cadastre.openstreetmap.fr/bano_cache/',cadastre_dep,cadastre_com,'{:s}-{:s}.csv'.format(cadastre_com,data_type))
 	return cache_filename
 def get_cadastre_code_dept_from_insee(insee):
-	code_dept = '0'+code_insee[0:2]
-	if code_insee[0:2] == '97':
-		code_dept = code_insee[0:3]
+	code_dept = '0'+insee[0:2]
+	if insee[0:2] == '97':
+		code_dept = insee[0:3]
 	return code_dept
 def get_code_cadastre_from_insee(insee):
 	str_query = 'SELECT cadastre_com FROM code_cadastre WHERE insee_com = \'{:s}\';'.format(insee)
