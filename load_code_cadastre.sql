@@ -5,13 +5,13 @@ UPDATE tmp_code_cadastre SET insee_com = dept||substr(cadastre_com,4,2) WHERE le
 UPDATE tmp_code_cadastre SET date_maj = (SELECT to_char(n,'YYMMDD')::integer FROM (SELECT now() AS n)a);
 
 DELETE FROM code_cadastre
-WHERE cadastre_com IN (SELECT cadastre_com FROM tmp_code_cadastre WHERE format_cadastre = 'VECT' AND nom_com != ''
+WHERE insee_com IN (SELECT insee_com FROM tmp_code_cadastre WHERE format_cadastre = 'VECT' AND nom_com != ''
 						INTERSECT
-						SELECT cadastre_com FROM code_cadastre WHERE format_cadastre = 'IMAG');
+						SELECT insee_com FROM code_cadastre WHERE format_cadastre = 'IMAG');
 INSERT INTO code_cadastre
 SELECT t.*
 FROM tmp_code_cadastre t
 LEFT OUTER JOIN code_cadastre c
-ON t.cadastre_com = c.cadastre_com
-WHERE c.cadastre_com IS NULL AND
+ON t.insee_com = c.insee_com
+WHERE c.insee_com IS NULL AND
 		t.nom_com != '';
