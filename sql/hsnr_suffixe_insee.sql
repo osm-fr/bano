@@ -1,12 +1,11 @@
-select 	ST_X(pt_geo)::character varying,
-		ST_Y(pt_geo)::character varying,
-		provenance::character varying,
-		osm_id::character varying,
-		hsnr,
-		street_name,
-		tags,
-		''::text suffixe,
-		insee_com
+select 	ST_X(a.pt_geo)::character varying,
+		ST_Y(a.pt_geo)::character varying,
+		a.provenance::character varying,
+		a.osm_id::character varying,
+		a.hsnr,
+		a.street_name,
+		a.tags,
+		h.suffixe
 FROM 
 -- point avec addr:street
 		(SELECT	1 provenance,
@@ -14,8 +13,7 @@ FROM
 				pt.osm_id::character varying,
 				pt."addr:housenumber" hsnr,
 				pt.tags->'addr:street' street_name,
-				ARRAY[]::character[] tags,
-				p.tags->'ref:INSEE' insee_com
+				ARRAY[]::character[] tags
 		 FROM	planet_osm_polygon	p
 		 JOIN	planet_osm_point 	pt
 		 ON		ST_Intersects(pt.way, p.way)
@@ -30,8 +28,7 @@ FROM
 				w.osm_id::character varying,
 				w."addr:housenumber",
 				w.tags->'addr:street',
-				ARRAY[]::character[],
-				p.tags->'ref:INSEE'
+				ARRAY[]::character[]
 		 FROM	planet_osm_polygon	p
 		 JOIN	planet_osm_polygon 	w
 		 ON		ST_Intersects(w.way, p.way)
@@ -47,8 +44,7 @@ FROM
 				pt.osm_id::character varying,
 				pt."addr:housenumber",
 				null,
-				r.tags,
-				p.tags->'ref:INSEE'
+				r.tags
 		FROM	planet_osm_polygon	p
 		JOIN	planet_osm_point 	pt
 		ON		ST_Intersects(pt.way, p.way)
@@ -64,8 +60,7 @@ FROM
 				w.osm_id::character varying,
 				w."addr:housenumber",
 				null,
-				r.tags,
-				p.tags->'ref:INSEE'
+				r.tags
 		FROM	planet_osm_polygon	p
 		JOIN	planet_osm_polygon 	w
 		ON		ST_Intersects(w.way, p.way)
@@ -76,7 +71,6 @@ FROM
 				w."addr:housenumber"	IS NOT NULL
 		
 )a
-ORDER BY 9
--- where hsnr is not null*/		
-;
+LEFT OUTER JOIN (__suffixe_data__) h
+ON		ST_Intersects(a.pt_geo, ST_Transform(h.geom,4326));
 
