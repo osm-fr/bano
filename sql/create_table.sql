@@ -53,9 +53,22 @@ DROP TABLE IF EXISTS tmp_code_cadastre CASCADE;
 CREATE TABLE tmp_code_cadastre
 AS SELECT * FROM code_cadastre LIMIT 0;
 
-DROP TABLE IF EXISTS hameaux CASCADE;
-CREATE TABLE hameaux (
-		geometrie geometry,
-		insee_com 		character(5),
-		libelle_hameau 	character varying(100)
+DROP TABLE IF EXISTS suffixe CASCADE;
+CREATE TABLE suffixe (
+                geometrie               geometry,
+                insee_com               character(5),
+                libelle_suffixe character varying(100)
 );
+CREATE INDEX gidx_suffixe
+ON suffixe
+USING GIST(geometrie);
+
+DROP TABLE IF EXISTS parcelles_noms CASCADE;
+CREATE TABLE parcelles_noms (
+		geometrie 		geometry,
+		insee_com 		character(5),
+		libelle		 	character varying(100),
+		fantoir			character varying (10)
+);
+CREATE INDEX parcelles_noms_insee_com
+ON parcelles_noms(insee_com);
