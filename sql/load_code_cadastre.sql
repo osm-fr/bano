@@ -15,3 +15,11 @@ LEFT OUTER JOIN code_cadastre c
 ON t.insee_com = c.insee_com
 WHERE c.insee_com IS NULL AND
 		t.nom_com != '';
+SELECT 	*
+FROM 	code_cadastre
+WHERE 	date_maj = (SELECT to_char(n,'YYMMDD')::integer FROM (SELECT now() AS n)a)
+ORDER BY 2,3;
+SELECT DISTINCT dept
+FROM    code_cadastre
+WHERE   date_maj = (SELECT to_char(n,'YYMMDD')::integer FROM (SELECT now() AS n)a)
+ORDER BY 1;
