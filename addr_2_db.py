@@ -262,9 +262,8 @@ def get_best_fantoir(cle):
 	if 'OSM' in adresses.a[cle]['fantoirs']:
 		res = adresses.a[cle]['fantoirs']['OSM']
 	return res
-def get_cache_filename(data_type,insee):
-	cadastre_com = get_code_cadastre_from_insee(insee)
-	cadastre_dep = get_cadastre_code_dept_from_insee(insee)
+def get_cache_filename(data_type,insee_com,cadastre_com):
+	cadastre_dep = get_cadastre_code_dept_from_insee(insee_com)
 	cache_filename = os.path.join('/data/work/cadastre.openstreetmap.fr/bano_cache/',cadastre_dep,cadastre_com,'{:s}-{:s}.csv'.format(cadastre_com,data_type))
 	return cache_filename
 def get_cadastre_code_dept_from_insee(insee):
@@ -274,18 +273,19 @@ def get_cadastre_code_dept_from_insee(insee):
 	return code_dept
 def get_code_cadastre_from_insee(insee):
 	str_query = 'SELECT cadastre_com FROM code_cadastre WHERE insee_com = \'{:s}\';'.format(insee)
+	# print(str_query)
 	pgc = get_pgc()
 	cur = pgc.cursor()
 	cur.execute(str_query)
 	for c in cur:
 		code_cadastre = c[0]
 	return code_cadastre
-def get_data_from_pg(data_type,insee):
-	cache_file = get_cache_filename(data_type,insee)
+def get_data_from_pg(data_type,insee_com,cadastre_com):
+	cache_file = get_cache_filename(data_type,insee_com,cadastre_com)
 	# print(cache_file)
 	if not os.path.exists(cache_file) or (time.time() - os.path.getmtime(cache_file)) > 86400 :
 		fq = open('sql/{:s}.sql'.format(data_type),'rb')
-		str_query = fq.read().replace('__com__',insee)
+		str_query = fq.read().replace('__com__',insee_com)
 		fq.close()
 		cur = pgcl.cursor()
 		cur.execute(str_query)
@@ -354,8 +354,8 @@ def	load_hsnr_from_cad_file(fnadresses,source):
 					adresses.add_adresse(Adresse(nd,dtags['addr:housenumber'],adresses.a[v]['voies']['CADASTRE'],''),source)
 			else:
 				print('Numero invalide : {:s}'.format(dtags['addr:housenumber'].encode('utf8')))
-def load_hsnr_from_pg_osm(insee):
-	data = get_data_from_pg('hsnr_insee',insee)
+def load_hsnr_from_pg_osm(insee_com,cadastre_com):
+	data = get_data_from_pg('hsnr_insee',insee_com,cadastre_com)
 	for l in data:
 		# oa = Pg_hsnr(list(l))
 		oa = Pg_hsnr(l)
@@ -364,8 +364,8 @@ def load_hsnr_from_pg_osm(insee):
 			continue
 		adresses.register(oa.voie.decode('utf8'))
 		adresses.add_adresse(Adresse(n,oa.numero.decode('utf8'),oa.voie.decode('utf8'),oa.fantoir),source)
-def load_highways_from_pg_osm(insee):
-	data = get_data_from_pg('highway_insee',insee)
+def load_highways_from_pg_osm(insee_com,cadastre_com):
+	data = get_data_from_pg('highway_insee',insee_com,cadastre_com)
 	for l in data:
 		# l = list(lt)
 		name = l[0].decode('utf8')
@@ -377,22 +377,22 @@ def load_highways_from_pg_osm(insee):
 			continue
 		fantoir = ''
 		if len(l)>1:
-			if l[1] != None and l[1][0:5] == insee:
+			if l[1] != None and l[1][0:5] == insee_com:
 				fantoir = l[1]
 				adresses.add_fantoir(cle,l[1],'OSM')
 		if len(l)>2 and fantoir == '':
-			if l[2] != None and l[2][0:5] == insee:
+			if l[2] != None and l[2][0:5] == insee_com:
 				fantoir = l[2]
 				adresses.add_fantoir(cle,l[2],'OSM')
 		if len(l)>3 and fantoir == '':
-			if l[3] != None and l[3][0:5] == insee:
+			if l[3] != None and l[3][0:5] == insee_com:
 				fantoir = l[3]
 				adresses.add_fantoir(cle,l[3],'OSM')
 		if fantoir != '':
 			dicts.add_fantoir_name(fantoir,name,'OSM')
 		adresses.add_voie(name,'OSM')
-def load_highways_relations_from_pg_osm(insee):
-	data = get_data_from_pg('highway_relation_insee',insee)
+def load_highways_relations_from_pg_osm(insee_com,cadastre_com):
+	data = get_data_from_pg('highway_relation_insee',insee_com,cadastre_com)
 	for l in data:
 		# l = list(lt)
 		name = l[0].decode('utf8')
@@ -541,9 +541,9 @@ def main(args):
 		fnadresses = os.path.join('/data/work/cadastre.openstreetmap.fr/bano_cache',code_dept,code_cadastre,code_cadastre+'-adresses.osm')
 		load_hsnr_from_cad_file(fnadresses,source)
 	if source == 'OSM':
-		load_hsnr_from_pg_osm(code_insee)
-	load_highways_from_pg_osm(code_insee)
-	load_highways_relations_from_pg_osm(code_insee)
+		load_hsnr_from_pg_osm(code_insee,code_cadastre)
+	load_highways_from_pg_osm(code_insee,code_cadastre)
+	load_highways_relations_from_pg_osm(code_insee,code_cadastre)
 	add_fantoir_to_hsnr()
 	nb_rec = load_to_db(adresses,code_insee,source,code_cadastre,code_dept)
 	
