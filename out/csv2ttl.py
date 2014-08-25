@@ -36,7 +36,11 @@ with open(sys.argv[1]) as csvfile:
 		print('	locn:postalCode "'+row[3]+'" ;')
 		print('	locn:locatorName "'+row[4]+'"@fr ;')
 		print('	locn:adminUnitL1 "FR" ;')
-		print('	locn:location <http://id.insee.fr/geo/commune/'+row[0][0:5]+'> ;')
+		# traitement des arrondissements municipaux de Paris, Lyon, Marseille
+		if (sys.argv[2] in ['13','69','75'] and int(row[0][0:5])) in range(13201, 13217)+range(69381, 69370)+range(75101, 75121):
+			print('	locn:location <http://id.insee.fr/geo/arrondissementMunicipal/'+row[0][0:5]+'> ;')
+		else:
+			print('	locn:location <http://id.insee.fr/geo/commune/'+row[0][0:5]+'> ;')
 		print('	locn:geometry <geo:'+row[6]+','+row[7]+';u=0;crs=wgs84> ;')
 		print('	locn:geometry [a geo:Point ; geo:lat "'+row[6]+'" ; geo:long "'+row[7]+'" ] ;')
 		print('	locn:geometry [a gsp:Geometry; gsp:asWKT "POINT('+row[7]+' '+row[6]+')"^^gsp:wktLiteral ] ;')
