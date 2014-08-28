@@ -4,6 +4,7 @@ CREATE TABLE cumul_adresses
 	numero 			character varying (15),
 	voie_cadastre	character varying (300),
 	voie_osm		character varying (300),
+	voie_fantoir	character varying (300),
 	fantoir			character varying (10),
 	insee_com		character 			(5),
 	cadastre_com	character varying (10),
@@ -11,6 +12,23 @@ CREATE TABLE cumul_adresses
 	code_postal		character varying (5),
 	source			character varying (100),
 	batch_import_id	integer);
+
+DROP TABLE IF EXISTS cumul_places CASCADE;
+CREATE TABLE cumul_places
+(	geometrie		geometry ,
+	libelle_cadastre	character varying (300),
+	libelle_osm		character varying (300),
+	libelle_fantoir	character varying (300),
+	fantoir			character varying (10),
+	insee_com		character 			(5),
+	cadastre_com	character varying (10),
+	dept			character varying (3),
+	code_postal		character varying (5),
+	source			character varying (100),
+	batch_import_id	integer);
+
+CREATE INDEX cumul_places_geo ON cumul_places USING GIST(geometrie);
+CREATE INDEX cumul_places_insee_com ON cumul_places (insee_com);
 
 DROP TABLE IF EXISTS batch CASCADE;
 CREATE TABLE batch
