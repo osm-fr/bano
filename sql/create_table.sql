@@ -81,6 +81,28 @@ CREATE INDEX gidx_suffixe
 ON suffixe
 USING GIST(geometrie);
 
+DROP TABLE IF EXISTS parcelles CASCADE;
+CREATE TABLE parcelles (
+		geometrie 		geometry,
+		insee_com 		character(5),
+		id_cadastre		character varying(15),
+		numero 			character varying (15),
+		voie_cadastre	character varying (300),
+		fantoir			character varying (10)
+);
+CREATE INDEX parcelles_insee_com
+ON parcelles(insee_com);
+
+DROP TABLE IF EXISTS buildings CASCADE;
+CREATE TABLE buildings (
+		geometrie 		geometry,
+		id_building		serial,
+		insee_com 		character(5),
+		wall			character varying (3)
+);
+CREATE INDEX buildings_insee_com
+ON buildings(insee_com);
+
 DROP TABLE IF EXISTS parcelles_noms CASCADE;
 CREATE TABLE parcelles_noms (
 		geometrie 		geometry,
