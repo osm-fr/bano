@@ -450,6 +450,7 @@ def normalize(s):
 	s = s.split(' (')[0]		# parenthèses : on coupe avant
 	s = s.replace('-',' ')		# separateur espace
 	s = s.replace('\'',' ')		# separateur espace
+	s = s.replace('’'.decode('utf8'),' ')		# separateur espace
 	s = s.replace('/',' ')		# separateur espace
 	s = s.replace(':',' ')		# separateur deux points
 	s = ' '.join(s.split())		# separateur : 1 espace
