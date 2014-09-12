@@ -93,6 +93,10 @@ CREATE TABLE parcelles (
 CREATE INDEX parcelles_insee_com
 ON parcelles(insee_com);
 
+CREATE INDEX gidx_parcelles
+ON parcelles
+USING gist (geometrie);
+
 DROP TABLE IF EXISTS buildings CASCADE;
 CREATE TABLE buildings (
 		geometrie 		geometry,
@@ -102,6 +106,10 @@ CREATE TABLE buildings (
 );
 CREATE INDEX buildings_insee_com
 ON buildings(insee_com);
+
+CREATE INDEX gidx_buildings
+ON buildings
+USING gist (geometrie);
 
 DROP TABLE IF EXISTS parcelles_noms CASCADE;
 CREATE TABLE parcelles_noms (
