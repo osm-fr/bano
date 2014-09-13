@@ -184,7 +184,7 @@ class Ways:
 	def add_way(self,w,id,osm_key):
 		self.w[osm_key][id] = w
 def format_toponyme(s):
-	a_s = s.split(' ')
+	a_s = s.replace('\'',' ').split(' ')
 	
 	# a_s = s.split('\'')
 	# a_s = [a[0:-1]+a[-1].lower() for a in a_s]
@@ -212,6 +212,7 @@ def format_toponyme(s):
 	dic_replace_hors_premier_mot['De'] = 'de'
 	dic_replace_hors_premier_mot['Des'] = 'des'
 	dic_replace_hors_premier_mot['Du'] = 'du'
+	dic_replace_hors_premier_mot['Et'] = 'et'
 	dic_replace_hors_premier_mot['L'] = 'l\''
 	dic_replace_hors_premier_mot['La'] = 'la'
 	dic_replace_hors_premier_mot['Le'] = 'le'
@@ -236,6 +237,8 @@ def format_toponyme(s):
 			a_s[m] = dic_ajoute_apostrophe[a_s[m]]
 	
 	s = ' '.join(a_s).replace('\' ','\'\'')
+	if s.strip()[-1] == '\'':
+		s = s.strip()[0:-1]
 	return s
 
 def	executeSQL_INSEE(fnsql,code_insee):
@@ -272,7 +275,8 @@ def load_to_db(data,code_insee,source,code_cadastre,code_dept):
 		a_values.append('(ST_PointFromText(\'POINT({:.6f} {:.6f})\', 4326),\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\')'.format(v[0],v[1],v[3].encode('utf8'),v[2],v[4],code_insee,code_cadastre,code_dept,'',source))
 		nb_rec +=1
 	sload = sload+','.join(a_values)+';COMMIT;'
-	cur_insert.execute(sload)
+	if nb_rec>0:
+		cur_insert.execute(sload)
 	return(nb_rec)
 def load_nodes_from_xml_parse(xmlp):
 	for n in xmlp.iter('node'):
