@@ -183,6 +183,61 @@ class Ways:
 				'parcelle':{}}
 	def add_way(self,w,id,osm_key):
 		self.w[osm_key][id] = w
+def format_toponyme(s):
+	a_s = s.split(' ')
+	
+	# a_s = s.split('\'')
+	# a_s = [a[0:-1]+a[-1].lower() for a in a_s]
+	
+	# Accents
+	dic_replace_accents = {}
+	dic_replace_accents['DERRIERE'] = u'DERRIÈRE'
+	dic_replace_accents['EGLISE'] = u'ÉGLISE'
+	dic_replace_accents['ILE'] = u'ÎLE'
+	dic_replace_accents['ILOT'] = u'ÎLOT'
+	dic_replace_accents['PRE'] = u'PRÉ'
+
+	for m in range(0,len(a_s)):
+		if a_s[m] in dic_replace_accents:
+			a_s[m] = dic_replace_accents[a_s[m]]
+	
+	# Capitalisation
+	a_s = [a.capitalize() for a in a_s]
+
+	# Minuscules
+	dic_replace_hors_premier_mot = {}
+	dic_replace_hors_premier_mot['Au'] = 'au'
+	dic_replace_hors_premier_mot['Aux'] = 'aux'
+	dic_replace_hors_premier_mot['D'] = 'd\''
+	dic_replace_hors_premier_mot['De'] = 'de'
+	dic_replace_hors_premier_mot['Des'] = 'des'
+	dic_replace_hors_premier_mot['Du'] = 'du'
+	dic_replace_hors_premier_mot['L'] = 'l\''
+	dic_replace_hors_premier_mot['La'] = 'la'
+	dic_replace_hors_premier_mot['Le'] = 'le'
+	dic_replace_hors_premier_mot['Les'] = 'les'
+	dic_replace_hors_premier_mot['Un'] = 'un'
+	dic_replace_hors_premier_mot['Une'] = 'une'
+	
+	if len(a_s) > 1:
+		for m in range(1,len(a_s)):
+			if a_s[m] in dic_replace_hors_premier_mot:
+				a_s[m] = dic_replace_hors_premier_mot[a_s[m]]
+	
+	# Appostrophes
+	dic_ajoute_apostrophe = {}
+	dic_ajoute_apostrophe['d'] = 'd\''
+	dic_ajoute_apostrophe['D'] = 'D\''
+	dic_ajoute_apostrophe['l'] = 'l\''
+	dic_ajoute_apostrophe['L'] = 'L\''
+
+	for m in range(0,len(a_s)):
+		if a_s[m] in dic_ajoute_apostrophe:
+			a_s[m] = dic_ajoute_apostrophe[a_s[m]]
+	
+	s = ' '.join(a_s).replace('\' ','\'\'')
+	return s
+
 def	executeSQL_INSEE(fnsql,code_insee):
 	fsql = open(fnsql,'rb')
 	str_query = fsql.read()
@@ -193,6 +248,32 @@ def	executeSQL_INSEE(fnsql,code_insee):
 	cur_sql.execute(str_query)
 	cur_sql.close()
 	# print(str_query)
+def get_data_from_pg(data_type,insee_com):
+	fq = open('sql/{:s}.sql'.format(data_type),'rb')
+	str_query = fq.read().replace('#com__',insee_com)
+	fq.close()
+	cur = pgc.cursor()
+	cur.execute(str_query)
+	res = []
+	# f = open(cache_file,'w+')
+	res = [list(lt) for lt in cur]
+	# print(res)
+	# os._exit(0)
+	return res
+def load_to_db(data,code_insee,source,code_cadastre,code_dept):
+	table_dest = 'cumul_places'
+	sload = 'DELETE FROM {:s} WHERE insee_com = \'{:s}\' AND source = \'{:s}\';\n'.format(table_dest,code_insee,source)
+	cur_insert = pgc.cursor()
+	cur_insert.execute(sload)
+	nb_rec = 0
+	sload = 'INSERT INTO {:s} (geometrie,libelle_cadastre,fantoir,ld_bati,insee_com,cadastre_com,dept,code_postal,source) VALUES'.format(table_dest)
+	a_values = []
+	for v in data:
+		a_values.append('(ST_PointFromText(\'POINT({:.6f} {:.6f})\', 4326),\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\')'.format(v[0],v[1],v[3].encode('utf8'),v[2],v[4],code_insee,code_cadastre,code_dept,'',source))
+		nb_rec +=1
+	sload = sload+','.join(a_values)+';COMMIT;'
+	cur_insert.execute(sload)
+	return(nb_rec)
 def load_nodes_from_xml_parse(xmlp):
 	for n in xmlp.iter('node'):
 		dtags = get_tags(n)
@@ -233,7 +314,7 @@ def normalize(s):
 	return s
 def main(args):
 	debut_total = time.time()
-	usage = 'USAGE : python parcelles_par_noms.py <code INSEE>'
+	usage = 'USAGE : python place_2_db.py <code INSEE>'
 	if len(args) < 2:
 		print(usage)
 		os._exit(0)
@@ -251,9 +332,11 @@ def main(args):
 	nodes = Nodes()
 	ways = Ways()
 
-	executeSQL_INSEE('sql/cadastre_2_places.sql',code_insee)
-	
-	batch_end_log(1,batch_id)
+	data = get_data_from_pg('cadastre_2_places',code_insee)
+	for d in data:
+		d[3] = format_toponyme(d[3])
+	nb_rec = load_to_db(data,code_insee,source,code_cadastre,code_dept)
+	batch_end_log(nb_rec,batch_id)
 
 if __name__ == '__main__':
     main(sys.argv)
