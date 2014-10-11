@@ -90,6 +90,7 @@ class Dicts:
 						FROM	fantoir_voie
 						WHERE	code_insee = \''''+insee+'''\' AND
 								caractere_annul NOT IN ('O','Q');'''
+		pgc = get_pgc()
 		cur_fantoir = pgc.cursor()
 		cur_fantoir.execute(str_query)
 		for c in cur_fantoir:
@@ -273,7 +274,7 @@ def get_cadastre_code_dept_from_insee(insee):
 	return code_dept
 def get_code_cadastre_from_insee(insee):
 	str_query = 'SELECT cadastre_com FROM code_cadastre WHERE insee_com = \'{:s}\';'.format(insee)
-	# print(str_query)
+	code_cadastre = []
 	pgc = get_pgc()
 	cur = pgc.cursor()
 	cur.execute(str_query)
