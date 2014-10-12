@@ -1,7 +1,48 @@
+DROP TABLE IF EXISTS 	fantoir_voie	CASCADE;
+CREATE TABLE fantoir_voie (	code_dept		character(2),
+							code_dir		character(1),
+							code_com		character(3),
+							code_insee		character(5),
+							id_voie			character(4),
+							cle_rivoli		character(1),
+							nature_voie		character varying(4),
+							libelle_voie	character varying(26),
+							type_commune	character(1),
+							caractere_rur	character(1),
+							caractere_voie	character(1),
+							caractere_pop	character(1),
+							pop_a_part		integer,
+							pop_fictive		integer,
+							caractere_annul	character(1),
+							date_annul		character varying(9),
+							date_creation	character varying(9),
+							code_majic		character(5),
+							type_voie		character(1),
+							ld_bati			character(1),
+							dernier_mot		character varying(8));
+CREATE INDEX idx_fantoir_voie_dept
+ON				fantoir_voie(code_dept);
+CREATE INDEX idx_fantoir_code_insee
+ON				fantoir_voie(code_insee);
+
 DROP TABLE IF EXISTS cumul_adresses CASCADE;
 CREATE TABLE cumul_adresses
 (	geometrie		geometry ,
 	numero 			character varying (15),
+	voie_cadastre	character varying (300),
+	voie_osm		character varying (300),
+	voie_fantoir	character varying (300),
+	fantoir			character varying (10),
+	insee_com		character 			(5),
+	cadastre_com	character varying (10),
+	dept			character varying (3),
+	code_postal		character varying (5),
+	source			character varying (100),
+	batch_import_id	integer);
+
+DROP TABLE IF EXISTS cumul_voies CASCADE;
+CREATE TABLE cumul_voies
+(	geometrie		geometry ,
 	voie_cadastre	character varying (300),
 	voie_osm		character varying (300),
 	voie_fantoir	character varying (300),
@@ -19,6 +60,8 @@ CREATE TABLE cumul_places
 	libelle_cadastre	character varying (300),
 	libelle_osm		character varying (300),
 	libelle_fantoir	character varying (300),
+	ld_bati			integer,
+	ld_osm			character varying (30),
 	fantoir			character varying (10),
 	insee_com		character 			(5),
 	cadastre_com	character varying (10),

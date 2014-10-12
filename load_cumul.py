@@ -1,11 +1,20 @@
 #!/usr/bin/env python
-# coding: UTF-8
+# -*- coding: utf-8 -*-
 
 import addr_2_db as a
 import log_2_file as e
 import outils_de_gestion as o
 import sys
 import os,os.path
+import codecs
+
+
+# Wrap sys.stdout with a writer that knows how to handle encoding
+# Unicode data.
+wrapped_stdout = codecs.getwriter('UTF-8')(sys.stdout)
+# Replace sys.stdout with a writer
+sys.stdout = wrapped_stdout
+
 
 def get_code_dept_from_insee(insee):
 	code_dept = insee[0:2]
@@ -86,6 +95,7 @@ for c_loop in cur_loop:
 	print(u'## Département {:s}'.format(num_dept_cadastre))
 	if source == 'OSM':
 		get_data_by_dept_from_pg('hsnr_insee',num_dept_cadastre)
+		get_data_by_dept_from_pg('point_par_rue_insee',num_dept_cadastre)
 	# os._exit(0)
 	
 	get_data_by_dept_from_pg('highway_insee',num_dept_cadastre)
