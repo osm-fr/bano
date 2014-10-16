@@ -21,7 +21,7 @@ class Adresses:
 	def register(self,voie):
 		cle = normalize(voie)
 		if not cle in self.a:
-			self.a[cle] = {'numeros':{},'voies':{},'fantoirs':{}}
+			self.a[cle] = {'numeros':{},'voies':{},'fantoirs':{},'point_par_rue':[]}
 	def add_fantoir(self,cle,fantoir,source):
 		self.register(cle)
 		if len(fantoir) == 10:
@@ -411,17 +411,30 @@ def load_highways_relations_from_pg_osm(insee_com,cadastre_com):
 		if fantoir != '':
 			dicts.add_fantoir_name(fantoir,name,'OSM')
 		adresses.add_voie(name,'OSM')
-def	load_to_db(adresses,code_insee,source,code_cadastre,code_dept):
-	table_dest = 'cumul_adresses'
-	sload = 'DELETE FROM {:s} WHERE insee_com = \'{:s}\' AND source = \'{:s}\';\n'.format(table_dest,code_insee,source)
-	cur_insert = pgc.cursor()
-	cur_insert.execute(sload)
-	nb_rec = 0
-	for v in adresses.a:
-		sload = 'INSERT INTO {:s} (geometrie,numero,voie_cadastre,voie_osm,voie_fantoir,fantoir,insee_com,cadastre_com,dept,code_postal,source) VALUES'.format(table_dest)
-		a_values = []
-		if not adresses.a[v]['numeros']:
+def load_point_par_rue_from_pg_osm(insee_com,cadastre_com):
+	data = get_data_from_pg('point_par_rue_insee',insee_com,cadastre_com)
+	for l in data:
+		name = l[2].decode('utf8')
+		if len(name) < 2:
 			continue
+		adresses.register(name)
+		cle = normalize(name)
+		# print(cle,adresses.a[cle]['point_par_rue'])
+		adresses.a[cle]['point_par_rue'] = l[0:2]
+		# print(cle,adresses.a[cle]['point_par_rue'])
+def	load_to_db(adresses,code_insee,source,code_cadastre,code_dept):
+	for a in ['cumul_adresses','cumul_voies']:
+		sload = 'DELETE FROM {:s} WHERE insee_com = \'{:s}\' AND source = \'{:s}\';\n'.format(a,code_insee,source)
+		cur_insert = pgc.cursor()
+		cur_insert.execute(sload)
+	nb_rec = 0
+	a_values_voie = []
+	for v in adresses.a:
+		sload = 'INSERT INTO cumul_adresses (geometrie,numero,voie_cadastre,voie_osm,voie_fantoir,fantoir,insee_com,cadastre_com,dept,code_postal,source) VALUES'
+		sload_voie = 'INSERT INTO cumul_voies (geometrie,voie_cadastre,voie_osm,voie_fantoir,fantoir,insee_com,cadastre_com,dept,code_postal,source) VALUES'
+		a_values = []
+		# if not adresses.a[v]['numeros']:
+			# continue
 		street_name_cadastre = ''
 		street_name_osm = ''
 		street_name_fantoir = ''
@@ -436,13 +449,25 @@ def	load_to_db(adresses,code_insee,source,code_cadastre,code_dept):
 			street_name_cadastre =  adresses.a[v]['voies']['CADASTRE'].encode('utf8')
 		if street_name_osm == '' and street_name_cadastre == '':
 			print('****** voies muettes '+v)
+		# if not adresses.a[v]['numeros'] and len(adresses.a[v]['point_par_rue'])>1 and source == 'OSM':
+		if len(adresses.a[v]['point_par_rue'])>1 and source == 'OSM':
+			a_values_voie.append("(ST_PointFromText('POINT({:6f} {:6f})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}')".format(adresses.a[v]['point_par_rue'][0],adresses.a[v]['point_par_rue'][1],street_name_cadastre.replace("'","''"),street_name_osm.replace("'","''"),street_name_fantoir.replace("'","''"),cle_fantoir,code_insee,code_cadastre,code_dept,'',source))
+			# nb_rec +=1
+			# print(a_values_voie)
+			# print(len(a_values_voie))
 # nodes
+		# else:
 		for num in adresses.a[v]['numeros']:
 			numadresse = adresses.a[v]['numeros'][num]
 			a_values.append('(ST_PointFromText(\'POINT({:s} {:s})\', 4326),\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\')'.format(numadresse.node.attribs['lon'],numadresse.node.attribs['lat'],numadresse.numero.encode('utf8'),street_name_cadastre.replace("'","''"),street_name_osm.replace("'","''"),street_name_fantoir.replace("'","''"),cle_fantoir,code_insee,code_cadastre,code_dept,'',source))
 			nb_rec +=1
-		sload = sload+','.join(a_values)+';COMMIT;'
-		cur_insert.execute(sload)
+		if len(a_values)>0:
+			sload = sload+','.join(a_values)+';COMMIT;'
+			cur_insert.execute(sload)
+	if len(a_values_voie) > 0:
+		sload_voie = sload_voie+','.join(a_values_voie)+';COMMIT;'
+		# print(a_values_voie)
+		cur_insert.execute(sload_voie)
 	return(nb_rec)
 def normalize(s):
 	# if s[0:2] == 'BD' or s[0:4] == 'Boul':
@@ -547,6 +572,8 @@ def main(args):
 	load_highways_from_pg_osm(code_insee,code_cadastre)
 	load_highways_relations_from_pg_osm(code_insee,code_cadastre)
 	add_fantoir_to_hsnr()
+	load_point_par_rue_from_pg_osm(code_insee,code_cadastre)
+	
 	nb_rec = load_to_db(adresses,code_insee,source,code_cadastre,code_dept)
 	
 	batch_end_log(nb_rec,batch_id)
