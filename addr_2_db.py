@@ -28,8 +28,10 @@ class Adresses:
 			self.a[cle]['fantoirs'][source] = fantoir
 		else:
 			print(u'Code Fantoir non conforme : {:s}'.format(fantoir))
-	def add_voie(self,voie,source):
-		cle = normalize(voie)
+	def add_voie(self,voie_cle,source,voie=None):
+		cle = normalize(voie_cle)
+		if not voie:
+			voie = voie_cle
 		self.a[cle]['voies'][source] = voie
 	def add_adresse(self,ad,source):
 		""" une adresses est considérée dans la commune si sans Fantoir ou avec un Fantoir de la commune"""
@@ -256,6 +258,19 @@ def add_fantoir_to_hsnr():
 			if 'OSM' in adresses.a[v]['fantoirs']:
 				if adresses.a[v]['fantoirs']['OSM'] in dicts.code_fantoir_vers_nom_fantoir:
 					adresses.a[v]['voies']['FANTOIR'] = dicts.code_fantoir_vers_nom_fantoir[adresses.a[v]['fantoirs']['OSM']]
+def append_suffixe(name,suffixe):
+	res = name
+	if suffixe:
+		name_norm = normalize(name)
+		suffixe_norm = normalize(suffixe)
+		ln = len(name_norm)
+		ls = len(suffixe)
+		if ln > ls:
+			if name[-ls:] != suffixe:
+				res = name+' '+suffixe
+		else:
+			res = name+' '+suffixe
+	return res
 def get_best_fantoir(cle):
 	res = ''
 	if 'FANTOIR' in adresses.a[cle]['fantoirs']:
@@ -281,14 +296,21 @@ def get_code_cadastre_from_insee(insee):
 	for c in cur:
 		code_cadastre = c[0]
 	return code_cadastre
-def get_data_from_pg(data_type,insee_com,cadastre_com):
+def get_data_from_pg(data_type,insee_com,cadastre_com,local=False,suffixe_data=None):
+	# print(data_type,insee_com,cadastre_com,suffixe_data)
 	cache_file = get_cache_filename(data_type,insee_com,cadastre_com)
 	# print(cache_file)
 	if not os.path.exists(cache_file) or (time.time() - os.path.getmtime(cache_file)) > 86400 :
 		fq = open('sql/{:s}.sql'.format(data_type),'rb')
 		str_query = fq.read().replace('__com__',insee_com)
 		fq.close()
-		cur = pgcl.cursor()
+		if local:
+			pgc = get_pgc()
+		else:
+			pgc = get_pgc_layers()
+		if suffixe_data:
+			str_query = str_query.replace('__suffixe_data__',suffixe_data)
+		cur = pgc.cursor()
 		cur.execute(str_query)
 		f = open(cache_file,'w+')
 		for lt in cur:
@@ -303,6 +325,12 @@ def get_data_from_pg(data_type,insee_com,cadastre_com):
 		res.append(eval(l))
 	f.close()
 	return res
+def get_geom_suffixes(insee,code_cadastre):
+	data = get_data_from_pg('geom_suffixes_insee',insee,code_cadastre,True)
+	a_queries = []
+	for l in data:
+		a_queries.append('SELECT ST_PolygonFromText(\'{:s}\',900913) as geom,\'{:s}\'::text suffixe'.format(l[0],l[1].replace('\'','\'\'')))
+	return ' UNION '.join(a_queries)
 def get_nb_parts(s):
 	return len(s.split())
 def get_part_debut(s,nb_parts):
@@ -315,6 +343,15 @@ def get_tags(xmlo):
 	for tg in xmlo.iter('tag'):
 		dtags[tg.get('k')] = tg.get('v')
 	return dtags
+def has_addreses_with_suffix(insee):
+	res = False
+	str_query = 'SELECT count(*) FROM suffixe where insee_com = \'{:s}\';'.format(insee)
+	cur = pgc.cursor()
+	cur.execute(str_query)
+	for c in cur:
+		if c[0]> 0 :
+			res = True
+	return res
 def is_valid_housenumber(hsnr):
 	is_valid = True
 	if len(hsnr.encode('utf8')) > 11:
@@ -366,14 +403,23 @@ def load_hsnr_from_pg_osm(insee_com,cadastre_com):
 		adresses.register(oa.voie.decode('utf8'))
 		adresses.add_adresse(Adresse(n,oa.numero.decode('utf8'),oa.voie.decode('utf8'),oa.fantoir),source)
 def load_highways_from_pg_osm(insee_com,cadastre_com):
-	data = get_data_from_pg('highway_insee',insee_com,cadastre_com)
+	if commune_avec_suffixe:
+		data = get_data_from_pg('highway_suffixe_insee',insee_com,cadastre_com,False,geom_suffixe)
+	else:
+		data = get_data_from_pg('highway_insee',insee_com,cadastre_com)
 	for l in data:
 		# l = list(lt)
 		name = l[0].decode('utf8')
+		suffixe = ''
+		if l[4]:
+			suffixe = l[4].decode('utf8')
+			# print('*****',name,suffixe)
 		if len(name) < 2:
 			continue
-		adresses.register(name)
-		cle = normalize(name)
+		name_suffixe = append_suffixe(name,suffixe)
+		adresses.register(name_suffixe)
+		cle = normalize(name_suffixe)
+		# print(cle)
 		if adresses.has_already_fantoir(cle,'OSM'):
 			continue
 		fantoir = ''
@@ -391,16 +437,23 @@ def load_highways_from_pg_osm(insee_com,cadastre_com):
 				adresses.add_fantoir(cle,l[3],'OSM')
 		if fantoir != '':
 			dicts.add_fantoir_name(fantoir,name,'OSM')
-		adresses.add_voie(name,'OSM')
+		adresses.add_voie(name_suffixe,'OSM',name)
 def load_highways_relations_from_pg_osm(insee_com,cadastre_com):
-	data = get_data_from_pg('highway_relation_insee',insee_com,cadastre_com)
+	if commune_avec_suffixe:
+		data = get_data_from_pg('highway_relation_suffixe_insee',insee_com,cadastre_com,False,geom_suffixe)
+	else:
+		data = get_data_from_pg('highway_relation_insee',insee_com,cadastre_com)
 	for l in data:
 		# l = list(lt)
 		name = l[0].decode('utf8')
 		if len(name) < 2:
 			continue
-		adresses.register(name)
-		cle = normalize(name)
+		suffixe = ''
+		if l[-2]:
+			suffixe = l[-2].decode('utf8')
+		name_suffixe = append_suffixe(name,suffixe)
+		adresses.register(name_suffixe)
+		cle = normalize(name_suffixe)
 		if adresses.has_already_fantoir(cle,'OSM'):
 			continue
 		fantoir = ''
@@ -410,7 +463,7 @@ def load_highways_relations_from_pg_osm(insee_com,cadastre_com):
 				fantoir = tags['ref:FR:FANTOIR']
 		if fantoir != '':
 			dicts.add_fantoir_name(fantoir,name,'OSM')
-		adresses.add_voie(name,'OSM')
+		adresses.add_voie(name_suffixe,'OSM',name)
 def load_point_par_rue_from_pg_osm(insee_com,cadastre_com):
 	data = get_data_from_pg('point_par_rue_insee',insee_com,cadastre_com)
 	for l in data:
@@ -419,9 +472,7 @@ def load_point_par_rue_from_pg_osm(insee_com,cadastre_com):
 			continue
 		adresses.register(name)
 		cle = normalize(name)
-		# print(cle,adresses.a[cle]['point_par_rue'])
 		adresses.a[cle]['point_par_rue'] = l[0:2]
-		# print(cle,adresses.a[cle]['point_par_rue'])
 def	load_to_db(adresses,code_insee,source,code_cadastre,code_dept):
 	for a in ['cumul_adresses','cumul_voies']:
 		sload = 'DELETE FROM {:s} WHERE insee_com = \'{:s}\' AND source = \'{:s}\';\n'.format(a,code_insee,source)
@@ -429,6 +480,10 @@ def	load_to_db(adresses,code_insee,source,code_cadastre,code_dept):
 		cur_insert.execute(sload)
 	nb_rec = 0
 	a_values_voie = []
+	# print(adresses.a['CHE LAC'])
+	# print(adresses.a['CHE LAC RUFFIGNY'])
+	# os._exit(0)
+	
 	for v in adresses.a:
 		sload = 'INSERT INTO cumul_adresses (geometrie,numero,voie_cadastre,voie_osm,voie_fantoir,fantoir,insee_com,cadastre_com,dept,code_postal,source) VALUES'
 		sload_voie = 'INSERT INTO cumul_voies (geometrie,voie_cadastre,voie_osm,voie_fantoir,fantoir,insee_com,cadastre_com,dept,code_postal,source) VALUES'
@@ -447,8 +502,9 @@ def	load_to_db(adresses,code_insee,source,code_cadastre,code_dept):
 			street_name_fantoir =  adresses.a[v]['voies']['FANTOIR'].encode('utf8')
 		if 'CADASTRE' in adresses.a[v]['voies']:
 			street_name_cadastre =  adresses.a[v]['voies']['CADASTRE'].encode('utf8')
-		if street_name_osm == '' and street_name_cadastre == '':
-			print('****** voies muettes '+v)
+		# if street_name_osm == '' and street_name_cadastre == '':
+			# print('****** voies muettes '+v)
+			# print(adresses.a[v])
 		# if not adresses.a[v]['numeros'] and len(adresses.a[v]['point_par_rue'])>1 and source == 'OSM':
 		if len(adresses.a[v]['point_par_rue'])>1 and source == 'OSM':
 			a_values_voie.append("(ST_PointFromText('POINT({:6f} {:6f})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}')".format(adresses.a[v]['point_par_rue'][0],adresses.a[v]['point_par_rue'][1],street_name_cadastre.replace("'","''"),street_name_osm.replace("'","''"),street_name_fantoir.replace("'","''"),cle_fantoir,code_insee,code_cadastre,code_dept,'',source))
@@ -521,7 +577,7 @@ def normalize(s):
 	if sp[-1] in dicts.chiffres_romains:
 		sp[-1] = dicts.chiffres_romains[sp[-1]]
 		s = ' '.join(sp)
-	return s
+	return s[0:30]
 def replace_type_voie(s,nb):
 	sp = s.split()
 	spd = ' '.join(sp[0:nb])
@@ -539,7 +595,9 @@ def main(args):
 	global code_insee,code_cadastre,code_dept
 	global dicts
 	global nodes,ways,adresses
-	
+	global commune_avec_suffixe
+	global geom_suffixe
+
 	debut_total = time.time()
 	usage = 'USAGE : python addr_cad_2_db.py <code INSEE> <OSM|CADASTRE>'
 	if len(args) != 3:
@@ -564,6 +622,12 @@ def main(args):
 	
 	dicts = Dicts()
 	dicts.load_all(code_insee)
+
+	commune_avec_suffixe = has_addreses_with_suffix(code_insee)
+	geom_suffixe = None
+	if commune_avec_suffixe:
+		geom_suffixe = get_geom_suffixes(code_insee,code_cadastre)
+
 	if source == 'CADASTRE':
 		fnadresses = os.path.join('/data/work/cadastre.openstreetmap.fr/bano_cache',code_dept,code_cadastre,code_cadastre+'-adresses.osm')
 		load_hsnr_from_cad_file(fnadresses,source)
