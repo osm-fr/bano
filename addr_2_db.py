@@ -72,6 +72,7 @@ class Dicts:
 		self.expand_noms = []
 		self.expand_titres = []
 		self.abrev_titres = []
+		self.substitution_complete = {}
 		self.chiffres = []
 		self.chiffres_romains = {}
 		self.mot_a_blanc = []
@@ -174,6 +175,15 @@ class Dicts:
 			c = (l.splitlines()[0]).split('\t')
 			self.abrev_type_voie[c[0]] = c[1]
 		f.close()
+	def load_substitution_complete(self):
+		fn = os.path.join(os.path.dirname(__file__),'dictionnaires','substitution_complete.txt')
+		f = open(fn)
+		for l in f:
+			if l[0:1] == '#':
+				continue
+			c = (l.splitlines()[0]).split('\t')
+			self.substitution_complete[c[0]] = c[1]
+		f.close()
 	def load_all(self,code_insee_commune):
 		self.load_lettre_a_lettre()
 		self.load_abrev_type_voie()
@@ -183,6 +193,7 @@ class Dicts:
 		self.load_chiffres()
 		self.load_chiffres_romains()
 		self.load_mot_a_blanc()
+		self.load_substitution_complete()
 		self.load_fantoir(code_insee_commune)
 	def add_voie(self,origine,nom):
 		cle = normalize(nom)
@@ -481,10 +492,7 @@ def	load_to_db(adresses,code_insee,source,code_cadastre,code_dept):
 		cur_insert.execute(sload)
 	nb_rec = 0
 	a_values_voie = []
-	# print(adresses.a['CHE LAC'])
-	# print(adresses.a['CHE LAC RUFFIGNY'])
-	# os._exit(0)
-	
+
 	for v in adresses.a:
 		sload = 'INSERT INTO cumul_adresses (geometrie,numero,voie_cadastre,voie_osm,voie_fantoir,fantoir,insee_com,cadastre_com,dept,code_postal,source) VALUES'
 		sload_voie = 'INSERT INTO cumul_voies (geometrie,voie_cadastre,voie_osm,voie_fantoir,fantoir,insee_com,cadastre_com,dept,code_postal,source) VALUES'
@@ -509,9 +517,6 @@ def	load_to_db(adresses,code_insee,source,code_cadastre,code_dept):
 		# if not adresses.a[v]['numeros'] and len(adresses.a[v]['point_par_rue'])>1 and source == 'OSM':
 		if len(adresses.a[v]['point_par_rue'])>1 and source == 'OSM':
 			a_values_voie.append("(ST_PointFromText('POINT({:6f} {:6f})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}')".format(adresses.a[v]['point_par_rue'][0],adresses.a[v]['point_par_rue'][1],street_name_cadastre.replace("'","''"),street_name_osm.replace("'","''"),street_name_fantoir.replace("'","''"),cle_fantoir,code_insee,code_cadastre,code_dept,'',source))
-			# nb_rec +=1
-			# print(a_values_voie)
-			# print(len(a_values_voie))
 # nodes
 		# else:
 		for num in adresses.a[v]['numeros']:
@@ -523,7 +528,6 @@ def	load_to_db(adresses,code_insee,source,code_cadastre,code_dept):
 			cur_insert.execute(sload)
 	if len(a_values_voie) > 0:
 		sload_voie = sload_voie+','.join(a_values_voie)+';COMMIT;'
-		# print(a_values_voie)
 		cur_insert.execute(sload_voie)
 	return(nb_rec)
 def normalize(s):
@@ -578,6 +582,10 @@ def normalize(s):
 	if sp[-1] in dicts.chiffres_romains:
 		sp[-1] = dicts.chiffres_romains[sp[-1]]
 		s = ' '.join(sp)
+
+# substitution complete
+	if s in dicts.substitution_complete:
+		s = dicts.substitution_complete[s]
 	return s[0:30]
 def replace_type_voie(s,nb):
 	sp = s.split()
