@@ -127,7 +127,8 @@ class Dicts:
 							'LA',
 							'LES',
 							'DE',
-							'D']
+							'D',
+							'L']
 	def load_expand_titres(self):
 		fn = os.path.join(os.path.dirname(__file__),'dictionnaires','expand_titres.txt')
 		f = open(fn)
