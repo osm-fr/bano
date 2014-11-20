@@ -259,7 +259,7 @@ class Pg_hsnr:
 		if 'type' in self.tags and self.tags['type'] == 'associatedStreet' and 'name' in self.tags:
 			self.voie = self.tags['name']
 	def set_fantoir(self):
-		if 'ref:FR:FANTOIR' in self.tags and len(self.tags['ref:FR:FANTOIR']) == 10:
+		if 'ref:FR:FANTOIR' in self.tags and len(self.tags['ref:FR:FANTOIR']) == 10 and self.tags['ref:FR:FANTOIR'][0:5] == code_insee:
 			self.fantoir = self.tags['ref:FR:FANTOIR']
 def add_fantoir_to_hsnr():
 	for v in adresses.a:
@@ -404,51 +404,113 @@ def	load_hsnr_from_cad_file(fnadresses,source):
 					adresses.add_adresse(Adresse(nd,dtags['addr:housenumber'],adresses.a[v]['voies']['CADASTRE'],''),source)
 			else:
 				print('Numero invalide : {:s}'.format(dtags['addr:housenumber'].encode('utf8')))
+def load_hsnr_bbox_from_pg_osm(insee_com,cadastre_com):
+	data = get_data_from_pg('hsnr_bbox_insee',insee_com,cadastre_com)
+	for l in data:
+		oa = Pg_hsnr(l)
+		n = Node({'id':oa.osm_id,'lon':oa.x,'lat':oa.y},{})
+		if oa.voie == None:
+			continue
+		if oa.fantoir == '':
+			continue
+		adresses.register(oa.voie.decode('utf8'))
+		adresses.add_adresse(Adresse(n,oa.numero.decode('utf8'),oa.voie.decode('utf8'),oa.fantoir),source)
 def load_hsnr_from_pg_osm(insee_com,cadastre_com):
 	data = get_data_from_pg('hsnr_insee',insee_com,cadastre_com)
 	for l in data:
-		# oa = Pg_hsnr(list(l))
 		oa = Pg_hsnr(l)
 		n = Node({'id':oa.osm_id,'lon':oa.x,'lat':oa.y},{})
 		if oa.voie == None:
 			continue
 		adresses.register(oa.voie.decode('utf8'))
 		adresses.add_adresse(Adresse(n,oa.numero.decode('utf8'),oa.voie.decode('utf8'),oa.fantoir),source)
+def load_highways_bbox_from_pg_osm(insee_com,cadastre_com):
+	if commune_avec_suffixe:
+		data = get_data_from_pg('highway_suffixe_insee',insee_com,cadastre_com,False,geom_suffixe)
+	else:
+		data = get_data_from_pg('highway_bbox_insee',insee_com,cadastre_com)
+	for l in data:
+		fantoir = ''
+		if len(l)>1:
+			if l[1] != None and l[1][0:5] == insee_com:
+				fantoir = l[1]
+		if len(l)>2 and fantoir == '':
+			if l[2] != None and l[2][0:5] == insee_com:
+				fantoir = l[2]
+		if len(l)>3 and fantoir == '':
+			if l[3] != None and l[3][0:5] == insee_com:
+				fantoir = l[3]
+		if fantoir == '':
+			continue
+		name = l[0].decode('utf8')
+		suffixe = ''
+		if l[4]:
+			suffixe = l[4].decode('utf8')
+		if len(name) < 2:
+			continue
+		name_suffixe = append_suffixe(name,suffixe)
+		adresses.register(name_suffixe)
+		cle = normalize(name_suffixe)
+		if adresses.has_already_fantoir(cle,'OSM'):
+			continue
+		# print(cle,fantoir)
+		adresses.add_fantoir(cle,fantoir,'OSM')
+		adresses.add_voie(name_suffixe,'OSM',name)
 def load_highways_from_pg_osm(insee_com,cadastre_com):
 	if commune_avec_suffixe:
 		data = get_data_from_pg('highway_suffixe_insee',insee_com,cadastre_com,False,geom_suffixe)
 	else:
 		data = get_data_from_pg('highway_insee',insee_com,cadastre_com)
 	for l in data:
-		# l = list(lt)
 		name = l[0].decode('utf8')
 		suffixe = ''
 		if l[4]:
 			suffixe = l[4].decode('utf8')
-			# print('*****',name,suffixe)
 		if len(name) < 2:
 			continue
 		name_suffixe = append_suffixe(name,suffixe)
 		adresses.register(name_suffixe)
 		cle = normalize(name_suffixe)
-		# print(cle)
 		if adresses.has_already_fantoir(cle,'OSM'):
 			continue
 		fantoir = ''
 		if len(l)>1:
 			if l[1] != None and l[1][0:5] == insee_com:
 				fantoir = l[1]
-				adresses.add_fantoir(cle,l[1],'OSM')
 		if len(l)>2 and fantoir == '':
 			if l[2] != None and l[2][0:5] == insee_com:
 				fantoir = l[2]
-				adresses.add_fantoir(cle,l[2],'OSM')
 		if len(l)>3 and fantoir == '':
 			if l[3] != None and l[3][0:5] == insee_com:
 				fantoir = l[3]
-				adresses.add_fantoir(cle,l[3],'OSM')
 		if fantoir != '':
+			adresses.add_fantoir(cle,fantoir,'OSM')
 			dicts.add_fantoir_name(fantoir,name,'OSM')
+		adresses.add_voie(name_suffixe,'OSM',name)
+def load_highways_relations_bbox_from_pg_osm(insee_com,cadastre_com):
+	if commune_avec_suffixe:
+		data = get_data_from_pg('highway_relation_suffixe_insee',insee_com,cadastre_com,False,geom_suffixe)
+	else:
+		data = get_data_from_pg('highway_relation_bbox_insee',insee_com,cadastre_com)
+	for l in data:
+		fantoir = ''
+		tags = tags_list_as_dict(l[1])
+		if 'ref:FR:FANTOIR' in tags:
+			if tags['ref:FR:FANTOIR'][0:5] == code_insee and len(tags['ref:FR:FANTOIR']) == 10:
+				fantoir = tags['ref:FR:FANTOIR']
+		if fantoir == '':
+			continue
+		name = l[0].decode('utf8')
+		if len(name) < 2:
+			continue
+		suffixe = ''
+		if commune_avec_suffixe and l[-2]:
+			suffixe = l[-2].decode('utf8')
+		name_suffixe = append_suffixe(name,suffixe)
+		adresses.register(name_suffixe)
+		cle = normalize(name_suffixe)
+		if adresses.has_already_fantoir(cle,'OSM'):
+			continue
 		adresses.add_voie(name_suffixe,'OSM',name)
 def load_highways_relations_from_pg_osm(insee_com,cadastre_com):
 	if commune_avec_suffixe:
@@ -461,7 +523,7 @@ def load_highways_relations_from_pg_osm(insee_com,cadastre_com):
 		if len(name) < 2:
 			continue
 		suffixe = ''
-		if l[-2]:
+		if commune_avec_suffixe and l[-2]:
 			suffixe = l[-2].decode('utf8')
 		name_suffixe = append_suffixe(name,suffixe)
 		adresses.register(name_suffixe)
@@ -511,10 +573,6 @@ def	load_to_db(adresses,code_insee,source,code_cadastre,code_dept):
 			street_name_fantoir =  adresses.a[v]['voies']['FANTOIR'].encode('utf8')
 		if 'CADASTRE' in adresses.a[v]['voies']:
 			street_name_cadastre =  adresses.a[v]['voies']['CADASTRE'].encode('utf8')
-		# if street_name_osm == '' and street_name_cadastre == '':
-			# print('****** voies muettes '+v)
-			# print(adresses.a[v])
-		# if not adresses.a[v]['numeros'] and len(adresses.a[v]['point_par_rue'])>1 and source == 'OSM':
 		if len(adresses.a[v]['point_par_rue'])>1 and source == 'OSM':
 			a_values_voie.append("(ST_PointFromText('POINT({:6f} {:6f})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}')".format(adresses.a[v]['point_par_rue'][0],adresses.a[v]['point_par_rue'][1],street_name_cadastre.replace("'","''"),street_name_osm.replace("'","''"),street_name_fantoir.replace("'","''"),cle_fantoir,code_insee,code_cadastre,code_dept,'',source))
 # nodes
@@ -642,8 +700,11 @@ def main(args):
 		load_hsnr_from_cad_file(fnadresses,source)
 	if source == 'OSM':
 		load_hsnr_from_pg_osm(code_insee,code_cadastre)
+		load_hsnr_bbox_from_pg_osm(code_insee,code_cadastre)
 	load_highways_from_pg_osm(code_insee,code_cadastre)
 	load_highways_relations_from_pg_osm(code_insee,code_cadastre)
+	load_highways_bbox_from_pg_osm(code_insee,code_cadastre)
+	load_highways_relations_bbox_from_pg_osm(code_insee,code_cadastre)
 	add_fantoir_to_hsnr()
 	load_point_par_rue_from_pg_osm(code_insee,code_cadastre)
 	
