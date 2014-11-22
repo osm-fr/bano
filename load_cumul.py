@@ -95,11 +95,15 @@ for c_loop in cur_loop:
 	print(u'## Département {:s}'.format(num_dept_cadastre))
 	if source == 'OSM':
 		get_data_by_dept_from_pg('hsnr_insee',num_dept_cadastre)
+		get_data_by_dept_from_pg('hsnr_bbox_insee',num_dept_cadastre)
 		get_data_by_dept_from_pg('point_par_rue_insee',num_dept_cadastre)
+		get_data_by_dept_from_pg('point_par_rue_complement_insee',num_dept_cadastre)
 	# os._exit(0)
 	
 	get_data_by_dept_from_pg('highway_insee',num_dept_cadastre)
+	get_data_by_dept_from_pg('highway_bbox_insee',num_dept_cadastre)
 	get_data_by_dept_from_pg('highway_relation_insee',num_dept_cadastre)
+	get_data_by_dept_from_pg('highway_relation_bbox_insee',num_dept_cadastre)
 	# os._exit(0)
 
 	clause_vecteur = ''

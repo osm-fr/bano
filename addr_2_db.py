@@ -547,6 +547,23 @@ def load_point_par_rue_from_pg_osm(insee_com,cadastre_com):
 		adresses.register(name)
 		cle = normalize(name)
 		adresses.a[cle]['point_par_rue'] = l[0:2]
+def load_point_par_rue_complement_from_pg_osm(insee_com,cadastre_com):
+	data = get_data_from_pg('point_par_rue_complement_insee',insee_com,cadastre_com)
+	for l in data:
+		name = l[2].decode('utf8')
+		if len(name) < 2:
+			continue
+		fantoir = l[3]
+		# if not fantoir : continue
+		if fantoir and fantoir[0:5] != insee_com:
+			continue
+		if fantoir and len(fantoir) != 10:
+			continue
+		adresses.register(name)
+		cle = normalize(name)
+		adresses.a[cle]['point_par_rue'] = l[0:2]
+		if fantoir:
+			adresses.add_fantoir(cle,fantoir,'OSM')
 def	load_to_db(adresses,code_insee,source,code_cadastre,code_dept):
 	for a in ['cumul_adresses','cumul_voies']:
 		sload = 'DELETE FROM {:s} WHERE insee_com = \'{:s}\' AND source = \'{:s}\';\n'.format(a,code_insee,source)
@@ -707,6 +724,7 @@ def main(args):
 	load_highways_relations_bbox_from_pg_osm(code_insee,code_cadastre)
 	add_fantoir_to_hsnr()
 	load_point_par_rue_from_pg_osm(code_insee,code_cadastre)
+	load_point_par_rue_complement_from_pg_osm(code_insee,code_cadastre)
 	
 	nb_rec = load_to_db(adresses,code_insee,source,code_cadastre,code_dept)
 	
