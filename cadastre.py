@@ -79,6 +79,14 @@ CORRECTIONS_PROJECTION_CADASTRE = {
     "RGR92UTM" : "RGR92UTM40S"
 }
 
+CORRECTIONS_PROJECTION_CADASTRE_COMMUNE = {
+    # Corrections de projections pour les îles Saint-Martin et Saint Barthélémy
+    # le site cadastre.gouv.fr ne semple pas renvoyer la bonne valeur
+    # voir https://lists.openstreetmap.org/pipermail/dev-fr/2010-November/000059.html
+    "SAINT MARTIN (97150)" : "GUADFM49U20",
+    "SAINT BARTHELEMY (ILE) (97133)" : "GUADFM49U20",
+}
+
 
 class CadastreWebsite(object):
   """Accèss au site web http://cadastre.gouv.fr"""
@@ -186,9 +194,16 @@ class CadastreWebsite(object):
         re.S);
     bbox_match = bbox_pattern.search(html)
     self.projection = bbox_match.group(5).encode("utf-8")
-    if self.projection in CORRECTIONS_PROJECTION_CADASTRE:
-        self.projection = CORRECTIONS_PROJECTION_CADASTRE[self.projection]
     #print ("projection = " + self.projection)
+    if self.projection in CORRECTIONS_PROJECTION_CADASTRE:
+        print ("projection du cadastre corrigée de " + self.projection +
+            " vers " + CORRECTIONS_PROJECTION_CADASTRE[self.projection])
+        self.projection = CORRECTIONS_PROJECTION_CADASTRE[self.projection]
+    nom_commune = self.communes[self.code_commune]
+    if nom_commune in CORRECTIONS_PROJECTION_CADASTRE_COMMUNE:
+        print ("projection du cadastre corrigée de " + self.projection +
+            " vers " + CORRECTIONS_PROJECTION_CADASTRE_COMMUNE[nom_commune])
+        self.projection = CORRECTIONS_PROJECTION_CADASTRE_COMMUNE[nom_commune]
     x1 = float(bbox_match.group(1))
     y1 = float(bbox_match.group(2))
     x2 = float(bbox_match.group(3))
