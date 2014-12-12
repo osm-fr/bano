@@ -88,11 +88,14 @@ class Dicts:
 						'U':[u'Û',u'Ü'],
 						'OE':[u'Œ']}
 	def load_fantoir(self,insee):
-		str_query = '''	SELECT 	code_insee||id_voie||cle_rivoli,
-								nature_voie||' '||libelle_voie
-						FROM	fantoir_voie
-						WHERE	code_insee = \''''+insee+'''\' AND
-								caractere_annul NOT IN ('O','Q');'''
+		str_query = '''	SELECT *
+						FROM	(SELECT code_insee||id_voie||cle_rivoli,
+										nature_voie||' '||libelle_voie,
+										rank() OVER(PARTITION BY nature_voie||' '||libelle_voie ORDER BY type_voie,id_voie,cle_rivoli) rang
+								FROM	fantoir_voie
+								WHERE	code_insee = \''''+insee+'''\' AND
+										caractere_annul NOT IN ('O','Q')) a
+						WHERE rang = 1;'''
 		pgc = get_pgc()
 		cur_fantoir = pgc.cursor()
 		cur_fantoir.execute(str_query)
