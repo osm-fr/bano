@@ -594,7 +594,7 @@ def	load_to_db(adresses,code_insee,source,code_cadastre,code_dept):
 		if 'CADASTRE' in adresses.a[v]['voies']:
 			street_name_cadastre =  adresses.a[v]['voies']['CADASTRE'].encode('utf8')
 		if len(adresses.a[v]['point_par_rue'])>1 and source == 'OSM':
-			a_values_voie.append("(ST_PointFromText('POINT({:6f} {:6f})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}')".format(adresses.a[v]['point_par_rue'][0],adresses.a[v]['point_par_rue'][1],street_name_cadastre.replace("'","''"),street_name_osm.replace("'","''"),street_name_fantoir.replace("'","''"),cle_fantoir,code_insee,code_cadastre,code_dept,'',source))
+			a_values_voie.append(("(ST_PointFromText('POINT({:6f} {:6f})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}')".format(adresses.a[v]['point_par_rue'][0],adresses.a[v]['point_par_rue'][1],street_name_cadastre.replace("'","''"),street_name_osm.replace("'","''"),street_name_fantoir.replace("'","''"),cle_fantoir,code_insee,code_cadastre,code_dept,'',source)).replace(",'',",",null,"))
 # nodes
 		# else:
 		for num in adresses.a[v]['numeros']:
@@ -647,8 +647,12 @@ def normalize(s):
 			s = s.replace(' '+r[0],' '+r[1])
 	for r in dicts.expand_titres:
 		s = s.replace(' '+r[0]+' ',' '+r[1]+' ')
+		if s[-len(r[0]):] == r[0]:
+			s = s.replace(' '+r[0],' '+r[1])
 	for r in dicts.abrev_titres:
 		s = s.replace(' '+r[0]+' ',' '+r[1]+' ')
+		if s[-len(r[0]):] == r[0]:
+			s = s.replace(' '+r[0],' '+r[1])
 
 # articles
 	for c in dicts.mot_a_blanc:
