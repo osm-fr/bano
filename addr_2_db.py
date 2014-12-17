@@ -9,6 +9,8 @@ import sys
 import time 
 import xml.etree.ElementTree as ET
 
+os.umask(0000)
+
 class Adresse:
 	def __init__(self,node,num,voie,fantoir):
 		self.node = node
@@ -314,9 +316,9 @@ def get_code_cadastre_from_insee(insee):
 def get_data_from_pg(data_type,insee_com,cadastre_com,local=False,suffixe_data=None):
 	# print(data_type,insee_com,cadastre_com,suffixe_data)
 	cache_file = get_cache_filename(data_type,insee_com,cadastre_com)
-	# print(cache_file)
-	if not os.path.exists(cache_file) or (time.time() - os.path.getmtime(cache_file)) > 86400 :
-		fq = open('sql/{:s}.sql'.format(data_type),'rb')
+	# print(os.path.abspath(__file__))
+	if not use_cache or not os.path.exists(cache_file) or (time.time() - os.path.getmtime(cache_file)) > 86400 :
+		fq = open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'sql/{:s}.sql'.format(data_type)),'rb')
 		str_query = fq.read().replace('__com__',insee_com)
 		fq.close()
 		if local:
@@ -377,7 +379,7 @@ def is_valid_fantoir(f):
 	if len(f) != 10:
 		res = False
 	return res
-def	load_hsnr_from_cad_file(fnadresses,source):
+def load_hsnr_from_cad_file(fnadresses,source):
 	xmladresses = ET.parse(fnadresses)
 	dict_node_relations = {}
 	for asso in xmladresses.iter('relation'):
@@ -567,7 +569,7 @@ def load_point_par_rue_complement_from_pg_osm(insee_com,cadastre_com):
 		adresses.a[cle]['point_par_rue'] = l[0:2]
 		if fantoir:
 			adresses.add_fantoir(cle,fantoir,'OSM')
-def	load_to_db(adresses,code_insee,source,code_cadastre,code_dept):
+def load_to_db(adresses,code_insee,source,code_cadastre,code_dept):
 	for a in ['cumul_adresses','cumul_voies']:
 		sload = 'DELETE FROM {:s} WHERE insee_com = \'{:s}\' AND source = \'{:s}\';\n'.format(a,code_insee,source)
 		cur_insert = pgc.cursor()
@@ -688,13 +690,18 @@ def main(args):
 	global nodes,ways,adresses
 	global commune_avec_suffixe
 	global geom_suffixe
+	global use_cache
+	
+	use_cache = True
 
 	debut_total = time.time()
-	usage = 'USAGE : python addr_cad_2_db.py <code INSEE> <OSM|CADASTRE>'
-	if len(args) != 3:
+	usage = 'USAGE : python addr_cad_2_db.py <code INSEE> <OSM|CADASTRE> {use_cache=True}'
+	if len(args) < 3:
 		print(usage)
 		os._exit(0)
-		
+	if len(args) > 3:
+		# use_cache = eval(args[3])
+		use_cache = args[3]
 	source = args[2].upper()
 	if source not in ['OSM','CADASTRE']:
 		print(usage)
@@ -737,6 +744,6 @@ def main(args):
 	
 	batch_end_log(nb_rec,batch_id)
 	fin_total = time.time()
-	print('Execution en '+str(int(fin_total - debut_total))+' s.')
+	# print('Execution en '+str(int(fin_total - debut_total))+' s.')
 if __name__ == '__main__':
     main(sys.argv)

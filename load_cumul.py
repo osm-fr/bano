@@ -8,6 +8,7 @@ import sys
 import os,os.path
 import codecs
 
+os.umask(0000)
 
 # Wrap sys.stdout with a writer that knows how to handle encoding
 # Unicode data.
