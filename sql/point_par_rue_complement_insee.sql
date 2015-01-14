@@ -29,6 +29,8 @@ FROM	(SELECT	ST_Transform(ST_SetSRID(pl.way,900913),4326) way,
 				ST_Intersects(pl.way, p.way)
 		WHERE	p.tags ? 'ref:INSEE'			AND
 				p.tags->'ref:INSEE'='__com__'	AND
-				coalesce(pl.highway,pl.tags->'ref:FR:FANTOIR') 	IS NOT NULL	AND
+--				coalesce(pl.highway,pl.tags->'ref:FR:FANTOIR') 	IS NOT NULL	AND
+				(	coalesce(pl.highway,pl.tags->'ref:FR:FANTOIR') 	IS NOT NULL		OR
+					pl.landuse = 'residential')	AND
 				pl.name 	IS NOT NULL)a
 ORDER BY 6;

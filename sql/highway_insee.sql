@@ -26,7 +26,8 @@ SELECT	pl.name,pl.tags->'ref:FR:FANTOIR' f,'' fl,'' fr,'' suffixe,p.tags->'ref:I
 				ST_Intersects(pl.way, p.way)
 		WHERE	p.tags ? 'ref:INSEE'			AND
 				p.tags->'ref:INSEE'='__com__'	AND
-				coalesce(pl.highway,pl.tags->'ref:FR:FANTOIR') 	IS NOT NULL			AND
+				(	coalesce(pl.highway,pl.tags->'ref:FR:FANTOIR') 	IS NOT NULL		OR
+					pl.landuse = 'residential')	AND
 				pl.name 	IS NOT NULL
 		--		group by 1,2,3,4
 ORDER BY 6
