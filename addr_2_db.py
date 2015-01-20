@@ -6,7 +6,7 @@ from outils_de_gestion import batch_start_log
 from outils_de_gestion import batch_end_log
 import os,os.path
 import sys
-import time 
+import time
 import xml.etree.ElementTree as ET
 
 os.umask(0000)
@@ -23,7 +23,7 @@ class Adresses:
 	def register(self,voie):
 		cle = normalize(voie)
 		if not cle in self.a:
-			self.a[cle] = {'numeros':{},'voies':{},'fantoirs':{},'point_par_rue':[]}
+			self.a[cle] = {'numeros':{},'voies':{},'fantoirs':{},'point_par_rue':[],'highway_index':0}
 	def add_fantoir(self,cle,fantoir,source):
 		self.register(cle)
 		if len(fantoir) == 10:
@@ -63,6 +63,8 @@ class Adresses:
 		if source in self.a[cle]['fantoirs']:
 			has = True
 		return has
+	def add_highway_index(self,cle,val):
+		self.a[cle]['highway_index']+=val
 class Dicts:
 	def __init__(self):
 		self.lettre_a_lettre = {}
@@ -80,6 +82,7 @@ class Dicts:
 		self.mot_a_blanc = []
 		self.noms_voies = {}
 		self.ways_osm = {}
+		self.highway_types = {}
 
 	def load_lettre_a_lettre(self):
 		self.lettre_a_lettre = {'A':[u'Â',u'À'],
@@ -189,6 +192,17 @@ class Dicts:
 			c = (l.splitlines()[0]).split('\t')
 			self.substitution_complete[c[0]] = c[1]
 		f.close()
+	def load_highway_types(self):
+		str_query = '''	SELECT 	tag_index,
+								tag_value
+						FROM	type_voie
+						ORDER BY	tag_index;'''
+		pgc = get_pgc()
+		cur_hw = pgc.cursor()
+		cur_hw.execute(str_query)
+		for c in cur_hw:
+			self.highway_types[c[1]] = c[0]
+		# print(self.highway_types)
 	def load_all(self,code_insee_commune):
 		self.load_lettre_a_lettre()
 		self.load_abrev_type_voie()
@@ -200,6 +214,7 @@ class Dicts:
 		self.load_mot_a_blanc()
 		self.load_substitution_complete()
 		self.load_fantoir(code_insee_commune)
+		self.load_highway_types()
 	def add_voie(self,origine,nom):
 		cle = normalize(nom)
 		if not cle in self.noms_voies:
@@ -579,7 +594,6 @@ def load_to_db(adresses,code_insee,source,code_cadastre,code_dept):
 
 	for v in adresses.a:
 		sload = 'INSERT INTO cumul_adresses (geometrie,numero,voie_cadastre,voie_osm,voie_fantoir,fantoir,insee_com,cadastre_com,dept,code_postal,source) VALUES'
-		sload_voie = 'INSERT INTO cumul_voies (geometrie,voie_cadastre,voie_osm,voie_fantoir,fantoir,insee_com,cadastre_com,dept,code_postal,source) VALUES'
 		a_values = []
 		# if not adresses.a[v]['numeros']:
 			# continue
@@ -596,7 +610,9 @@ def load_to_db(adresses,code_insee,source,code_cadastre,code_dept):
 		if 'CADASTRE' in adresses.a[v]['voies']:
 			street_name_cadastre =  adresses.a[v]['voies']['CADASTRE'].encode('utf8')
 		if len(adresses.a[v]['point_par_rue'])>1 and source == 'OSM':
-			a_values_voie.append(("(ST_PointFromText('POINT({:6f} {:6f})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}')".format(adresses.a[v]['point_par_rue'][0],adresses.a[v]['point_par_rue'][1],street_name_cadastre.replace("'","''"),street_name_osm.replace("'","''"),street_name_fantoir.replace("'","''"),cle_fantoir,code_insee,code_cadastre,code_dept,'',source)).replace(",'',",",null,"))
+			a_values_voie.append(("(ST_PointFromText('POINT({:6f} {:6f})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}',{:d})".format(adresses.a[v]['point_par_rue'][0],adresses.a[v]['point_par_rue'][1],street_name_cadastre.replace("'","''"),street_name_osm.replace("'","''"),street_name_fantoir.replace("'","''"),cle_fantoir,code_insee,code_cadastre,code_dept,'',source,adresses.a[v]['highway_index'])).replace(",'',",",null,"))
+			# print(a_values_voie)
+			# os._exit(0)
 # nodes
 		# else:
 		for num in adresses.a[v]['numeros']:
@@ -606,10 +622,19 @@ def load_to_db(adresses,code_insee,source,code_cadastre,code_dept):
 		if len(a_values)>0:
 			sload = sload+','.join(a_values)+';COMMIT;'
 			cur_insert.execute(sload)
+	sload_voie = 'INSERT INTO cumul_voies (geometrie,voie_cadastre,voie_osm,voie_fantoir,fantoir,insee_com,cadastre_com,dept,code_postal,source,voie_index) VALUES'
 	if len(a_values_voie) > 0:
 		sload_voie = sload_voie+','.join(a_values_voie)+';COMMIT;'
 		cur_insert.execute(sload_voie)
 	return(nb_rec)
+def load_type_highway_from_pg_osm(insee_com,cadastre_com):
+	data = get_data_from_pg('type_highway_insee',insee_com,cadastre_com)
+	for l in data:
+		name = l[0].decode('utf8')
+		adresses.register(name)
+		cle = normalize(name)
+		if l[1] in dicts.highway_types:
+			adresses.add_highway_index(cle,dicts.highway_types[l[1]])
 def normalize(s):
 	# if s[0:2] == 'BD' or s[0:4] == 'Boul':
 		# print(s)
@@ -739,7 +764,7 @@ def main(args):
 	add_fantoir_to_hsnr()
 	load_point_par_rue_from_pg_osm(code_insee,code_cadastre)
 	load_point_par_rue_complement_from_pg_osm(code_insee,code_cadastre)
-	
+	load_type_highway_from_pg_osm(code_insee,code_cadastre)
 	nb_rec = load_to_db(adresses,code_insee,source,code_cadastre,code_dept)
 	
 	batch_end_log(nb_rec,batch_id)
