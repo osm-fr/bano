@@ -312,7 +312,11 @@ def get_best_fantoir(cle):
 	return res
 def get_cache_filename(data_type,insee_com,cadastre_com):
 	cadastre_dep = get_cadastre_code_dept_from_insee(insee_com)
-	cache_filename = os.path.join('/data/work/cadastre.openstreetmap.fr/bano_cache/',cadastre_dep,cadastre_com,'{:s}-{:s}.csv'.format(cadastre_com,data_type))
+	cache_dir = os.path.join('/data/work/cadastre.openstreetmap.fr/bano_cache/',cadastre_dep,cadastre_com)
+	if not os.path.exists(cache_dir):
+		os.mkdir(cache_dir)
+	# cache_filename = os.path.join('/data/work/cadastre.openstreetmap.fr/bano_cache/',cadastre_dep,cadastre_com,'{:s}-{:s}.csv'.format(cadastre_com,data_type))
+	cache_filename = os.path.join(cache_dir,'{:s}-{:s}.csv'.format(cadastre_com,data_type))
 	return cache_filename
 def get_cadastre_code_dept_from_insee(insee):
 	code_dept = '0'+insee[0:2]
@@ -757,6 +761,7 @@ def main(args):
 	if source == 'OSM':
 		load_hsnr_from_pg_osm(code_insee,code_cadastre)
 		load_hsnr_bbox_from_pg_osm(code_insee,code_cadastre)
+		load_type_highway_from_pg_osm(code_insee,code_cadastre)
 	load_highways_from_pg_osm(code_insee,code_cadastre)
 	load_highways_relations_from_pg_osm(code_insee,code_cadastre)
 	load_highways_bbox_from_pg_osm(code_insee,code_cadastre)
@@ -764,7 +769,6 @@ def main(args):
 	add_fantoir_to_hsnr()
 	load_point_par_rue_from_pg_osm(code_insee,code_cadastre)
 	load_point_par_rue_complement_from_pg_osm(code_insee,code_cadastre)
-	load_type_highway_from_pg_osm(code_insee,code_cadastre)
 	nb_rec = load_to_db(adresses,code_insee,source,code_cadastre,code_dept)
 	
 	batch_end_log(nb_rec,batch_id)
