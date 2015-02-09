@@ -260,7 +260,7 @@ def get_dict_accents_mots(osm_noms):
         # en faire un dictionaire de remplacement a appliquer
         for node in osm_noms.nodes.itervalues():
           if not 'place' in node.tags: # on évite les nœuds place=neighbourhood qui sont écrit en majuscule sans accents
-            for mot in node.tags['name'].replace("_"," ").replace("-"," ").split():
+            for mot in node.tags['name'].replace("_"," ").replace("-"," ").replace("'"," ").split():
                 if len(mot) > 1:
                     mot_norm = to_ascii(mot).upper()
                     if mot_norm != mot.upper(): # il contient des accents
