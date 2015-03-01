@@ -17,7 +17,6 @@ SELECT	l.name,l.tags->'ref:FR:FANTOIR' f,l.tags->'ref:FR:FANTOIR:left' fl,l.tags
 				p.tags->'ref:INSEE'='__com__'	AND
 				l.highway 	IS NOT NULL			AND
 				l.name 		IS NOT NULL
-		--		group by 1,2,3,4
 UNION
 SELECT	pl.name,pl.tags->'ref:FR:FANTOIR' f,'' fl,'' fr,'' suffixe,p.tags->'ref:INSEE'
 		FROM	planet_osm_polygon 	p
@@ -27,7 +26,8 @@ SELECT	pl.name,pl.tags->'ref:FR:FANTOIR' f,'' fl,'' fr,'' suffixe,p.tags->'ref:I
 		WHERE	p.tags ? 'ref:INSEE'			AND
 				p.tags->'ref:INSEE'='__com__'	AND
 				(	coalesce(pl.highway,pl.tags->'ref:FR:FANTOIR') 	IS NOT NULL		OR
-					pl.landuse = 'residential')	AND
+					pl.landuse = 'residential'													OR
+					pl.amenity = 'parking')	AND
 				pl.name 	IS NOT NULL
 		--		group by 1,2,3,4
 ORDER BY 6
