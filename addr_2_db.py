@@ -665,8 +665,9 @@ def normalize(s):
 			abrev_trouvee = True
 # ordinal
 	s = s.replace(' EME ','EME ')
-	s = s.replace(' 1ER ',' PREMIER ')
-
+	s = s.replace(' 1ERE',' PREMIERE')
+	s = s.replace(' 1ER',' PREMIER')
+	
 # chiffres
 	for c in dicts.chiffres:
 		s = s.replace(c[0],c[1])
