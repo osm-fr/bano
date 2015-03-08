@@ -8,4 +8,5 @@ psql cadastre -c "UPDATE laposte_cp SET commune=trim(commune), libelle=trim(libe
 
 # ajout de BIHOREL (manquant dans fichier La Poste)
 psql cadastre -c "insert into laposte_cp values ('76095','BIHOREL','76420','BIHOREL');"
-
+# correction des codes postaux invalides (4 ou 6 chiffres au lieu de 5)
+psql cadastre -c "update laposte_cp set cp = '0'||cp where cp like '____'; update laposte_cp set cp = right(cp,5) where cp like '______';"
