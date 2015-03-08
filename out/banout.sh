@@ -17,7 +17,7 @@ FROM (WITH u AS \
            AND length(fantoir)=10 \
            AND fantoir LIKE '$1%' \
          GROUP BY fantoir, \
-                  num) \
+                  num), lp as (select insee, min(cp) as cp from laposte_cp where insee like '$1%' group by 1) \
       SELECT concat(u.fantoir,'-',u.num) AS id, \
              upper(replace(CASE WHEN u.num=o.num THEN o.numero WHEN u.num=od.num THEN od.num ELSE c.numero END,' ','')) AS numero, \
              replace(replace(regexp_replace(regexp_replace(coalesce(CASE \
@@ -26,7 +26,11 @@ FROM (WITH u AS \
              		WHEN o.voie_osm != '' THEN replace(o.voie_osm,'’',chr(39)) \
              		ELSE o.voie_cadastre \
              	END \
-             	WHEN u.num=od.num THEN replace(od.voie_osm,'’',chr(39)) \
+             	WHEN u.num=od.num THEN \
+		CASE \
+			WHEN od.voie_osm is not null THEN replace(od.voie_osm,'’',chr(39)) \
+			ELSE od.voie_cadastre \
+		END \
              	ELSE \
              	CASE \
              		WHEN c.voie_osm!='' THEN replace(c.voie_osm,'’',chr(39)) \
@@ -41,7 +45,7 @@ FROM (WITH u AS \
              		ELSE c.voie_cadastre \
              	END \
              END),'([dD][eé]partementale?|Rue|[rR]urale?|[vV]icinale?|[cC]ommunale?|Cr) ([0-9]+ )?[dD]ite? ',''),'(Draille|Chemin|Sentier) [dD]ite? ','\1 '),'Voie Che ','Chemin '),'Cours Dit Che ','Chemin ') AS voie, \
-             ca.code_postal AS code_post, \
+             coalesce(cp.postal_cod, lp.cp, ca.code_postal) AS code_post, \
              coalesce(cn.nom,initcap(ca.nom_com)) AS ville, \
              CASE \
                  WHEN u.num=o.num THEN 'OSM' \
@@ -68,6 +72,7 @@ FROM (WITH u AS \
                  ELSE c.geometrie \
              END AS geom \
       FROM u \
+      LEFT JOIN lp ON (lp.insee=left(u.fantoir,5)) \
       LEFT JOIN \
         (SELECT *, \
                 replace(replace(replace(replace(replace(replace(replace(regexp_replace(upper(numero),'^0*',''),'BIS','B'),'TER','T'),'QUATER','Q'),'QUAT','Q'),' ',''),'à','-'),';',',') AS num \
@@ -90,7 +95,6 @@ FROM (WITH u AS \
          FROM cumul_adresses \
          WHERE fantoir LIKE '$1%' \
            AND SOURCE LIKE 'OD%' \
-           AND voie_osm IS NOT NULL \
            AND st_x(geometrie)!=0 \
            AND st_y(geometrie)!=0) AS od \
         ON (od.num=u.num AND od.fantoir=u.fantoir) \
@@ -98,6 +102,8 @@ FROM (WITH u AS \
       	ON (ca.insee_com=left(u.fantoir,5)) \
       LEFT JOIN communes cn \
       	ON (cn.insee=left(u.fantoir,5)) \
+      LEFT JOIN postal_code cp \
+      	ON (cp.insee = left(u.fantoir,5) and st_contains(cp.wkb_geometry, coalesce(o.geometrie, od.geometrie, c.geometrie))) \
       WHERE u.num>'0') AS DATA \
 WHERE lat IS NOT NULL \
   AND lon IS NOT NULL \
@@ -116,6 +122,7 @@ sed -e 1d bano-$1-tmp.csv | sed 's/\(\.[0-9]\{6\}\)[0-9]*/\1/g' | sort > bano-$1
 # sortie RDF "turtle" à partir du csv
 python csv2ttl.py bano-$1.csv $1 > bano-$1.ttl
 gzip -9 bano-$1.ttl
+mv bano-$1.ttl.gz /data/project/bano.openstreetmap.fr/web/data/
 
 # copie dans le dossier web
 mv bano-$1.csv /data/project/bano.openstreetmap.fr/web/data/
