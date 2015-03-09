@@ -121,7 +121,7 @@ echo "`date +%H:%M:%S` LD $1"
 # export cumul_place (lieux-dits) > json
 psql cadastre -t -A -c "
 with u as (select fantoir as f, insee_com as insee from cumul_places where fantoir like '$1%' GROUP BY 1,2), lp as (select insee, min(cp) as cp from laposte_cp where insee like '$1%' group by 1)
-select '{\"id\": \"' || u.f || '\",\"type\": \"' || coalesce(o.ld_osm, 'place') || '\",\"name\": \"' || replace(replace(coalesce(o.libelle_osm, c.libelle_cadastre),'\"',''),'’',chr(39)) || '\",\"postcode\": \"' || coalesce(cp.postal_cod, lp.cp, ca.code_postal) || CASE WHEN replace(lower(cp.nom),'-',' ') != replace(lower(coalesce(cn.nom,initcap(ca.nom_com))),'-',' ') THEN '\",\"post_office\": \"' || cp.nom ELSE '' END || '\",\"lat\": \"' || case when o.geometrie is not null then round(st_y(o.geometrie)::numeric,6) else st_y(c.geometrie) end || '\",\"lon\": \"' || case when o.geometrie is not null then round(st_x(o.geometrie)::numeric,6) else st_x(c.geometrie) end || '\",\"city\": \"' || coalesce(cn.nom,initcap(ca.nom_com)) || '\",\"departement\": \"' || cog.nom_dep || '\", \"region\": \"' || cog.nom_reg || '\", \"importance\": '|| least(0.05,round(log((CASE WHEN g.statut LIKE 'Capital%' THEN 6 WHEN g.statut = 'Préfecture de régi' THEN 5 WHEN g.statut='Préfecture' THEN 4 WHEN g.statut LIKE 'Sous-pr%' THEN 3 WHEN g.statut='Chef-lieu canton' THEN 2 ELSE 1 END)+log(g.population+1)/3)*(0.25+0.5*(1-('0' || coalesce(f.ld_bati,'1'))::numeric)),4)) ||'}'
+select DISTINCT '{\"id\": \"' || u.f || '\",\"type\": \"' || coalesce(o.ld_osm, 'place') || '\",\"name\": \"' || replace(replace(coalesce(o.libelle_osm, c.libelle_cadastre),'\"',''),'’',chr(39)) || '\",\"postcode\": \"' || coalesce(cp.postal_cod, lp.cp, ca.code_postal) || CASE WHEN replace(lower(cp.nom),'-',' ') != replace(lower(coalesce(cn.nom,initcap(ca.nom_com))),'-',' ') THEN '\",\"post_office\": \"' || cp.nom ELSE '' END || '\",\"lat\": \"' || case when o.geometrie is not null then round(st_y(o.geometrie)::numeric,6) else st_y(c.geometrie) end || '\",\"lon\": \"' || case when o.geometrie is not null then round(st_x(o.geometrie)::numeric,6) else st_x(c.geometrie) end || '\",\"city\": \"' || coalesce(cn.nom,initcap(ca.nom_com)) || '\",\"departement\": \"' || cog.nom_dep || '\", \"region\": \"' || cog.nom_reg || '\", \"importance\": '|| least(0.05,round(log((CASE WHEN g.statut LIKE 'Capital%' THEN 6 WHEN g.statut = 'Préfecture de régi' THEN 5 WHEN g.statut='Préfecture' THEN 4 WHEN g.statut LIKE 'Sous-pr%' THEN 3 WHEN g.statut='Chef-lieu canton' THEN 2 ELSE 1 END)+log(g.population+1)/3)*(0.25+0.5*(1-('0' || coalesce(f.ld_bati,'1'))::numeric)),4)) ||'}'
 from u
 	LEFT JOIN fantoir_voie f on (f.code_insee=u.insee AND u.f = concat(f.code_insee,f.id_voie,f.cle_rivoli))
 	LEFT JOIN cumul_places c on (c.fantoir=u.f and c.source='CADASTRE')
@@ -132,7 +132,7 @@ from u
 	LEFT JOIN lp ON (lp.insee=u.insee)
     LEFT JOIN postal_code cp ON (cp.insee=u.insee AND ST_Contains(cp.wkb_geometry, o.geometrie))
 	JOIN (select dep, nom_dep, nom_reg from cog group by dep, nom_dep, nom_reg) as cog ON (cog.dep=left(u.insee,2) or cog.dep=left(u.insee,3))
-where coalesce(o.libelle_osm, c.libelle_cadastre) != cn.nom;
+where coalesce(o.libelle_osm, c.libelle_cadastre) != cn.nom ORDER BY 1;
 " >> $OUTPUT
 
 
