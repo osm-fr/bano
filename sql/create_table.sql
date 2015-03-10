@@ -40,6 +40,12 @@ CREATE TABLE cumul_adresses
 	source			character varying (100),
 	batch_import_id	integer);
 
+CREATE INDEX	cumul_adresses_fantoir ON cumul_adresses(fantoir);
+CREATE INDEX	cumul_adresses_fantoir_source_idx ON cumul_adresses(fantoir, source);
+CREATE INDEX	cumul_adresses_geo ON cumul_adresses USING gist (geometrie);
+CREATE INDEX	cumul_adresses_insee ON cumul_adresses(insee_com) WITH (fillfactor=95);
+CREATE INDEX	cumul_adresses_source ON cumul_adresses(source) WITH (fillfactor=95);
+
 DROP TABLE IF EXISTS cumul_voies CASCADE;
 CREATE TABLE cumul_voies
 (	geometrie		geometry ,
@@ -52,7 +58,14 @@ CREATE TABLE cumul_voies
 	dept			character varying (3),
 	code_postal		character varying (5),
 	source			character varying (100),
+	voie_index		integer,
 	batch_import_id	integer);
+
+CREATE INDEX	cumul_voies_fantoir ON cumul_voies(fantoir);
+CREATE INDEX	cumul_voies_fantoir_source_idx ON cumul_voies(fantoir, source);
+CREATE INDEX	cumul_voies_geo ON cumul_voies USING gist (geometrie);
+CREATE INDEX	cumul_voies_insee ON cumul_voies(insee_com) WITH (fillfactor=95);
+CREATE INDEX	cumul_voies_source ON cumul_voies(source) WITH (fillfactor=95);
 
 DROP TABLE IF EXISTS cumul_places CASCADE;
 CREATE TABLE cumul_places
@@ -163,3 +176,37 @@ CREATE TABLE parcelles_noms (
 );
 CREATE INDEX parcelles_noms_insee_com
 ON parcelles_noms(insee_com);
+
+DROP TABLE IF EXISTS type_voie CASCADE;
+CREATE TABLE type_voie (
+		id_voie integer,
+		tag_value text,
+		tag_index integer);
+INSERT INTO type_voie (id_voie,tag_value) 
+	VALUES (1,'steps'),
+			(2,'path'),
+			(3,'cycleway'),
+			(4,'footway'),
+			(5,'pedestrian'),
+			(6,'track'),
+			(7,'service'),
+			(8,'road'),
+			(9,'living_street'),
+			(10,'residential'),
+			(11,'unclassified'),
+			(12,'tertiary'),
+			(13,'secondary'),
+			(14,'primary'),
+			(15,'trunk'),
+			(16,'motorway');
+UPDATE type_voie
+SET		tag_index = power(2,id_voie-1);
+
+DROP TABLE IF EXISTS cadastre_noms_bruts CASCADE;
+CREATE TABLE cadastre_noms_bruts (
+		insee_com 		character(5),
+		voie_cadastre	character varying (300),
+		fantoir			character varying (10)
+);
+
+CREATE INDEX ON cadastre_noms_bruts(insee_com);
