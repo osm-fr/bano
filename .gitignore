@@ -223,3 +223,9 @@ cache_buildings/
 cache_highways/
 debug.txt
 opendata/
+*.cpg
+*.dbf
+*.prj
+*.shp
+*.shx
+*.tgz
