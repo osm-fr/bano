@@ -75,21 +75,23 @@ def collect_adresses_points(sel):
 	return kres
 def load_suffixe_2_db(adds):
 	nb_res = 0
-	f = open('q.txt','wb')
+	#f = open('q.txt','wb')
 	cur = pgc.cursor()
+	str_query = "DELETE FROM suffixe WHERE insee_com = '{:s}';COMMIT;".format(code_insee)
+	cur.execute(str_query)
 	for h in adds:
 		# Agde (34003): detection de 'Mer' abusif, pas d'autres suffixes dans la commune
 		if code_insee == '34003':
 			continue
 		print('\t{:s}'.format(h.encode('utf8')))
-		str_query = 'DELETE FROM suffixe WHERE libelle_hameau = \'{:s}\' and insee_com = \'{:s}\';'.format(h.replace("'","''").encode('utf8'),code_insee)
-		str_query += 'INSERT INTO suffixe SELECT (ST_Dump(gu)).geom,code_insee,hameau FROM (SELECT ST_Union(g) gu,code_insee,hameau FROM({:s})a GROUP BY 2,3)a;COMMIT;'.format(' UNION ALL '.join(adds[h]))
+		#str_query = 'DELETE FROM suffixe WHERE libelle_hameau = \'{:s}\' and insee_com = \'{:s}\';'.format(h.replace("'","''").encode('utf8'),code_insee)
+		str_query = 'INSERT INTO suffixe SELECT (ST_Dump(gu)).geom,code_insee,hameau FROM (SELECT ST_Union(g) gu,code_insee,hameau FROM({:s})a GROUP BY 2,3)a;COMMIT;'.format(' UNION ALL '.join(adds[h]))
 		# str_query += 'INSERT INTO suffixe SELECT ST_ConvexHull((ST_Dump(gu)).geom),code_insee,hameau FROM (SELECT ST_Union(g) gu,code_insee,hameau FROM({:s})a GROUP BY 2,3)a;COMMIT;'.format(' UNION ALL '.join(adds[h]))
 		# str_query+= 'DELETE FROM suffixe WHERE insee_com = \'{:s}\' and libelle_hameau = \'{:s}\' and st_area(geometrie) < (select sum(st_area(geometrie))/5 from suffixe a where insee_com = \'{:s}\' and libelle_hameau = \'{:s}\');COMMIT;'.format(code_insee,h.replace("'","''").encode('utf8'),code_insee,h.replace("'","''").encode('utf8'))
 		cur.execute(str_query)
-		f.write(str_query+'\n')
+		#f.write(str_query+'\n')
 		nb_res+=len(adds[h])
-	f.close()
+	#f.close()
 	return nb_res
 def	load_hsnr_from_cad_file(fnadresses):
 	xmladresses = ET.parse(fnadresses)
@@ -154,9 +156,9 @@ def	select_street_names_by_name(freq):
 			sel[k] = freq[k]
 	for k in freq:
 		ks = k.split()
-		if freq[k]['nombre'] > 5 and len(ks) == 1 and k not in mots:
+		# un suffixe ne peut pas être un numero seul, cas dans les arrdts parisiens
+		if freq[k]['nombre'] > 5 and len(ks) == 1 and not k.isdigit() and not k in mots :
 			sel[k] = freq[k]
-	# print(sel)
 	return sel
 def main(args):
 	debut_total = time.time()
