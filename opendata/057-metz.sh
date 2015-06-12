@@ -1,4 +1,4 @@
-cd /tmp
+cd 057_metz
 curl -k -o metz-numero.zip 'https://geo-ws.metzmetropole.fr/geoserver/ows?service=WFS&version=2.0.0&request=GetFeature&typeName=fdp_voi_nume&srsName=EPSG:4326&outputFormat=SHAPE-ZIP'
 unzip metz-numero.zip
 unzip metz-voie.zip

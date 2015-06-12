@@ -1,5 +1,4 @@
-cd /tmp
-cp /home/cquest/LMCU/lmcu_geocatalogue_1403274292.zip /tmp
+cd 059_lille
 unzip -o lmcu_geocatalogue_1403274292.zip
 ogr2ogr -t_srs EPSG:4326 -f PostgreSQL PG:dbname=cadastre donnees/LM_SEUIL_point.shp  -overwrite -nlt GEOMETRY -nln import_lille
 

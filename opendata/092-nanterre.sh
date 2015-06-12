@@ -1,4 +1,4 @@
-cd /tmp
+cd 092_nanterre
 rm -rf BDA_Adresse*
 
 # récupération des shapefile contenant les points adresse

@@ -1,4 +1,4 @@
-cd /tmp
+cd 006_nice
 wget 'http://opendata.nicecotedazur.org/data/storage/f/2014-12-08T15%3A52%3A26.440Z/ig-base-adresses-wgs84-shapefile.zip'
 unzip -o ig-base-adresses-wgs84-shapefile.zip
 ogr2ogr -t_srs EPSG:4326 -f PostgreSQL PG:dbname=cadastre ig_base_adresses_WGS84_shapefile.shp -overwrite -nlt GEOMETRY -nln import_nice

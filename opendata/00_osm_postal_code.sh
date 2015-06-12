@@ -1,3 +1,5 @@
+cd 00_osm
+
 # extraction limites des codes postaux vers shapefile
 ogr2ogr -f "ESRI Shapefile" -lco ENCODING=UTF-8 -s_srs EPSG:900913 -t_srs "EPSG:4326" -overwrite postal_code.shp \
 	PG:"host=osm105.openstreetmap.fr user=cadastre password=b4n0 dbname=osm" \
@@ -8,4 +10,4 @@ ogr2ogr -f PostgreSQL PG:dbname=cadastre postal_code.shp -overwrite -nlt GEOMETR
 
 # suppression colonne inutile et création index sur le code INSEE
 psql cadastre -c "alter table postal_code drop column ogc_fid; create index postal_code_insee on postal_code (insee);"
-
+psql cadastre -c "grant select on table postal_code to public;"

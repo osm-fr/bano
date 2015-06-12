@@ -1,4 +1,4 @@
-cd 017-larochelle
+cd 017_larochelle
 
 # ménage initial
 rm -f voirie*

@@ -1,6 +1,6 @@
 ## http://data.nantes.fr/donnees/detail/adresses-postales-de-nantes-metropole-par-commune/
 
-cd /tmp
+cd 044_nantes
 rm -rf *ADRESSES_NM*
 
 wget http://data.nantes.fr/fileadmin/data/datastore/nm/urbanisme/24440040400129_NM_NM_00001/ADRESSES_NM_shp_l93.zip

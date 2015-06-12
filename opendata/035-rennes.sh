@@ -1,4 +1,4 @@
-cd /tmp
+cd 035_rennes
 rm -rf voies_adresses*
 # récupération des shapefile contenant les points adresse
 wget http://www.data.rennes-metropole.fr/fileadmin/user_upload/data/data_sig/referentiels/voies_adresses/voies_adresses_shp_wgs84.zip

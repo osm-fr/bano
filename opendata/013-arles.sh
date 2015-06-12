@@ -1,6 +1,6 @@
 ## http://opendata.regionpaca.fr/donnees/detail/base-de-donnees-adresses-de-laccm.html
 
-cd /tmp
+cd 013_arles
 #wget 'http://opendata.regionpaca.fr/donnees.html?type=109&no_cache=1&tx_ausyopendata_pi1%5Bdataset%5D=283&tx_ausyopendata_pi1%5Bdatafile%5D=278&tx_ausyopendata_pi1%5Baction%5D=download&tx_ausyopendata_pi1%5Bcontroller%5D=Dataset&cHash=5d538731e8fa4c9f44d1a103dc452ab1' -O accm.zip
 wget 'http://opendata.regionpaca.fr/donnees.html?type=109&no_cache=1&tx_ausyopendata_pi1%5Bdataset%5D=283&tx_ausyopendata_pi1%5Bdatafile%5D=278&tx_ausyopendata_pi1%5Baction%5D=download&tx_ausyopendata_pi1%5Bcontroller%5D=Dataset&cHash=5d538731e8fa4c9f44d1a103dc452ab1' -O accm.zip
 unzip -o accm.zip

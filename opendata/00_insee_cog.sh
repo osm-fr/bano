@@ -1,4 +1,4 @@
-cd /tmp
+cd 00_insee
 wget -nc http://www.insee.fr/fr/methodes/nomenclatures/cog/telechargement/2014/txt/comsimp2014.zip
 unzip -o comsimp2014.zip
 iconv comsimp2014.txt -f ISO8859-1 -t UTF8 > comsimp2014.csv

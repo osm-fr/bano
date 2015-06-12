@@ -1,6 +1,6 @@
 ## http://opendata.montpelliernumerique.fr/Point-adresse
 
-cd /tmp
+cd 034_montpellier
 rm -rf VilleMTP*
 
 wget http://opendata.montpelliernumerique.fr/datastore/VilleMTP_MTP_PointAdresse.zip

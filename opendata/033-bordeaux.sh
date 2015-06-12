@@ -1,4 +1,4 @@
-cd /tmp
+cd 033_bordeaux
 rm -rf FV*
 
 curl -o cub-numeros.zip 'http://data.bordeaux-metropole.fr/files.php?gid=20&format=2'

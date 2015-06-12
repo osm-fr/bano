@@ -1,6 +1,6 @@
 ## http://opendata.grand-nancy.org/jeux-de-donnees/detail-dune-fiche-de-donnees/?tx_icsoddatastore_pi1%5Buid%5D=82&tx_icsoddatastore_pi1%5BreturnID%5D=447
 
-cd /tmp
+cd 054_nancy
 rm -rf ADRESSES*
 
 wget http://opendata.grand-nancy.org/fileadmin/fichiers/opendata/Referentiel_adresse/ADRESSES_shp.zip

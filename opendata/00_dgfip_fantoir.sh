@@ -1,5 +1,8 @@
 # récupération et décompression du fichier FANTOIR
 # wget http://www2.impots.gouv.fr/documentation/fantoir/fichier_national_fantoir.zip
+
+cd 00_dgfip
+
 unzip FANTOIR0115.zip
 
 # import dans SQL en format fixe (delimiter et quote spéciaux pour ignorer)

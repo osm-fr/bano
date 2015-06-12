@@ -1,4 +1,4 @@
-cd /home/cquest
+cd 087_limoges
 unzip -o export_bano_etalab_limoges.zip
 ogr2ogr -t_srs EPSG:4326 -f PostgreSQL PG:dbname=cadastre limoges_adresses.shp -overwrite -nlt GEOMETRY -nln import_limoges
 

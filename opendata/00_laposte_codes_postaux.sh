@@ -1,3 +1,5 @@
+cd 00_laposte
+
 # récupération et décompression du fichier FANTOIR
 wget https://www.data.gouv.fr/s/resources/base-officielle-des-codes-postaux/20141106-120608/code_postaux_v201410.csv
 iconv -f iso8859-1 -t utf8 code_postaux_v201410.csv > code_postaux_v201410-utf.csv

@@ -1,8 +1,8 @@
-cd /tmp
+cd 029_brest
 rm -rf BMO_BaseAdresses*
 
 # récupération des shapefile contenant les points adresse
-wget https://geo.pays-de-brest.fr/donnees/Documents/Public/BMO_BaseAdresses.zip
+curl https://geo.pays-de-brest.fr/donnees/Documents/Public/BMO_BaseAdresses.zip > BMO_BaseAdresses.zip
 unzip -o BMO_BaseAdresses.zip
 
 # import dans postGIS
