@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: UTF-8
 
-import addr_2_db as a
+#import addr_2_db as a
 import sys
 import os,os.path
 import subprocess
@@ -18,9 +18,10 @@ if len(sys.argv) > 2:
 
 pgc = get_pgc()
 if len(sys.argv) == 2:
-	str_query = 'SELECT insee_com,cadastre_com,nom_com,cadastre_dept FROM code_cadastre WHERE format_cadastre = \'VECT\' AND dept = \'{:s}\' ORDER BY dept,nom_com;'.format(sys.argv[1])
+	str_query = "SELECT insee_com,cadastre_com,nom_com,cadastre_dept FROM code_cadastre WHERE format_cadastre = 'VECT' AND dept = '{:s}' ORDER BY dept,nom_com;".format(sys.argv[1])
 else:
-	str_query = 'SELECT c.insee_com,c.cadastre_com,c.nom_com,c.cadastre_dept FROM code_cadastre c LEFT OUTER JOIN (SELECT cadastre_com FROM batch WHERE etape = \'importQadastre\' AND date_fin IS NOT NULL) b ON c.cadastre_com = b.cadastre_com WHERE b.cadastre_com IS NULL AND c.format_cadastre = \'VECT\' ORDER BY dept,nom_com;' 
+	#str_query = "SELECT c.insee_com,c.cadastre_com,c.nom_com,c.cadastre_dept FROM code_cadastre c LEFT OUTER JOIN (SELECT cadastre_com FROM batch WHERE etape = 'importQadastre' AND date_fin IS NOT NULL) b using (cadastre_com) WHERE b.cadastre_com IS NULL AND c.format_cadastre = 'VECT' ORDER BY dept,nom_com;"
+	str_query = "SELECT DISTINCT c.insee_com,c.cadastre_com,c.nom_com,c.cadastre_dept FROM code_cadastre c JOIN (SELECT cadastre_com FROM code_cadastre  WHERE format_cadastre = 'VECT' EXCEPT SELECT b1.cadastre_com FROM batch b1 JOIN batch b2 USING (cadastre_com) WHERE b1.etape = 'importQadastre' AND b2.etape = 'recupCadastre' AND b1.timestamp_debut > b2.timestamp_debut AND b1.date_fin IS NOT NULL AND b2.date_fin IS NOT NULL) j USING (cadastre_com) ORDER BY 4,3;"
 
 cur = pgc.cursor()
 cur.execute(str_query)
@@ -35,11 +36,11 @@ for c in cur:
 		p_out_city = p[0:-4]+'-city-limit.osm'
 		p_out_water = p[0:-4]+'-water.osm'
 		suffixe = '-'.join(p[0:-4].rsplit('-',2)[1:])
-		if not (os.path.exists(p_out) or os.path.exists(p_out_city) or os.path.exists(p_out_water) ):
-			print(p_out)
-			subprocess.call('./qadastre.sh {:s} {:s} "{:s}"'.format(c[3],c[1],suffixe),shell=True)
-			if not os.path.exists(p_out):
-				nb_parts -=1
+		#if not (os.path.exists(p_out) or os.path.exists(p_out_city) or os.path.exists(p_out_water) ):
+		print(suffixe)
+		subprocess.call('./qadastre.sh {:s} {:s} "{:s}"'.format(c[3],c[1],suffixe),shell=True)
+		if not os.path.exists(p_out):
+			nb_parts -=1
 		# os._exit(0)
 	batch_end_log(nb_parts,batch_id)
 	time.sleep(1)
