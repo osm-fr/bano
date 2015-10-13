@@ -6,7 +6,8 @@ import time
 import os
 import xml.etree.ElementTree as ET
 
-a_depts = ['2A','2B']
+a_depts = ['2A','2B','976']
+#a_depts = ['2A','2B']
 for n in range(1,20)+range(21,96)+range(971,975):
         a_depts.append(str(n).rjust(2,'0'))
 a_0_depts = [a.rjust(3,'0') for a in a_depts]
