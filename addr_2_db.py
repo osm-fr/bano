@@ -123,6 +123,7 @@ class Dicts:
 							['7','SEPT'],
 							['8','HUIT'],
 							['9','NEUF'],
+							[' DIX NEUF ',' UNNEUF '],
 							[' DIX ',' UNZERO '],
 							[' ONZE ',' UNUN '],
 							[' DOUZE ',' UNDEUX '],
