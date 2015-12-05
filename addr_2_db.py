@@ -28,8 +28,8 @@ class Adresses:
 		self.register(cle)
 		if len(fantoir) == 10:
 			self.a[cle]['fantoirs'][source] = fantoir
-		else:
-			print(u'Code Fantoir non conforme : {:s}'.format(fantoir))
+		# else:
+		# 	print(u'Code Fantoir non conforme : {:s}'.format(fantoir))
 	def add_voie(self,voie_cle,source,voie=None):
 		cle = normalize(voie_cle)
 		if not voie:
@@ -43,8 +43,8 @@ class Adresses:
 			self.a[cle]['numeros'][ad.numero] = ad
 			if ad.fantoir != '':
 				self.a[cle]['fantoirs']['OSM'] = ad.fantoir
-		else:
-			print(u'adresse rejetée : {:s} {:s}'.format(ad.numero,ad.fantoir))
+		# else:
+		# 	print(u'adresse rejetée : {:s} {:s}'.format(ad.numero,ad.fantoir))
 	def get_cle_by_fantoir(self,fantoir):
 		cle = ''
 		for c in self.a:
@@ -427,8 +427,8 @@ def load_hsnr_from_cad_file(fnadresses,source):
 				for v in dict_node_relations[n_id]:
 					nd = Node({'id':n_id,'lon':n.get('lon'),'lat':n.get('lat')},{})
 					adresses.add_adresse(Adresse(nd,dtags['addr:housenumber'],adresses.a[v]['voies']['CADASTRE'],''),source)
-			else:
-				print('Numero invalide : {:s}'.format(dtags['addr:housenumber'].encode('utf8')))
+			# else:
+			# 	print('Numero invalide : {:s}'.format(dtags['addr:housenumber'].encode('utf8')))
 def load_hsnr_bbox_from_pg_osm(insee_com,cadastre_com):
 	data = get_data_from_pg('hsnr_bbox_insee',insee_com,cadastre_com)
 	for l in data:
