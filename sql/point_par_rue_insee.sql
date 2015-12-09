@@ -11,7 +11,8 @@ FROM (	WITH w
 			ON		ST_Intersects(l.way, p.way)
 			WHERE	p.tags ? 'ref:INSEE'			AND
 					p.tags->'ref:INSEE'='__com__'	AND
-					l.highway IS NOT NULL			AND
+					(l.highway IS NOT NULL			OR
+					l.waterway = 'dam')				AND
 					l.name IS NOT NULL)
 		SELECT	ST_Transform(ST_SetSRID(ST_ClosestPoint(wl.way,wp.way),900913),4326) point,
 				wl.name,
