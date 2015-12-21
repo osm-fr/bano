@@ -13,7 +13,7 @@ AS (SELECT	l.way,
 		l.name IS NOT NULL),
 w1
 AS
-(SELECT	w.*,rank() OVER(PARTITION BY name ORDER BY within DESC) rang
+(SELECT	w.*,rank() OVER(PARTITION BY name,insee ORDER BY within DESC) rang
 FROM	w),
 wl
 AS
