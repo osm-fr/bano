@@ -572,6 +572,11 @@ def load_point_par_rue_from_pg_osm(insee_com,cadastre_com):
 		adresses.register(name)
 		cle = normalize(name)
 		adresses.a[cle]['point_par_rue'] = l[0:2]
+		if 'OSM' not in adresses.a[cle]['voies']:
+			adresses.add_voie(name,'OSM')
+		if 'OSM' not in adresses.a[cle]['fantoirs']:
+			if cle in dicts.fantoir:
+				adresses.add_fantoir(cle,dicts.fantoir[cle],'OSM')
 def load_point_par_rue_complement_from_pg_osm(insee_com,cadastre_com):
 	data = get_data_from_pg('point_par_rue_complement_insee',insee_com,cadastre_com)
 	for l in data:
@@ -772,9 +777,7 @@ def main(args):
 	load_point_par_rue_from_pg_osm(code_insee,code_cadastre)
 	load_point_par_rue_complement_from_pg_osm(code_insee,code_cadastre)
 	nb_rec = load_to_db(adresses,code_insee,source,code_cadastre,code_dept)
-	
 	batch_end_log(nb_rec,batch_id)
 	fin_total = time.time()
-	# print('Execution en '+str(int(fin_total - debut_total))+' s.')
 if __name__ == '__main__':
     main(sys.argv)
