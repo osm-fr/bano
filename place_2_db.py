@@ -183,7 +183,6 @@ def format_toponyme(s):
 def get_data_from_pg(data_type,insee_com,cadastre_com,local=False,suffixe_data=None):
 	# print(data_type,insee_com,cadastre_com,suffixe_data)
 	cache_file = get_cache_filename(data_type,insee_com,cadastre_com)
-	# print(cache_file)
 	if not use_cache or not os.path.exists(cache_file) or (time.time() - os.path.getmtime(cache_file)) > 86400 :
 		fq = open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'sql/{:s}.sql'.format(data_type)),'rb')
 		str_query = fq.read().replace('__com__',insee_com)
@@ -311,8 +310,8 @@ def normalize(s):
 
 def main(args):
 	debut_total = time.time()
-	usage = 'USAGE : python place_2_db.py <code INSEE>'
-	if len(args) != 2:
+	usage = 'USAGE : python place_2_db.py <code INSEE> {use_cache=True}'
+	if len(args) < 2:
 		print(usage)
 		os._exit(0)
 
@@ -326,10 +325,10 @@ def main(args):
 	format_cadastre = get_cadastre_format(code_insee)
 
 	use_cache = True
-
+	if len(args) > 2:
+		use_cache = args[2]
 	places = Places()
 	load_fantoir(code_insee)
-	# places._print()
 	
 	batch_id_osm = batch_start_log('OSM','cumulPlaces',code_cadastre)
 
