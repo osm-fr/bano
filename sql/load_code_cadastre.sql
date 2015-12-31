@@ -8,6 +8,11 @@ DELETE FROM code_cadastre
 WHERE insee_com IN (SELECT insee_com FROM tmp_code_cadastre WHERE format_cadastre = 'VECT' AND nom_com != ''
 						INTERSECT
 						SELECT insee_com FROM code_cadastre WHERE format_cadastre = 'IMAG');
+DELETE FROM code_cadastre
+WHERE insee_com IN (SELECT insee_com
+					FROM (SELECT insee_com,cadastre_com FROM tmp_code_cadastre WHERE format_cadastre = 'VECT' AND nom_com != ''
+						EXCEPT
+						SELECT insee_com,cadastre_com FROM code_cadastre)i);
 INSERT INTO code_cadastre
 SELECT t.*
 FROM tmp_code_cadastre t
