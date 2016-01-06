@@ -5,11 +5,11 @@ rm -rf VilleMTP*
 
 wget http://opendata.montpelliernumerique.fr/datastore/VilleMTP_MTP_PointAdresse.zip
 unzip -o VilleMTP_MTP_PointAdresse.zip
-ogr2ogr -t_srs EPSG:4326 -f PostgreSQL PG:dbname=cadastre /tmp/VilleMTP_MTP_PointAdresse.shp -overwrite -nlt GEOMETRY -nln import_montpellier
+ogr2ogr -t_srs EPSG:4326 -f PostgreSQL PG:dbname=cadastre VilleMTP_MTP_PointAdresse.shp -overwrite -nlt GEOMETRY -nln import_montpellier
 
 wget http://opendata.montpelliernumerique.fr/datastore/VilleMTP_MTP_FilaireVoies.zip
 unzip -o VilleMTP_MTP_FilaireVoies.zip
-ogr2ogr -t_srs EPSG:4326 -f PostgreSQL PG:dbname=cadastre /tmp/VilleMTP_MTP_FilaireVoies.shp  -overwrite -nlt GEOMETRY -nln import_montpellier_voies
+ogr2ogr -t_srs EPSG:4326 -f PostgreSQL PG:dbname=cadastre VilleMTP_MTP_FilaireVoies.shp  -overwrite -nlt GEOMETRY -nln import_montpellier_voies
 
 # remise en forme code fantoir du fichier voies
 psql cadastre -c "update import_montpellier_voies set rivoli_dgi=substr(rivoli_dgi,2,4) where rivoli_dgi ~ '^0[0-9BX][0-9]{3}';"
