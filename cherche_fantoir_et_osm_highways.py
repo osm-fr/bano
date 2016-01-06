@@ -141,12 +141,13 @@ def open_osm_overpass(requete, cache_filename, metropole=False):
     if not (os.path.exists(cache_filename) and os.path.exists(ok_filename)):
         if os.path.exists(cache_filename): os.remove(cache_filename)
         if os.path.exists(ok_filename): os.remove(ok_filename)
-        if metropole:
+        #if metropole:
             # oapi-fr.openstreetmap.fr n'a que la métropole, pas l'outre mer
-            overvass_server = "http://oapi-fr.openstreetmap.fr/oapi/interpreter?"
-        else:
-            overvass_server = "http://overpass-api.de/api/interpreter?"
-        url = overvass_server + urllib.urlencode({'data':requete})
+        #    overpass_server = "http://oapi-fr.openstreetmap.fr/oapi/interpreter?"
+        #else:
+        #overpass_server = "http://api.openstreetmap.fr/oapi/interpreter?"
+        overpass_server = "http://overpass.osm.rambler.ru/cgi/interpreter?"
+        url = overpass_server + urllib.urlencode({'data':requete})
         sys.stdout.write((urllib.unquote(url) + "\n").encode("utf-8"))
         sys.stdout.flush()
         write_stream_to_file(urllib2.urlopen(url), cache_filename)
@@ -167,9 +168,9 @@ def open_osm_ways_commune(code_departement, code_commune, type_way, filtre="", n
     cache_filename = code_commune + "-" + type_way + "s.osm"
     code_insee = cadastre.code_insee(code_departement, code_commune)
     area = 3600000000 + addr_fantoir_building.dicts.osm_insee[code_insee]
-    requete_overpass = 'way(area:%d)["%s"]%s;' % (area, type_way, filtre)
+    requete_overpass = 'area["ref:INSEE"="%s"];way(area)["%s"]%s;' % (code_insee, type_way, filtre)
     if nodes: requete_overpass += "(._;>;);"
-    requete_overpass += "out meta;"
+    requete_overpass += "out;"
     sys.stdout.write((u"Récupération des " + type_way + " de la commune\n").encode("utf-8"))
     return open_osm_overpass(requete_overpass, cache_filename, metropole=code_departement.startswith("0"))
 
@@ -259,7 +260,8 @@ def get_dict_accents_mots(osm_noms):
         # On essaye de parser l'ensemble des noms extraits du cadastre pour
         # en faire un dictionaire de remplacement a appliquer
         for node in osm_noms.nodes.itervalues():
-          if not 'place' in node.tags: # on évite les nœuds place=neighbourhood qui sont écrit en majuscule sans accents
+          #if not 'place' in node.tags: # on évite les nœuds place=neighbourhood qui sont écrit en majuscule sans accents
+          if 'name' in node.tags and not 'place' in node.tags: # on évite les nœuds place=neighbourhood qui sont écrit en majuscule sans accents, et les noeuds sans tag name (sans aucun tag)
             for mot in node.tags['name'].replace("_"," ").replace("-"," ").replace("'"," ").split():
                 if len(mot) > 1:
                     mot_norm = to_ascii(mot).upper()
