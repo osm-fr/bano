@@ -3,6 +3,7 @@
 from addr_2_db import get_code_cadastre_from_insee
 from addr_2_db import get_cadastre_code_dept_from_insee
 from addr_2_db import get_tags
+from addr_2_db import is_valid_housenumber
 from pg_connexion import get_pgc
 from outils_de_gestion import batch_start_log
 from outils_de_gestion import batch_end_log
@@ -67,7 +68,7 @@ class Way:
 				voie = self.tags[street_tag].replace('\'','\'\'')
 			else:
 				continue
-			if hsnr_tag in self.tags:
+			if hsnr_tag in self.tags and is_valid_housenumber(self.tags[hsnr_tag]):
 				numero = self.tags[hsnr_tag]
 			a_values.append('(SELECT ST_Transform(ST_SetSRID(ST_MakePolygon(ST_GeomFromText({:s})),4326),900913)),\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\',\'{:s}\''.format(self.geom.get_geom_as_linestring_text(),code_insee,id_cadastre,numero,voie,fantoir))
 		if a_values:
@@ -171,7 +172,9 @@ def main(args):
 	fn_parcelles = os.path.join(get_cache_directory(code_insee,cadastre_com),cadastre_com+'-parcelles.osm')
 	# fn_parcelles = 'C:\\Users\\vincent\\Documents\\GitHub\\ZA063-parcelles.osm'
 	batch_id = batch_start_log('CADASTRE','importParcelles',cadastre_com)
-	nb_parcelles = load_parcelles(fn_parcelles)
+	nb_parcelles = 0
+	if (os.path.exists(fn_parcelles)):
+		nb_parcelles = load_parcelles(fn_parcelles)
 	batch_end_log(nb_parcelles,batch_id)
 
 	a_fn_houses_parts = glob.glob('{:s}/{:s}-[0-9]-[0-9]-houses.osm'.format(get_cache_directory(code_insee,cadastre_com),cadastre_com))
