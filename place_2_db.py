@@ -211,13 +211,13 @@ def get_data_from_pg(data_type,insee_com,cadastre_com,local=False,suffixe_data=N
 	f.close()
 	return res
 def load_cadastre():
-	date_buildings_en_base = get_cadastre_etape_timestamp_debut(code_cadastre,'importBuildings','CADASTRE')
-	date_cache = get_cadastre_etape_timestamp_debut(code_cadastre,'cumulPlaces','CADASTRE')
-	# print('date_buildings_en_base '+str(date_buildings_en_base))
-	# print('date_cache '+str(date_cache))
-	if date_cache > date_buildings_en_base:
-		fname = get_cache_filename('cadastre_2_places',code_insee,code_cadastre)
-		if os.path.exists(fname):
+	fname = get_cache_filename('cadastre_2_places',code_insee,code_cadastre)
+	if os.path.exists(fname):
+		date_buildings_en_base = get_cadastre_etape_timestamp_debut(code_cadastre,'importBuildings','CADASTRE')
+		date_cache = os.path.getmtime(fname)
+		# print('date_buildings_en_base '+str(date_buildings_en_base))
+		# print('date_cache '+str(date_cache))
+		if date_cache > date_buildings_en_base:
 			os.utime(fname, None)
 			# print('utime')
 	data = get_data_from_pg('cadastre_2_places',code_insee,code_cadastre,True)
