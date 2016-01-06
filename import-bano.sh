@@ -44,7 +44,8 @@ if [ "$bis" = "false" ] ; then
   nobis="-nobis"
 fi
 
-command1="env LD_LIBRARY_PATH=/home/tyndare/.local/lib/ PYTHONPATH=/home/tyndare/.local/lib/python2.7/site-packages/ $PWD/cadastre_vers_osm_adresses_pour_bano.py $nobis $code_departement $code_commune"
+# command1="env LD_LIBRARY_PATH=/home/tyndare/.local/lib/ PYTHONPATH=/home/tyndare/.local/lib/python2.7/site-packages/ $PWD/cadastre_vers_osm_adresses_pour_bano.py $nobis $code_departement $code_commune"
+command1="env LD_LIBRARY_PATH=/home/tyndare/.local/lib/ PYTHONPATH=/home/tyndare/.local/lib/python2.7/site-packages/ $PWD/cadastre_vers_osm_adresses.py $nobis $code_departement $code_commune"
 command1dir="$communedir"
 
 # command2="python addr_fantoir_building.py $code_insee $code_commune"
