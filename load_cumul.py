@@ -99,6 +99,7 @@ for c_loop in cur_loop:
 		get_data_by_dept_from_pg('hsnr_bbox_insee',num_dept_cadastre)
 		get_data_by_dept_from_pg('point_par_rue_insee',num_dept_cadastre)
 		get_data_by_dept_from_pg('point_par_rue_complement_insee',num_dept_cadastre)
+		get_data_by_dept_from_pg('type_highway_insee',num_dept_cadastre)
 	# os._exit(0)
 	
 	get_data_by_dept_from_pg('highway_insee',num_dept_cadastre)
