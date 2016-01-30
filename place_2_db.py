@@ -73,9 +73,9 @@ class Place:
 			return "(ST_PointFromText('POINT({:7f} {:7f})',4326),'{:s}',null,null,null,'{:s}','{:s}','{:s}','','{:s}',null,'')".format(self.cadastre.lon,self.cadastre.lat,format_toponyme(self.cadastre.name).replace('\'','\'\'').encode('utf8'),code_insee,code_cadastre,code_dept,'CADASTRE')
 	def as_SQL_osm_row(self):
 		if self.has_osm and self.has_fantoir:
-			return "(ST_PointFromText('POINT({:7f} {:7f})',4326),null,'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','','{:s}',{:s},'')".format(self.osm.lon,self.osm.lat,self.osm.name.replace('\'','\'\'').encode('utf8'),self.fantoir.name.replace('\'','\'\''),self.fantoir.fantoir,code_insee,code_cadastre,code_dept,'OSM',self.fantoir.bati)
+			return "(ST_PointFromText('POINT({:7f} {:7f})',4326),null,'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','','{:s}',{:s},'{:s}')".format(self.osm.lon,self.osm.lat,self.osm.name.replace('\'','\'\'').encode('utf8'),self.fantoir.name.replace('\'','\'\''),self.fantoir.fantoir,code_insee,code_cadastre,code_dept,'OSM',self.fantoir.bati,self.osm.place)
 		if self.has_osm:
-			return "(ST_PointFromText('POINT({:7f} {:7f})',4326),null,'{:s}',null,null,'{:s}','{:s}','{:s}','','{:s}',null,'')".format(self.osm.lon,self.osm.lat,self.osm.name.replace('\'','\'\'').encode('utf8'),code_insee,code_cadastre,code_dept,'OSM')
+			return "(ST_PointFromText('POINT({:7f} {:7f})',4326),null,'{:s}',null,null,'{:s}','{:s}','{:s}','','{:s}',null,'{:s}')".format(self.osm.lon,self.osm.lat,self.osm.name.replace('\'','\'\'').encode('utf8'),code_insee,code_cadastre,code_dept,'OSM',self.osm.place)
 class Places:
 	def __init__(self):
 		self.p = {}
