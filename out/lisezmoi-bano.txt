@@ -40,7 +40,7 @@ BANO est une base de données composite, constituée à partir de différentes s
 - OpenStreetMap (ODbL)
 - données disponibles en opendata
   - Arles Crau Camargue Montagnette (Licence Ouverte) - juin 2014
-  - Ville de Montpellier (Licence Ouverte) - janvier 2015
+  - Ville de Montpellier (Licence Ouverte) - décembre 2015
   - Toulouse Métropole (ODbL) - juin 2014
   - Rennes Métropole (ODbL) - juin 2014
   - Mulhouse Alsace Agglomération (Licence Ouverte) - septembre 2013
@@ -49,13 +49,17 @@ BANO est une base de données composite, constituée à partir de différentes s
   - Grand Lyon (Licence Ouverte) - janvier 2015
   - Bordeaux Métropole (ODbL) - février 2015
   - Strasbourg EuroMétropole (Licence Ouverte) - janvier 2014
-  - Communauté Urbaine de Lille Métropole (Licence Ouverte - juin 2014
-  - Métropole Nice Côte d'Azur (Licence Ouverte - Janvier 2015)
-  - Ville de Limoges (ODbL - Décembre 2014)
-  - Ville de La Rochelle (ODbL - Février 2015)
-  - Brest Métropole Océane (ODbL - Février 2015)
-  - Ville de Nanterre (Licence Ouverte - Février 2015)
-- données adresses collectées sur le site du cadastre et fichier FANTOIR (Licence Ouverte) - 2014
+  - Communauté Urbaine de Lille Métropole (Licence Ouverte) - juin 2014
+  - Métropole Nice Côte d'Azur (Licence Ouverte) - Janvier 2015 
+  - Ville de Limoges (ODbL) - Décembre 2014
+  - Ville de La Rochelle (ODbL) - Octobre 2015
+  - Brest Métropole Océane (ODbL) - Juin 2015
+  - Ville de Nanterre (Licence Ouverte) - Février 2015 
+  - Ville de Grenoble (ODbL) - Mars 2015 
+  - Ville de Paris (ODbL) - Janvier 2015
+  - Ville de Poitiers (Licence Ouverte) - Avril 2015
+- données adresses collectées sur le site du cadastre et fichier FANTOIR DGFiP (Licence Ouverte) - Octobre 2015
+- base officielle des codes postaux de La Poste (Licence Ouverte) - 2014
 
 
 **Format**
