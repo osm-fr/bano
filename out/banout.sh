@@ -1,9 +1,29 @@
 # ménage préparatoire...
 rm -f bano-$1*
 
-# dédoublement des adresses multiple OSM (séparées par ';' '-' ',' ou 'à')
-psql cadastre -q -c "insert into cumul_adresses select geometrie, trim( both from regexp_split_to_table(numero,';|-|à|,')), voie_cadastre, voie_osm, fantoir, insee_com, cadastre_com, dept, code_postal, source, batch_import_id, voie_fantoir from cumul_adresses where numero ~ ';|-|à|,' and insee_com like '$1%' and source='OSM';"
-psql cadastre -q -c "delete from cumul_adresses where numero ~ ';|-|à|,' and insee_com like '$1%' and source='OSM';"
+# dédoublement des adresses multiple OSM (séparées par ';' ',' ou 'à')
+psql cadastre -q -c "insert into cumul_adresses select geometrie, trim( both from regexp_split_to_table(numero,';|à|,')), voie_cadastre, voie_osm, fantoir, insee_com, cadastre_com, dept, code_postal, source, batch_import_id, voie_fantoir from cumul_adresses where numero ~ ';|-|à|,' and insee_com like '$1%' and source='OSM';"
+psql cadastre -q -c "delete from cumul_adresses where numero ~ ';|à|,' and insee_com like '$1%' and source='OSM';"
+
+# dédoublement des adresses multiple OSM (séparées par '-' uniquement si premier nombre inférieur au second)
+psql cadastre -q -c "insert into cumul_adresses
+select geometrie, trim( both from regexp_split_to_table(numero,'-')), voie_cadastre, voie_osm, fantoir, insee_com, cadastre_com, dept, code_postal, source, batch_import_id, voie_fantoir
+from (
+  select * from (
+    select regexp_split_to_array(numero,'-') as nums,*
+      from cumul_adresses
+      where numero like '%-%' and insee_com like '$1%' and source='OSM'
+    ) as n
+    where regexp_replace('0'||nums[1],'[^0-9]','','g')::integer < regexp_replace('0'||nums[2],'[^0-9]','','g')::integer
+) as n;"
+psql cadastre -q -c "with n as (
+  select * from (
+    select regexp_split_to_array(numero,'-') as nums, fantoir as d_fantoir, numero as d_numero
+      from cumul_adresses
+      where numero like '%-%' and insee_com like '$1%' and source='OSM'
+    ) as n0
+    where regexp_replace('0'||nums[1],'[^0-9]','','g')::integer < regexp_replace('0'||nums[2],'[^0-9]','','g')::integer
+) delete from cumul_adresses where source='OSM' and fantoir||numero in (select d_fantoir||d_numero from n);"
 
 # export postgres > shapefile
 export SHAPE_ENCODING='UTF-8'
@@ -19,7 +39,7 @@ FROM (WITH u AS \
          GROUP BY fantoir, \
                   num), lp as (select insee, min(cp) as cp from laposte_cp where insee like '$1%' group by 1) \
       SELECT concat(u.fantoir,'-',u.num) AS id, \
-             upper(replace(CASE WHEN u.num=o.num THEN o.numero WHEN u.num=od.num THEN od.num ELSE c.numero END,' ','')) AS numero, \
+             upper(replace(CASE WHEN u.num=o.num THEN o.numero WHEN u.num=od.num THEN od.numero ELSE c.numero END,' ','')) AS numero, \
              replace(replace(regexp_replace(regexp_replace(coalesce(CASE \
              	WHEN u.num=o.num THEN \
              	CASE \
@@ -128,8 +148,8 @@ mv bano-$1.ttl.gz /data/project/bano.openstreetmap.fr/web/data/
 mv bano-$1.csv /data/project/bano.openstreetmap.fr/web/data/
 
 # préparation du shapefile zippé
-cp -p -u /data/project/bano.openstreetmap.fr/web/data/*.txt ./
-zip -q -9 bano-$1-shp.zip bano-$1.* .txt
+#cp -p -u /data/project/bano.openstreetmap.fr/web/data/*.txt ./
+zip -q -9 bano-$1-shp.zip bano-$1.* *.txt
 chmod a+r *.zip
 
 # copie dans le dossier web
