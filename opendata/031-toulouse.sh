@@ -1,6 +1,10 @@
 cd 031_toulouse
-curl -o toulouse.zip 'https://data.toulouse-metropole.fr/les-donnees/-/opendata/card/12673-n-de-rue/resource/document?p_p_state=exclusive&_5_WAR_opendataportlet_jspPage=%2Fsearch%2Fview_card.jsp'
-unzip -o toulouse.zip
-ogr2ogr -t_srs EPSG:4326 -f PostgreSQL PG:dbname=cadastre toulouse.vrt -overwrite -nlt GEOMETRY -nln import_toulouse
-psql cadastre -c "begin; delete from cumul_adresses where source='OD-TOULOUSE'; insert into cumul_adresses (select wkb_geometry, trim(regexp_replace(numero,'^0*','')||' '||repetition), libelle, null,concat(substr(sti,1,5),substr(rivoli,7,5)), substr(sti,1,5), null, '031', null, 'OD-TOULOUSE',null from import_toulouse);commit;"
+curl "https://data.toulouse-metropole.fr/explore/dataset/numero-de-rue/download/?format=geojson&timezone=Europe/Berlin" > num.geojson
+ogr2ogr -t_srs EPSG:4326 -f PostgreSQL PG:dbname=cadastre num.geojson -overwrite -nlt GEOMETRY -nln import_toulouse
+psql cadastre -c "
+BEGIN;
+DELETE FROM cumul_adresses WHERE source='OD-TOULOUSE';
+INSERT INTO cumul_adresses (SELECT wkb_geometry, trim(numero||' '||coalesce(repetition,'')), libelle, null,concat(substr(sti,1,5),substr(rivoli,7,5)), substr(sti,1,5), null, '031', null, 'OD-TOULOUSE',null,null from import_toulouse);
+COMMIT;
+"
 
