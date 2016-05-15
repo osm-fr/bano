@@ -39,25 +39,26 @@ Version complète en français disponible sur: http://www.vvlibri.org/fr/licence
 BANO est une base de données composite, constituée à partir de différentes sources:
 - OpenStreetMap (ODbL)
 - données disponibles en opendata
-  - Arles Crau Camargue Montagnette (Licence Ouverte) - juin 2014
-  - Ville de Montpellier (Licence Ouverte) - décembre 2015
-  - Toulouse Métropole (ODbL) - juin 2014
-  - Rennes Métropole (ODbL) - juin 2014
-  - Mulhouse Alsace Agglomération (Licence Ouverte) - septembre 2013
-  - Grand Nancy (ODbL) - août 2014
+  - Arles Crau Camargue Montagnette (Licence Ouverte) - avril 2016
+  - Ville de Montpellier (Licence Ouverte) - mai 2016
+  - Toulouse Métropole (ODbL) - février 2015
+  - Rennes Métropole (ODbL) - avril 2016
+  - Mulhouse Alsace Agglomération (Licence Ouverte) - février 2015
+  - Grand Nancy (ODbL) - avril 2016
   - Nantes Métropole (ODbL) - janvier 2015
   - Grand Lyon (Licence Ouverte) - janvier 2015
   - Bordeaux Métropole (ODbL) - février 2015
   - Strasbourg EuroMétropole (Licence Ouverte) - janvier 2014
   - Communauté Urbaine de Lille Métropole (Licence Ouverte) - juin 2014
-  - Métropole Nice Côte d'Azur (Licence Ouverte) - Janvier 2015 
-  - Ville de Limoges (ODbL) - Décembre 2014
-  - Ville de La Rochelle (ODbL) - Octobre 2015
-  - Brest Métropole Océane (ODbL) - Juin 2015
-  - Ville de Nanterre (Licence Ouverte) - Février 2015 
-  - Ville de Grenoble (ODbL) - Mars 2015 
-  - Ville de Paris (ODbL) - Janvier 2015
-  - Ville de Poitiers (Licence Ouverte) - Avril 2015
+  - Métropole Nice Côte d'Azur (Licence Ouverte) - janvier 2015
+  - Ville de Limoges (ODbL) - décembre 2014
+  - Ville de La Rochelle (ODbL) - octobre 2015
+  - Pays de Brest (Licence Ouverte) - mars 2016
+  - Mairie de Nanterre (Licence Ouverte) - février 2015
+  - Ville de Grenoble (ODbL) - mars 2015
+  - Ville de Paris (ODbL) - janvier 2015
+  - Ville de Poitiers (Licence Ouverte) - avril 2015
+  - Ville d'Angers (ODbL) - avril 2016
 - données adresses collectées sur le site du cadastre et fichier FANTOIR DGFiP (Licence Ouverte) - Octobre 2015
 - base officielle des codes postaux de La Poste (Licence Ouverte) - 2014
 
