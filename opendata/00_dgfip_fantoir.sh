@@ -1,5 +1,5 @@
 # nom du fichier dans le dossier 00_dgfip
-FANTOIR=FANTOIR1015
+FANTOIR=FANTOIR0116
 
 # récupération et décompression du fichier FANTOIR
 # wget http://www2.impots.gouv.fr/documentation/fantoir/fichier_national_fantoir.zip
