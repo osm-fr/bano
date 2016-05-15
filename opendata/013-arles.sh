@@ -6,7 +6,10 @@ wget 'http://opendata.regionpaca.fr/donnees.html?type=109&no_cache=1&tx_ausyopen
 unzip -o accm.zip
 ogr2ogr -t_srs EPSG:4326 -f PostgreSQL PG:dbname=cadastre ADRESSE_ACCM.shp  -overwrite -nlt GEOMETRY -nln import_accm
 
-psql cadastre -c "insert into cumul_adresses (select wkb_geometry, concat(num_voi,' ',suf_voi), concat(typevoie,' ',nomvoie), NULL, concat(codcomm,rivoli), codcomm, null, '013', code_posta, 'OD-ARLES', null from import_accm);"
+psql cadastre -c "
+delete from cumul_adresses where source='OD-ARLES';
+insert into cumul_adresses (select wkb_geometry, concat(num_voi,' ',suf_voi), concat(typevoie,' ',nomvoie), NULL, concat(codcomm,rivoli), codcomm, null, '013', code_posta, 'OD-ARLES', null from import_accm);
+"
 
 # mise à jour des codes FANTOIR (manque la clé RIVOLI dans les données opendata)
 psql cadastre -c "with f as (select v.fantoir, cle_rivoli from cumul_adresses join fantoir_voie v on (code_insee=insee_com and concat(code_insee,id_voie)=v.fantoir) where source = 'OD-ARLES' group by v.fantoir, cle_rivoli) update cumul_adresses c set fantoir = concat(f.fantoir,f.cle_rivoli) from f where c.fantoir=f.fantoir and source like 'OD%';"
