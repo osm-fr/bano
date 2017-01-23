@@ -11,10 +11,12 @@ a AS
  ON		ST_Intersects(pt.way, p.way)
  WHERE	p.tags ? 'ref:INSEE'			AND
 		p.tags->'ref:INSEE'='__com__'	AND
-		pt.place != ''	AND
+        (pt.place != ''                                       OR
+        (pt.railway !='' AND pt.tags->'ref:FR:FANTOIR' != '') OR
+        (pt.amenity !='' AND pt.tags->'ref:FR:FANTOIR' != '')    ) AND
 		pt.name != '')
-SELECT 	ST_X(pt_geo)::character varying,
-		ST_Y(pt_geo)::character varying,
+SELECT 	ST_X(pt_geo),
+		ST_Y(pt_geo),
 		place,
 		name,
 		fantoir,
