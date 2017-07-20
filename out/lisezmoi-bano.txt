@@ -59,6 +59,7 @@ BANO est une base de données composite, constituée à partir de différentes s
   - Ville de Paris (ODbL) - janvier 2015
   - Ville de Poitiers (Licence Ouverte) - avril 2015
   - Ville d'Angers (ODbL) - avril 2016
+  - Colmar Agglomération (Licence Ouverte) - septembre 2016
 - données adresses collectées sur le site du cadastre et fichier FANTOIR DGFiP (Licence Ouverte) - Octobre 2015
 - base officielle des codes postaux de La Poste (Licence Ouverte) - 2014
 
