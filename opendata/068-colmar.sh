@@ -8,6 +8,8 @@ ogr2ogr -t_srs EPSG:4326 -f PostgreSQL PG:dbname=cadastre FR_246800726_678.shp -
 psql cadastre -c "
 BEGIN;
 DELETE FROM cumul_adresses WHERE source='OD-COLMAR';
-INSERT INTO cumul_adresses (SELECT wkb_geometry, numero, voie, null, null, null, com_insee_, null, '068', null, 'OD-COLMAR',null from import_colmar);
+INSERT INTO cumul_adresses (
+SELECT wkb_geometry, numero, voie, null, com_insee_||rivoli||cle_rivoli, com_insee_, null, '068', null, 'OD-COLMAR',null,null FROM import_colmar JOIN fantoir_voie on (fantoir=com_insee_||rivoli)
+);
 COMMIT;
 "
