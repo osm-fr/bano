@@ -1,5 +1,6 @@
 ## http://www.agglo-colmar.fr/geo
 
+mkdir -p 068_colmar
 cd 068_colmar
 wget http://sig.agglo-colmar.fr/web/Sig/OpenData/FR-246800726-678/FR-246800726-678.zip
 unzip FR-246800726-678.zip
