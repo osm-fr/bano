@@ -6,7 +6,6 @@ import cookielib
 import time
 import os
 from bs4 import BeautifulSoup
-import re
 
 a_depts = []
 for n in range(1, 20)+['2A', '2B']+range(21, 96)+range(971, 975) + [976]:
@@ -19,8 +18,6 @@ request = urllib2.Request(
     'https://www.cadastre.gouv.fr/scpc/rechercherPlan.do')
 response = opener.open(request)
 token = response.read().split('CSRF_TOKEN=')[1].split('"')[0]
-
-COMMUNE_CP_REGEX = re.compile('^(.*?) \((.*?)\) $')
 
 for i, d in enumerate(a_0_depts):
     fname = 'dept_'+d+'.xml'
@@ -47,7 +44,8 @@ for i, d in enumerate(a_0_depts):
 
         # e.strong.string structure: "COBONNE (26400) "
         commune_cp = e.strong.string
-        (nom_commune, cp) = COMMUNE_CP_REGEX.match(commune_cp).group(1, 2)
+        nom_commune = commune_cp[:-9]
+        cp = commune_cp[-7:-2]
 
         f_output.write('{:s},{:s},{:s},{:s},{:s},{:s}\n'.format(
             a_depts[i], d, nom_commune, cp, code_commune, format_type))
