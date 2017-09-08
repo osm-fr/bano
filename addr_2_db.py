@@ -17,24 +17,29 @@ class Adresse:
 		self.numero = num
 		self.voie = voie
 		self.fantoir = fantoir
+
 class Adresses:
 	def __init__(self):
 		self.a = {}
+
 	def register(self,voie):
 		cle = normalize(voie)
 		if not cle in self.a:
 			self.a[cle] = {'numeros':{},'voies':{},'fantoirs':{},'point_par_rue':[],'highway_index':0}
+
 	def add_fantoir(self,cle,fantoir,source):
 		self.register(cle)
 		if len(fantoir) == 10:
 			self.a[cle]['fantoirs'][source] = fantoir
 		# else:
 		# 	print(u'Code Fantoir non conforme : {:s}'.format(fantoir))
+
 	def add_voie(self,voie_cle,source,voie=None):
 		cle = normalize(voie_cle)
 		if not voie:
 			voie = voie_cle
 		self.a[cle]['voies'][source] = voie
+
 	def add_adresse(self,ad,source):
 		""" une adresses est considérée dans la commune si sans Fantoir ou avec un Fantoir de la commune"""
 		if (ad.fantoir == '' or (is_valid_fantoir(ad.fantoir) and ad.fantoir[0:5] == code_insee)) and is_valid_housenumber(ad.numero):
@@ -45,6 +50,7 @@ class Adresses:
 				self.a[cle]['fantoirs']['OSM'] = ad.fantoir
 		# else:
 		# 	print(u'adresse rejetée : {:s} {:s}'.format(ad.numero,ad.fantoir))
+
 	def get_cle_by_fantoir(self,fantoir):
 		cle = ''
 		for c in self.a:
@@ -58,13 +64,16 @@ class Adresses:
 						cle = c
 						break
 		return cle
+
 	def has_already_fantoir(self,cle,source):
 		has = False
 		if source in self.a[cle]['fantoirs']:
 			has = True
 		return has
+
 	def add_highway_index(self,cle,val):
 		self.a[cle]['highway_index']+=val
+
 class Dicts:
 	def __init__(self):
 		self.lettre_a_lettre = {}
@@ -92,15 +101,16 @@ class Dicts:
 						'O':[u'Ö',u'Ô'],
 						'U':[u'Û',u'Ü'],
 						'OE':[u'Œ']}
+
 	def load_fantoir(self,insee):
-		str_query = '''	SELECT *
+		str_query = ("""SELECT *
 						FROM	(SELECT code_insee||id_voie||cle_rivoli,
 										nature_voie||' '||libelle_voie,
 										rank() OVER(PARTITION BY nature_voie||' '||libelle_voie ORDER BY type_voie,id_voie,cle_rivoli) rang
 								FROM	fantoir_voie
-								WHERE	code_insee = \''''+insee+'''\' AND
+								WHERE	code_insee = '%s' AND
 										caractere_annul NOT IN ('O','Q')) a
-						WHERE rang = 1;'''
+						WHERE rang = 1;""" % insee)
 		pgc = get_pgc()
 		cur_fantoir = pgc.cursor()
 		cur_fantoir.execute(str_query)
@@ -109,9 +119,11 @@ class Dicts:
 			cle = ' '.join(c[1].replace('-',' ').split())
 			cle = normalize(cle)
 			self.fantoir[cle] = c[0]
+
 	def load_addr_from_fantoir(self):
 		for k in self.fantoir:
 			adresses.add_fantoir(k,self.fantoir[k],'FANTOIR')
+
 	def load_chiffres(self):
 		self.chiffres = [	['0','ZERO'],
 							['1','UN'],
@@ -129,6 +141,7 @@ class Dicts:
 							[' DOUZE ',' UNDEUX '],
 							[' TREIZE ',' UNTROIS '],
 							[' QUATORZE ',' UNQUATRE ']]
+
 	def load_mot_a_blanc(self):
 		self.mot_a_blanc = ['DE LA',
 							'DU',
@@ -139,6 +152,7 @@ class Dicts:
 							'DE',
 							'D',
 							'L']
+
 	def load_expand_titres(self):
 		fn = os.path.join(os.path.dirname(__file__),'dictionnaires','expand_titres.txt')
 		f = open(fn)
@@ -148,6 +162,7 @@ class Dicts:
 			c = (l.splitlines()[0]).split('\t')
 			self.expand_titres.append(c)
 		f.close()
+
 	def load_expand_noms(self):
 		fn = os.path.join(os.path.dirname(__file__),'dictionnaires','expand_noms.txt')
 		f = open(fn)
@@ -157,6 +172,7 @@ class Dicts:
 			c = (l.splitlines()[0]).split('\t')
 			self.expand_noms.append(c)
 		f.close()
+
 	def load_abrev_titres(self):
 		fn = os.path.join(os.path.dirname(__file__),'dictionnaires','abrev_titres.txt')
 		f = open(fn)
@@ -166,6 +182,7 @@ class Dicts:
 			c = (l.splitlines()[0]).split('\t')
 			self.abrev_titres.append(c)
 		f.close()
+
 	def load_chiffres_romains(self):
 		fn = os.path.join(os.path.dirname(__file__),'dictionnaires','chiffres_romains.txt')
 		f = open(fn)
@@ -175,6 +192,7 @@ class Dicts:
 			c = (l.splitlines()[0]).split('\t')
 			self.chiffres_romains[c[0]] = c[1]
 		f.close()
+
 	def load_abrev_type_voie(self):
 		fn = os.path.join(os.path.dirname(__file__),'dictionnaires','abrev_type_voie.txt')
 		f = open(fn)
@@ -184,6 +202,7 @@ class Dicts:
 			c = (l.splitlines()[0]).split('\t')
 			self.abrev_type_voie[c[0]] = c[1]
 		f.close()
+
 	def load_substitution_complete(self):
 		fn = os.path.join(os.path.dirname(__file__),'dictionnaires','substitution_complete.txt')
 		f = open(fn)
@@ -193,6 +212,7 @@ class Dicts:
 			c = (l.splitlines()[0]).split('\t')
 			self.substitution_complete[c[0]] = c[1]
 		f.close()
+
 	def load_highway_types(self):
 		str_query = '''	SELECT 	tag_index,
 								tag_value
@@ -204,6 +224,7 @@ class Dicts:
 		for c in cur_hw:
 			self.highway_types[c[1]] = c[0]
 		# print(self.highway_types)
+
 	def load_all(self,code_insee_commune):
 		self.load_lettre_a_lettre()
 		self.load_abrev_type_voie()
@@ -216,34 +237,41 @@ class Dicts:
 		self.load_substitution_complete()
 		self.load_fantoir(code_insee_commune)
 		self.load_highway_types()
+
 	def add_voie(self,origine,nom):
 		cle = normalize(nom)
 		if not cle in self.noms_voies:
 			self.noms_voies[cle] = {}
 		self.noms_voies[cle][origine] = nom
+
 	def add_fantoir_name(self,fantoir,name,source):
 		if not fantoir in self.code_fantoir_vers_noms:
 			self.code_fantoir_vers_noms[fantoir] = {}
 		if not source in self.code_fantoir_vers_noms[fantoir]:
 			self.code_fantoir_vers_noms[fantoir][source] = name
+
 	def get_fantoir_name(self,fantoir,source):
 		res = ''
 		if fantoir in self.code_fantoir_vers_noms:
 			if source in self.code_fantoir_vers_noms[fantoir]:
 				res = self.code_fantoir_vers_noms[fantoir][source]
 		return res
+
 class Node:
 	def __init__(self,attribs,tags):
 		self.attribs = attribs
 		self.tags = tags
 		self.sent = False
 		self.modified = False
+
 	def get_geom_as_text(self):
 		strp = 'ST_PointFromText(\'POINT('+str(self.attribs['lon'])+' '+str(self.attribs['lat'])+')\',4326)'
 		return strp
+
 	def move_to(self,lon,lat):
 		self.attribs['lon'] = lon
 		self.attribs['lat'] = lat
+
 	def get_as_osm_xml_node(self):
 		s = "\t<node id="+XSS.quoteattr(self.attribs['id'])
 		if self.modified:
@@ -263,6 +291,7 @@ class Node:
 				s = s+"\t\t<tag k="+XSS.quoteattr(k)+" v="+XSS.quoteattr(self.tags[k]).encode('utf8')+"/>\n"
 			s = s+"\t</node>\n"
 		return s
+
 class Pg_hsnr:
 	def __init__(self,d):
 		self.x = d[0]
@@ -276,12 +305,15 @@ class Pg_hsnr:
 		if self.provenance == '3' or self.provenance == '4':
 			self.set_street_name()
 		self.set_fantoir()
+
 	def set_street_name(self):
 		if 'type' in self.tags and self.tags['type'] == 'associatedStreet' and 'name' in self.tags:
 			self.voie = self.tags['name']
+
 	def set_fantoir(self):
 		if 'ref:FR:FANTOIR' in self.tags and len(self.tags['ref:FR:FANTOIR']) == 10 and self.tags['ref:FR:FANTOIR'][0:5] == code_insee:
 			self.fantoir = self.tags['ref:FR:FANTOIR']
+
 def add_fantoir_to_hsnr():
 	for v in adresses.a:
 		if v in dicts.fantoir:
@@ -291,6 +323,7 @@ def add_fantoir_to_hsnr():
 			if 'OSM' in adresses.a[v]['fantoirs']:
 				if adresses.a[v]['fantoirs']['OSM'] in dicts.code_fantoir_vers_nom_fantoir:
 					adresses.a[v]['voies']['FANTOIR'] = dicts.code_fantoir_vers_nom_fantoir[adresses.a[v]['fantoirs']['OSM']]
+
 def append_suffixe(name,suffixe):
 	res = name
 	if suffixe:
@@ -304,6 +337,7 @@ def append_suffixe(name,suffixe):
 		else:
 			res = name+' '+suffixe
 	return res
+
 def get_best_fantoir(cle):
 	res = ''
 	if 'FANTOIR' in adresses.a[cle]['fantoirs']:
@@ -311,6 +345,7 @@ def get_best_fantoir(cle):
 	if 'OSM' in adresses.a[cle]['fantoirs']:
 		res = adresses.a[cle]['fantoirs']['OSM']
 	return res
+
 def get_cache_filename(data_type,insee_com,cadastre_com):
 	cadastre_dep = get_cadastre_code_dept_from_insee(insee_com)
 	cache_dir = os.path.join('/data/work/cadastre.openstreetmap.fr/bano_cache/',cadastre_dep,cadastre_com)
@@ -319,11 +354,13 @@ def get_cache_filename(data_type,insee_com,cadastre_com):
 	# cache_filename = os.path.join('/data/work/cadastre.openstreetmap.fr/bano_cache/',cadastre_dep,cadastre_com,'{:s}-{:s}.csv'.format(cadastre_com,data_type))
 	cache_filename = os.path.join(cache_dir,'{:s}-{:s}.csv'.format(cadastre_com,data_type))
 	return cache_filename
+
 def get_cadastre_code_dept_from_insee(insee):
 	code_dept = '0'+insee[0:2]
 	if insee[0:2] == '97':
 		code_dept = insee[0:3]
 	return code_dept
+
 def get_code_cadastre_from_insee(insee):
 	str_query = 'SELECT cadastre_com FROM code_cadastre WHERE insee_com = \'{:s}\';'.format(insee)
 	code_cadastre = []
@@ -333,6 +370,7 @@ def get_code_cadastre_from_insee(insee):
 	for c in cur:
 		code_cadastre = c[0]
 	return code_cadastre
+
 def get_data_from_pg(data_type,insee_com,cadastre_com,local=False,suffixe_data=None):
 	# print(data_type,insee_com,cadastre_com,suffixe_data)
 	cache_file = get_cache_filename(data_type,insee_com,cadastre_com)
@@ -362,24 +400,29 @@ def get_data_from_pg(data_type,insee_com,cadastre_com,local=False,suffixe_data=N
 		res.append(eval(l))
 	f.close()
 	return res
+
 def get_geom_suffixes(insee,code_cadastre):
 	data = get_data_from_pg('geom_suffixes_insee',insee,code_cadastre,True)
 	a_queries = []
 	for l in data:
 		a_queries.append('SELECT ST_PolygonFromText(\'{:s}\',900913) as geom,\'{:s}\'::text suffixe'.format(l[0],l[1].replace('\'','\'\'')))
 	return ' UNION '.join(a_queries)
+
 def get_nb_parts(s):
 	return len(s.split())
+
 def get_part_debut(s,nb_parts):
 	resp = ''
 	if get_nb_parts(s) > nb_parts:
 		resp = ' '.join(s.split()[0:nb_parts])
 	return resp
+
 def get_tags(xmlo):
 	dtags = {}
 	for tg in xmlo.iter('tag'):
 		dtags[tg.get('k')] = tg.get('v')
 	return dtags
+
 def has_addreses_with_suffix(insee):
 	res = False
 	str_query = 'SELECT count(*) FROM suffixe where insee_com = \'{:s}\';'.format(insee)
@@ -389,16 +432,19 @@ def has_addreses_with_suffix(insee):
 		if c[0]> 0 :
 			res = True
 	return res
+
 def is_valid_housenumber(hsnr):
 	is_valid = True
 	if len(hsnr.encode('utf8')) > 11:
 		is_valid = False
 	return is_valid
+
 def is_valid_fantoir(f):
 	res = True
 	if len(f) != 10:
 		res = False
 	return res
+
 def load_hsnr_from_cad_file(fnadresses,source):
 	xmladresses = ET.parse(fnadresses)
 	dict_node_relations = {}
@@ -429,6 +475,7 @@ def load_hsnr_from_cad_file(fnadresses,source):
 					adresses.add_adresse(Adresse(nd,dtags['addr:housenumber'],adresses.a[v]['voies']['CADASTRE'],''),source)
 			# else:
 			# 	print('Numero invalide : {:s}'.format(dtags['addr:housenumber'].encode('utf8')))
+
 def load_hsnr_bbox_from_pg_osm(insee_com,cadastre_com):
 	data = get_data_from_pg('hsnr_bbox_insee',insee_com,cadastre_com)
 	for l in data:
@@ -440,6 +487,7 @@ def load_hsnr_bbox_from_pg_osm(insee_com,cadastre_com):
 			continue
 		adresses.register(oa.voie.decode('utf8'))
 		adresses.add_adresse(Adresse(n,oa.numero.decode('utf8'),oa.voie.decode('utf8'),oa.fantoir),source)
+
 def load_hsnr_from_pg_osm(insee_com,cadastre_com):
 	data = get_data_from_pg('hsnr_insee',insee_com,cadastre_com)
 	for l in data:
@@ -449,6 +497,7 @@ def load_hsnr_from_pg_osm(insee_com,cadastre_com):
 			continue
 		adresses.register(oa.voie.decode('utf8'))
 		adresses.add_adresse(Adresse(n,oa.numero.decode('utf8'),oa.voie.decode('utf8'),oa.fantoir),source)
+
 def load_highways_bbox_from_pg_osm(insee_com,cadastre_com):
 	if commune_avec_suffixe:
 		data = get_data_from_pg('highway_suffixe_insee',insee_com,cadastre_com,False,geom_suffixe)
@@ -481,6 +530,7 @@ def load_highways_bbox_from_pg_osm(insee_com,cadastre_com):
 		# print(cle,fantoir)
 		adresses.add_fantoir(cle,fantoir,'OSM')
 		adresses.add_voie(name_suffixe,'OSM',name)
+
 def load_highways_from_pg_osm(insee_com,cadastre_com):
 	if commune_avec_suffixe:
 		data = get_data_from_pg('highway_suffixe_insee',insee_com,cadastre_com,False,geom_suffixe)
@@ -512,6 +562,7 @@ def load_highways_from_pg_osm(insee_com,cadastre_com):
 			adresses.add_fantoir(cle,fantoir,'OSM')
 			dicts.add_fantoir_name(fantoir,name,'OSM')
 		adresses.add_voie(name_suffixe,'OSM',name)
+
 def load_highways_relations_bbox_from_pg_osm(insee_com,cadastre_com):
 	if commune_avec_suffixe:
 		data = get_data_from_pg('highway_relation_suffixe_insee',insee_com,cadastre_com,False,geom_suffixe)
@@ -537,6 +588,7 @@ def load_highways_relations_bbox_from_pg_osm(insee_com,cadastre_com):
 		if adresses.has_already_fantoir(cle,'OSM'):
 			continue
 		adresses.add_voie(name_suffixe,'OSM',name)
+
 def load_highways_relations_from_pg_osm(insee_com,cadastre_com):
 	if commune_avec_suffixe:
 		data = get_data_from_pg('highway_relation_suffixe_insee',insee_com,cadastre_com,False,geom_suffixe)
@@ -563,6 +615,7 @@ def load_highways_relations_from_pg_osm(insee_com,cadastre_com):
 		if fantoir != '':
 			dicts.add_fantoir_name(fantoir,name,'OSM')
 		adresses.add_voie(name_suffixe,'OSM',name)
+
 def load_point_par_rue_from_pg_osm(insee_com,cadastre_com):
 	data = get_data_from_pg('point_par_rue_insee',insee_com,cadastre_com)
 	for l in data:
@@ -577,6 +630,7 @@ def load_point_par_rue_from_pg_osm(insee_com,cadastre_com):
 		if 'OSM' not in adresses.a[cle]['fantoirs']:
 			if cle in dicts.fantoir:
 				adresses.add_fantoir(cle,dicts.fantoir[cle],'OSM')
+
 def load_point_par_rue_complement_from_pg_osm(insee_com,cadastre_com):
 	data = get_data_from_pg('point_par_rue_complement_insee',insee_com,cadastre_com)
 	for l in data:
@@ -594,6 +648,7 @@ def load_point_par_rue_complement_from_pg_osm(insee_com,cadastre_com):
 		adresses.a[cle]['point_par_rue'] = l[0:2]
 		if fantoir:
 			adresses.add_fantoir(cle,fantoir,'OSM')
+
 def load_to_db(adresses,code_insee,source,code_cadastre,code_dept):
 	for a in ['cumul_adresses','cumul_voies']:
 		sload = "DELETE FROM {:s} WHERE insee_com = '{:s}' AND source = '{:s}';\n".format(a,code_insee,source)
@@ -627,7 +682,7 @@ def load_to_db(adresses,code_insee,source,code_cadastre,code_dept):
 		# else:
 		for num in adresses.a[v]['numeros']:
 			numadresse = adresses.a[v]['numeros'][num]
-			a_values.append("(ST_PointFromText('POINT({:s} {:s})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}')".format(numadresse.node.attribs['lon'],numadresse.node.attribs['lat'],numadresse.numero.encode('utf8'),street_name_cadastre.replace("'","''"),street_name_osm.replace("'","''"),street_name_fantoir.replace("'","''"),cle_fantoir,code_insee,code_cadastre,code_dept,'',source).replace(",''",",null").replace(",''",",null"))
+			a_values.append("(ST_PointFromText('POINT({:s} {:s})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}')".format(numadresse.node.attribs['lon'],numadresse.node.attribs['lat'],numadresse.numero.encode('utf8').replace("'",""),street_name_cadastre.replace("'","''"),street_name_osm.replace("'","''"),street_name_fantoir.replace("'","''"),cle_fantoir,code_insee,code_cadastre,code_dept,'',source).replace(",''",",null").replace(",''",",null"))
 			nb_rec +=1
 		if len(a_values)>0:
 			sload = sload+','.join(a_values)+';COMMIT;'
@@ -637,6 +692,7 @@ def load_to_db(adresses,code_insee,source,code_cadastre,code_dept):
 		sload_voie = sload_voie+','.join(a_values_voie)+';COMMIT;'
 		cur_insert.execute(sload_voie)
 	return(nb_rec)
+
 def load_type_highway_from_pg_osm(insee_com,cadastre_com):
 	data = get_data_from_pg('type_highway_insee',insee_com,cadastre_com)
 	for l in data:
@@ -645,6 +701,7 @@ def load_type_highway_from_pg_osm(insee_com,cadastre_com):
 		cle = normalize(name)
 		if l[1] in dicts.highway_types:
 			adresses.add_highway_index(cle,dicts.highway_types[l[1]])
+
 def normalize(s):
 	# if s[0:2] == 'BD' or s[0:4] == 'Boul':
 		# print(s)
@@ -660,7 +717,7 @@ def normalize(s):
 		for ll in dicts.lettre_a_lettre[l]:
 			s = s.replace(ll,l)
 	s = s.encode('ascii','ignore')
-	
+
 # type de voie
 	abrev_trouvee = False
 	p = 5
@@ -673,7 +730,7 @@ def normalize(s):
 	s = s.replace(' EME ','EME ')
 	s = s.replace(' 1ERE',' PREMIERE')
 	s = s.replace(' 1ER',' PREMIER')
-	
+
 # chiffres
 	for c in dicts.chiffres:
 		s = s.replace(c[0],c[1])
@@ -699,7 +756,7 @@ def normalize(s):
 # chiffres romains
 	sp = s.split()
 
-	if sp[-1] in dicts.chiffres_romains:
+	if len(sp)>0 and sp[-1] in dicts.chiffres_romains:
 		sp[-1] = dicts.chiffres_romains[sp[-1]]
 		s = ' '.join(sp)
 
@@ -707,17 +764,20 @@ def normalize(s):
 	if s in dicts.substitution_complete:
 		s = dicts.substitution_complete[s]
 	return s[0:30]
+
 def replace_type_voie(s,nb):
 	sp = s.split()
 	spd = ' '.join(sp[0:nb])
 	spf = ' '.join(sp[nb:len(sp)])
 	s = dicts.abrev_type_voie[spd]+' '+spf
 	return s
+
 def tags_list_as_dict(ltags):
 	res = {}
 	for i in range(0,int(len(ltags)/2)):
 		res[ltags[i*2]] = ltags[i*2+1]
 	return res
+
 def main(args):
 	global source,batch_id
 	global pgc,pgcl
@@ -727,7 +787,7 @@ def main(args):
 	global commune_avec_suffixe
 	global geom_suffixe
 	global use_cache
-	
+
 	use_cache = True
 
 	debut_total = time.time()
@@ -744,16 +804,16 @@ def main(args):
 		os._exit(0)
 
 	adresses = Adresses()
-	
+
 	pgc = get_pgc()
 	pgcl = get_pgc_layers()
-	
+
 	code_insee = args[1]
 	code_cadastre = get_code_cadastre_from_insee(code_insee)
 	code_dept = get_cadastre_code_dept_from_insee(code_insee)
-	
+
 	batch_id = batch_start_log(source,'loadCumul',code_cadastre)
-	
+
 	dicts = Dicts()
 	dicts.load_all(code_insee)
 
@@ -779,5 +839,6 @@ def main(args):
 	nb_rec = load_to_db(adresses,code_insee,source,code_cadastre,code_dept)
 	batch_end_log(nb_rec,batch_id)
 	fin_total = time.time()
+
 if __name__ == '__main__':
     main(sys.argv)
