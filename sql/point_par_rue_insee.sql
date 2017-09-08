@@ -1,8 +1,8 @@
 WITH w0
 AS (SELECT	l.way,
 		unnest(array[l.name,l.tags->'alt_name',l.tags->'old_name']) as name,
-		p.tags->'ref:INSEE' insee,
-		ST_Within(l.way,p.way)::integer within
+		p.tags->'ref:INSEE' as insee,
+		ST_Within(l.way,p.way)::integer as within
 	FROM	planet_osm_polygon p
 	JOIN	planet_osm_line l
 	ON	ST_Intersects(l.way, p.way)
