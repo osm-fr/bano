@@ -53,4 +53,20 @@ def age_etape_dept(etape,dept):
 	str_query = 'SELECT timestamp_debut FROM batch WHERE etape = \'{:s}\' AND dept = \'{:s}\' UNION ALL SELECT 0 ORDER BY 1 DESC;'.format(etape,dept)
 	cur.execute(str_query)
 	c = cur.fetchone()
-	return t - c[0]	
+	return t - c[0]
+def get_cadastre_format(insee):
+	str_query = 'SELECT format_cadastre FROM code_cadastre WHERE insee_com = \'{:s}\';'.format(insee)
+	pgc = get_pgc()
+	cur = pgc.cursor()
+	cur.execute(str_query)
+	for c in cur:
+		code_cadastre = c[0]
+	return code_cadastre
+def get_cadastre_etape_timestamp_debut(code_cadastre,etape,source):
+	str_query = "SELECT timestamp_debut FROM batch WHERE cadastre_com = '{:s}' AND etape = '{:s}' AND source = '{:s}';".format(code_cadastre,etape,source)
+	pgc = get_pgc()
+	cur = pgc.cursor()
+	cur.execute(str_query)
+	for c in cur:
+		code_cadastre = c[0]
+	return code_cadastre
