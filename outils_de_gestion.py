@@ -5,26 +5,27 @@ import time
 import psycopg2
 from pg_connexion import get_pgc
 
-def batch_start_log(source,etape,code_cadastre):
+def batch_start_log(source,etape,code_insee):
 	t = time.localtime()
 	th =  time.strftime('%d-%m-%Y %H:%M:%S',t)
 	t = round(time.mktime(t),0)
 	pgc = get_pgc()
 	cur = pgc.cursor()
 	if len(etape)>10 and etape[0:10] == 'cache_dept':
-		whereclause = 'dept = \'{:s}\' AND etape = \'{:s}\''.format(code_cadastre,etape)
+		whereclause = "dept = '{:s}' AND etape = '{:s}'".format(code_insee,etape)
 	else:
-		whereclause = 'cadastre_com = \'{:s}\' AND source = \'{:s}\' AND etape = \'{:s}\''.format(code_cadastre,source,etape)
+		whereclause = "insee_com = '{:s}' AND source = '{:s}' AND etape = '{:s}'".format(code_insee,source,etape)
 	str_query = 'INSERT INTO batch_historique (SELECT * FROM batch WHERE {:s});'.format(whereclause)
 	str_query = str_query+'DELETE FROM batch WHERE {:s};'.format(whereclause)
 	if len(etape)>10 and etape[0:10] == 'cache_dept':
-		str_query = str_query+'INSERT INTO batch (etape,timestamp_debut,date_debut,dept,nombre_adresses) SELECT \'{:s}\',{:f},\'{:s}\',\'{:s}\',0;'.format(etape,t,th,code_cadastre)
+		str_query = str_query+"INSERT INTO batch (etape,timestamp_debut,date_debut,dept,nombre_adresses) SELECT '{:s}',{:f},'{:s}','{:s}',0;".format(etape,t,th,code_insee)
 	else:
-		str_query = str_query+'INSERT INTO batch (source,etape,timestamp_debut,date_debut,dept,cadastre_com,nom_com,nombre_adresses) SELECT \'{:s}\',\'{:s}\',{:f},\'{:s}\',dept,cadastre_com,nom_com,0 FROM code_cadastre WHERE cadastre_com = \'{:s}\';'.format(source,etape,t,th,code_cadastre)
+		str_query = str_query+"INSERT INTO batch (source,etape,timestamp_debut,date_debut,dept,insee_com,nom_com,nombre_adresses) SELECT '{:s}','{:s}',{:f},'{:s}',dept,insee_com,nom_com,0 FROM code_cadastre WHERE insee_com = '{:s}';".format(source,etape,t,th,code_insee)
 	str_query = str_query+'COMMIT;'
-	# print(str_query)
+	#print(str_query)
 	cur.execute(str_query)
 	str_query = 'SELECT id_batch::integer FROM batch WHERE {:s};'.format(whereclause)
+	#print(str_query)
 	cur.execute(str_query)
 	c = cur.fetchone()
 	return c[0]

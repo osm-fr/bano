@@ -96,6 +96,7 @@ CREATE TABLE batch
 	date_fin		character varying (100),
 	dept			character varying (3),
 	cadastre_com	character (5),
+	insee_com		character (5),
 	nom_com			character varying(250),
 	nombre_adresses	integer);
 
@@ -109,6 +110,7 @@ CREATE TABLE batch_historique
 	date_fin		character varying (100),
 	dept			character varying (3),
 	cadastre_com	character (5),
+	insee_com		character (5),
 	nom_com			character varying(250),
 	nombre_adresses	integer);
 

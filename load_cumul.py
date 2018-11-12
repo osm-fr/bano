@@ -37,12 +37,12 @@ def get_data_by_dept_from_pg(data_type,dept):
 		cur = pgcl.cursor()
 		cur.execute(str_query)
 		
-		str_query_com = "SELECT insee_com,cadastre_com FROM code_cadastre WHERE dept = '{:s}'".format(dept)
+		str_query_com = "SELECT insee_com FROM code_cadastre WHERE dept = '{:s}'".format(dept)
 		cur_com = pgc.cursor()
 		cur_com.execute(str_query_com)
 		k_insee = {}
 		for c in cur_com:
-			k_insee[c[0]] = {'cad':c[1],'data':[]}
+			k_insee[c[0]] = {'data':[]}
 		for lt in cur:
 			l = list(lt)
 			insee = l[-1]
@@ -56,7 +56,7 @@ def get_data_by_dept_from_pg(data_type,dept):
 			k_insee[insee]['data'].append(str(l))
 		for k in k_insee.iterkeys():
 			# print(k)
-			cache_file = a.get_cache_filename(data_type,k,k_insee[k]['cad'])
+			cache_file = a.get_cache_filename(data_type,k)
 			# print(cache_file)
 			f = open(cache_file,'w')
 			f.write('\n'.join(k_insee[k]['data']))

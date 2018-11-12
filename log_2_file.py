@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 # coding: UTF-8
 
+import os
 import time
+
 def start_log_to_file(source,etape,dept):
         t = time.localtime()
         th =  time.strftime('%d-%m-%Y %H:%M:%S',t)
         t = round(time.mktime(t),0)
 	log_filename = '{:s}_{:s}_{:s}.log'.format(dept,etape,source)
-	f = open('./logs/{:s}'.format(log_filename),'w+')
+	f = open(os.path.join(os.environ['LOG_DIR'],'{:s}'.format(log_filename)),'w+')
 	f.write('Debut : {:s}\n'.format(th))
 	f.flush()
 	return f
