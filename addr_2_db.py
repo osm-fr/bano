@@ -491,6 +491,8 @@ def load_hsnr_from_cad_file_csv(fnadresses,source):
 
         if len(name) < 2:
             continue
+        if len(lon) < 1:
+            continue
         adresses.register(name)
         adresses.add_voie(name,'CADASTRE')
         if not cle_interop in dict_node_relations:

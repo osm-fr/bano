@@ -1,7 +1,7 @@
 #!/bin/bash
 
-WORK_DIR=${WORK_DIR:-"/data/work/cadastre.openstreetmap.fr"}
-DATA_DIR=${DATA_DIR:-"$WORK_DIR/data"}
-HIDDEN_DIR=${HIDDEN_DIR:-"$WORK_DIR/bano_cache"}
-LOG_DIR=${LOG_DIR:-"$WORK_DIR/logs"}
-BIN_DIR=${BIN_DIR:-"/data/project/cadastre.openstreetmap.fr/bin"}
+export BANO_DIR=$HOME/bano
+export LOG_DIR=$BANO_DIR/log
+export DATA_DIR=$HOME/bano_data
+export BANO_CACHE_DIR=$DATA_DIR/bano_cache
+export CADASTRE_CACHE_DIR=$DATA_DIR/cadastre_cache
