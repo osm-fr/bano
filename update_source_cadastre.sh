@@ -3,9 +3,9 @@ source config
 
 cd $DATA_DIR/bano_cache
 
-#for dep in {01..19} 2A 2B {21..95} {971..974}
+for dep in {01..19} 2A 2B {21..95} {971..974}
 #for dep in {01..03} 2A
-for dep in  {24..95} {971..974} 976
+#for dep in  {24..95} {971..974} 976
 do
 	mkdir $dep
 	cd $dep
