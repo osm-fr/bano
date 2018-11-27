@@ -4,7 +4,7 @@ import os,os.path
 import sys
 
 def main(args):
-    csvfile = open(args[1],'rb')
+    csvfile = open(args[1],'r')
     # ligne d'entete
     l1 = csvfile.readline()
 
@@ -23,10 +23,10 @@ def main(args):
                 output_file.close()
             bal_output_filename = os.path.join(cache_dir,'{}-bal.csv'.format(insee))
             if insee in dic_insee:
-                output_file = open(bal_output_filename,'ab')
+                output_file = open(bal_output_filename,'a')
             else:
                 dic_insee[insee]=''
-                output_file = open(bal_output_filename,'wb')
+                output_file = open(bal_output_filename,'w')
         output_file.write(l)
     if output_file:
         output_file.close()
