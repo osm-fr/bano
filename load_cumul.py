@@ -12,9 +12,9 @@ os.umask(0000)
 
 # Wrap sys.stdout with a writer that knows how to handle encoding
 # Unicode data.
-wrapped_stdout = codecs.getwriter('UTF-8')(sys.stdout)
+# wrapped_stdout = codecs.getwriter('UTF-8')(sys.stdout)
 # Replace sys.stdout with a writer
-sys.stdout = wrapped_stdout
+# sys.stdout = wrapped_stdout
 
 
 def get_code_dept_from_insee(insee):
@@ -30,7 +30,7 @@ def get_data_by_dept_from_pg(data_type,dept):
 	if o.age_etape_dept(etape_dept,dept) > 3600:
 		print(u'Mise à jour du cache "{:s}"'.format(data_type.upper()))
 		batch_id = o.batch_start_log(source,etape_dept,dept)
-		fq = open('sql/{:s}.sql'.format(data_type),'rb')
+		fq = open('sql/{:s}.sql'.format(data_type),'r')
 		str_sql_dept_like = (dept+'___')[0:5]
 		str_query = fq.read().replace('=\'__com__',' LIKE  \'{:s}'.format(str_sql_dept_like))
 		fq.close()
@@ -54,7 +54,7 @@ def get_data_by_dept_from_pg(data_type,dept):
 				e.write_log_to_file(f_log,'Commune manquante au Cadastre : INSEE # {:s}'.format(insee))
 				continue
 			k_insee[insee]['data'].append(str(l))
-		for k in k_insee.iterkeys():
+		for k in k_insee.keys():
 			# print(k)
 			cache_file = a.get_cache_filename(data_type,k)
 			# print(cache_file)
@@ -93,7 +93,7 @@ for c_loop in cur_loop:
 	num_dept_cadastre = c_loop[0]
 	global f_log
 	f_log = e.start_log_to_file(source,os.path.basename(sys.argv[0]).split('.')[0],num_dept_cadastre)
-	print(u'## Département {:s}'.format(num_dept_cadastre))
+	print('## Département {:s}'.format(num_dept_cadastre))
 	if source == 'OSM':
 		get_data_by_dept_from_pg('hsnr_insee',num_dept_cadastre)
 		get_data_by_dept_from_pg('hsnr_bbox_insee',num_dept_cadastre)
