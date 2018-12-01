@@ -23,7 +23,8 @@ FROM
 		ON		r.parts @> ARRAY[pt.osm_id]
 		WHERE	p.tags ? 'ref:INSEE'				AND
 				p.tags->'ref:INSEE'='__com__'		AND
-				pt."addr:housenumber"	IS NOT NULL
+				pt."addr:housenumber"	IS NOT NULL     AND
+				r.tags IS NOT NULL
 		UNION
 -- way dans relation associatedStreet
 		SELECT	4,
@@ -40,7 +41,8 @@ FROM
 		ON		r.parts @> ARRAY[w.osm_id]
 		WHERE	p.tags ? 'ref:INSEE'				AND
 				p.tags->'ref:INSEE'='__com__'		AND
-				w."addr:housenumber"	IS NOT NULL
+				w."addr:housenumber"	IS NOT NULL     AND
+				r.tags IS NOT NULL
 		
 )a
 ORDER BY 9
