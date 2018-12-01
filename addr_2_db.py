@@ -31,8 +31,6 @@ class Adresses:
         self.register(cle)
         if len(fantoir) == 10:
             self.a[cle]['fantoirs'][source] = fantoir
-        # else:
-        #     print(u'Code Fantoir non conforme : {:s}'.format(fantoir))
 
     def add_voie(self,voie_cle,source,voie=None):
         cle = normalize(voie_cle)
@@ -48,8 +46,6 @@ class Adresses:
             self.a[cle]['numeros'][ad.numero] = ad
             if ad.fantoir != '':
                 self.a[cle]['fantoirs']['OSM'] = ad.fantoir
-        # else:
-        #     print(u'adresse rejetée : {:s} {:s}'.format(ad.numero,ad.fantoir))
 
     def get_cle_by_fantoir(self,fantoir):
         cle = ''
@@ -223,7 +219,6 @@ class Dicts:
         cur_hw.execute(str_query)
         for c in cur_hw:
             self.highway_types[c[1]] = c[0]
-        # print(self.highway_types)
 
     def load_all(self,code_insee_commune):
         self.load_lettre_a_lettre()
@@ -351,7 +346,6 @@ def get_cache_filename(data_type,insee_com):
     cache_dir = os.path.join(os.environ['BANO_CACHE_DIR'],code_dept,insee_com)
     if not os.path.exists(cache_dir):
         os.mkdir(cache_dir)
-    # cache_filename = os.path.join('/data/work/cadastre.openstreetmap.fr/bano_cache/',cadastre_dep,cadastre_com,'{:s}-{:s}.csv'.format(cadastre_com,data_type))
     cache_filename = os.path.join(cache_dir,'{:s}-{:s}.csv'.format(insee_com,data_type))
     return cache_filename
 
@@ -378,11 +372,9 @@ def get_code_cadastre_from_insee(insee):
     return code_cadastre
 
 def get_data_from_pg(data_type,insee_com,local=False,suffixe_data=None):
-    # print(data_type,insee_com,cadastre_com,suffixe_data)
     cache_file = get_cache_filename(data_type,insee_com)
-    # print(os.path.abspath(__file__))
     if not use_cache or not os.path.exists(cache_file) or (time.time() - os.path.getmtime(cache_file)) > 86400 :
-        fq = open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'sql/{:s}.sql'.format(data_type)),'rb')
+        fq = open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'sql/{:s}.sql'.format(data_type)),'r')
         str_query = fq.read().replace('__com__',insee_com)
         fq.close()
         if local:
@@ -407,11 +399,11 @@ def get_data_from_pg(data_type,insee_com,local=False,suffixe_data=None):
     f.close()
     return res
 
-def get_geom_suffixes(insee,code_cadastre):
-    data = get_data_from_pg('geom_suffixes_insee',insee,code_cadastre,True)
+def get_geom_suffixes(insee):
+    data = get_data_from_pg('geom_suffixes_insee',insee,True)
     a_queries = []
     for l in data:
-        a_queries.append('SELECT ST_PolygonFromText(\'{:s}\',900913) as geom,\'{:s}\'::text suffixe'.format(l[0],l[1].replace('\'','\'\'')))
+        a_queries.append('SELECT ST_PolygonFromText(\'{:s}\',3857) as geom,\'{:s}\'::text suffixe'.format(l[0],l[1].replace('\'','\'\'')))
     return ' UNION '.join(a_queries)
 
 def get_nb_parts(s):
@@ -479,15 +471,13 @@ def load_hsnr_from_cad_file(fnadresses,source):
                 for v in dict_node_relations[n_id]:
                     nd = Node({'id':n_id,'lon':n.get('lon'),'lat':n.get('lat')},{})
                     adresses.add_adresse(Adresse(nd,dtags['addr:housenumber'],adresses.a[v]['voies']['CADASTRE'],''),source)
-            # else:
-            #     print('Numero invalide : {:s}'.format(dtags['addr:housenumber'].encode('utf8')))
 
 def load_hsnr_from_cad_file_csv(fnadresses,source):
-    csvadresses = open(fnadresses,'rb')
+    csvadresses = open(fnadresses,'r')
     dict_node_relations = {}
     for l in csvadresses :
         line_split = l.split(';')
-        cle_interop,housenumber,name,lon,lat = line_split[0],line_split[2]+line_split[3],line_split[5].decode('utf8'),line_split[13],line_split[14]
+        cle_interop,housenumber,name,lon,lat = line_split[0],line_split[2]+line_split[3],line_split[5],line_split[13],line_split[14]
 
         if len(name) < 2:
             continue
@@ -501,8 +491,6 @@ def load_hsnr_from_cad_file_csv(fnadresses,source):
         if is_valid_housenumber(housenumber):
             nd = Node({'id':cle_interop,'lon':lon,'lat':lat},{})
             adresses.add_adresse(Adresse(nd,housenumber,name,''),source)
-            # else:
-            #     print('Numero invalide : {:s}'.format(dtags['addr:housenumber'].encode('utf8')))
 
 def load_hsnr_bbox_from_pg_osm(insee_com):
     data = get_data_from_pg('hsnr_bbox_insee',insee_com)
@@ -513,8 +501,8 @@ def load_hsnr_bbox_from_pg_osm(insee_com):
             continue
         if oa.fantoir == '':
             continue
-        adresses.register(oa.voie.decode('utf8'))
-        adresses.add_adresse(Adresse(n,oa.numero.decode('utf8'),oa.voie.decode('utf8'),oa.fantoir),source)
+        adresses.register(oa.voie)
+        adresses.add_adresse(Adresse(n,oa.numero,oa.voie,oa.fantoir),source)
 
 def load_hsnr_from_pg_osm(insee_com):
     data = get_data_from_pg('hsnr_insee',insee_com)
@@ -523,8 +511,8 @@ def load_hsnr_from_pg_osm(insee_com):
         n = Node({'id':oa.osm_id,'lon':oa.x,'lat':oa.y},{})
         if oa.voie == None:
             continue
-        adresses.register(oa.voie.decode('utf8'))
-        adresses.add_adresse(Adresse(n,oa.numero.decode('utf8'),oa.voie.decode('utf8'),oa.fantoir),source)
+        adresses.register(oa.voie)
+        adresses.add_adresse(Adresse(n,oa.numero,oa.voie,oa.fantoir),source)
 
 def load_highways_bbox_from_pg_osm(insee_com):
     if commune_avec_suffixe:
@@ -544,10 +532,10 @@ def load_highways_bbox_from_pg_osm(insee_com):
                 fantoir = l[3]
         if fantoir == '':
             continue
-        name = l[0].decode('utf8')
+        name = l[0]
         suffixe = ''
         if l[4]:
-            suffixe = l[4].decode('utf8')
+            suffixe = l[4]
         if len(name) < 2:
             continue
         name_suffixe = append_suffixe(name,suffixe)
@@ -555,20 +543,19 @@ def load_highways_bbox_from_pg_osm(insee_com):
         cle = normalize(name_suffixe)
         if adresses.has_already_fantoir(cle,'OSM'):
             continue
-        # print(cle,fantoir)
         adresses.add_fantoir(cle,fantoir,'OSM')
         adresses.add_voie(name_suffixe,'OSM',name)
 
 def load_highways_from_pg_osm(insee_com):
     if commune_avec_suffixe:
-        data = get_data_from_pg('highway_suffixe_insee',insee_com,cadastre_com,False,geom_suffixe)
+        data = get_data_from_pg('highway_suffixe_insee',insee_com,False,geom_suffixe)
     else:
         data = get_data_from_pg('highway_insee',insee_com)
     for l in data:
-        name = l[0].decode('utf8')
+        name = l[0]
         suffixe = ''
         if l[4]:
-            suffixe = l[4].decode('utf8')
+            suffixe = l[4]
         if len(name) < 2:
             continue
         name_suffixe = append_suffixe(name,suffixe)
@@ -604,12 +591,12 @@ def load_highways_relations_bbox_from_pg_osm(insee_com):
                 fantoir = tags['ref:FR:FANTOIR']
         if fantoir == '':
             continue
-        name = l[0].decode('utf8')
+        name = l[0]
         if len(name) < 2:
             continue
         suffixe = ''
         if commune_avec_suffixe and l[-2]:
-            suffixe = l[-2].decode('utf8')
+            suffixe = l[-2]
         name_suffixe = append_suffixe(name,suffixe)
         adresses.register(name_suffixe)
         cle = normalize(name_suffixe)
@@ -623,13 +610,12 @@ def load_highways_relations_from_pg_osm(insee_com):
     else:
         data = get_data_from_pg('highway_relation_insee',insee_com)
     for l in data:
-        # l = list(lt)
-        name = l[0].decode('utf8')
+        name = l[0]
         if len(name) < 2:
             continue
         suffixe = ''
         if commune_avec_suffixe and l[-2]:
-            suffixe = l[-2].decode('utf8')
+            suffixe = l[-2]
         name_suffixe = append_suffixe(name,suffixe)
         adresses.register(name_suffixe)
         cle = normalize(name_suffixe)
@@ -647,7 +633,7 @@ def load_highways_relations_from_pg_osm(insee_com):
 def load_point_par_rue_from_pg_osm(insee_com):
     data = get_data_from_pg('point_par_rue_insee',insee_com)
     for l in data:
-        name = l[2].decode('utf8')
+        name = l[2]
         if len(name) < 2:
             continue
         adresses.register(name)
@@ -662,11 +648,10 @@ def load_point_par_rue_from_pg_osm(insee_com):
 def load_point_par_rue_complement_from_pg_osm(insee_com):
     data = get_data_from_pg('point_par_rue_complement_insee',insee_com)
     for l in data:
-        name = l[2].decode('utf8')
+        name = l[2]
         if len(name) < 2:
             continue
         fantoir = l[3]
-        # if not fantoir : continue
         if fantoir and fantoir[0:5] != insee_com:
             continue
         if fantoir and len(fantoir) != 10:
@@ -688,29 +673,24 @@ def load_to_db(adresses,code_insee,source,code_dept):
     for v in adresses.a:
         sload = 'INSERT INTO cumul_adresses (geometrie,numero,voie_cadastre,voie_osm,voie_fantoir,fantoir,insee_com,dept,code_postal,source) VALUES'
         a_values = []
-        # if not adresses.a[v]['numeros']:
-            # continue
         street_name_cadastre = ''
         street_name_osm = ''
         street_name_fantoir = ''
         cle_fantoir = get_best_fantoir(v)
         if 'OSM' in adresses.a[v]['voies']:
-            street_name_osm =  adresses.a[v]['voies']['OSM'].encode('utf8')
+            street_name_osm =  adresses.a[v]['voies']['OSM']
         else :
-            street_name_osm = dicts.get_fantoir_name(cle_fantoir,'OSM').encode('utf8')
+            street_name_osm = dicts.get_fantoir_name(cle_fantoir,'OSM')
         if 'FANTOIR' in adresses.a[v]['voies']:
-            street_name_fantoir =  adresses.a[v]['voies']['FANTOIR'].encode('utf8')
+            street_name_fantoir =  adresses.a[v]['voies']['FANTOIR']
         if 'CADASTRE' in adresses.a[v]['voies']:
-            street_name_cadastre =  adresses.a[v]['voies']['CADASTRE'].encode('utf8')
+            street_name_cadastre =  adresses.a[v]['voies']['CADASTRE']
         if len(adresses.a[v]['point_par_rue'])>1 and source == 'OSM':
             a_values_voie.append(("(ST_PointFromText('POINT({:6f} {:6f})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}',{:d})".format(adresses.a[v]['point_par_rue'][0],adresses.a[v]['point_par_rue'][1],street_name_cadastre.replace("'","''"),street_name_osm.replace("'","''"),street_name_fantoir.replace("'","''"),cle_fantoir,code_insee,code_dept,'',source,adresses.a[v]['highway_index'])).replace(",'',",",null,"))
-            # print(a_values_voie)
-            # os._exit(0)
-# nodes
-        # else:
+
         for num in adresses.a[v]['numeros']:
             numadresse = adresses.a[v]['numeros'][num]
-            a_values.append("(ST_PointFromText('POINT({:s} {:s})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}')".format(numadresse.node.attribs['lon'],numadresse.node.attribs['lat'],numadresse.numero.encode('utf8').replace("'",""),street_name_cadastre.replace("'","''"),street_name_osm.replace("'","''"),street_name_fantoir.replace("'","''"),cle_fantoir,code_insee,code_dept,'',source).replace(",''",",null").replace(",''",",null"))
+            a_values.append("(ST_PointFromText('POINT({:s} {:s})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}')".format(numadresse.node.attribs['lon'],numadresse.node.attribs['lat'],numadresse.numero.replace("'",""),street_name_cadastre.replace("'","''"),street_name_osm.replace("'","''"),street_name_fantoir.replace("'","''"),cle_fantoir,code_insee,code_dept,'',source).replace(",''",",null").replace(",''",",null"))
             nb_rec +=1
         if len(a_values)>0:
             sload = sload+','.join(a_values)+';COMMIT;'
@@ -724,27 +704,24 @@ def load_to_db(adresses,code_insee,source,code_dept):
 def load_type_highway_from_pg_osm(insee_com):
     data = get_data_from_pg('type_highway_insee',insee_com)
     for l in data:
-        name = l[0].decode('utf8')
+        name = l[0]
         adresses.register(name)
         cle = normalize(name)
         if l[1] in dicts.highway_types:
             adresses.add_highway_index(cle,dicts.highway_types[l[1]])
 
 def normalize(s):
-    # if s[0:2] == 'BD' or s[0:4] == 'Boul':
-        # print(s)
     s = s.upper()                # tout en majuscules
     s = s.split(' (')[0]        # parenthèses : on coupe avant
     s = s.replace('-',' ')        # separateur espace
     s = s.replace('\'',' ')        # separateur espace
-    s = s.replace('’'.decode('utf8'),' ')        # separateur espace
+    s = s.replace('’',' ')        # separateur espace
     s = s.replace('/',' ')        # separateur espace
     s = s.replace(':',' ')        # separateur deux points
     s = ' '.join(s.split())        # separateur : 1 espace
     for l in iter(dicts.lettre_a_lettre):
         for ll in dicts.lettre_a_lettre[l]:
             s = s.replace(ll,l)
-    s = s.encode('ascii','ignore')
 
 # type de voie
     abrev_trouvee = False
@@ -824,7 +801,6 @@ def main(args):
         print(usage)
         os._exit(0)
     if len(args) > 3:
-        # use_cache = eval(args[3])
         use_cache = args[3]
     source = args[2].upper()
     if source not in ['OSM','CADASTRE']:
@@ -837,7 +813,6 @@ def main(args):
     pgcl = get_pgc_layers()
 
     code_insee = args[1]
-    #code_cadastre = get_code_cadastre_from_insee(code_insee)
     code_dept = get_short_code_dept_from_insee(code_insee)
 
     batch_id = batch_start_log(source,'loadCumul',code_insee)
@@ -848,7 +823,7 @@ def main(args):
     commune_avec_suffixe = has_addreses_with_suffix(code_insee)
     geom_suffixe = None
     if commune_avec_suffixe:
-        geom_suffixe = get_geom_suffixes(code_insee,code_cadastre)
+        geom_suffixe = get_geom_suffixes(code_insee)
 
     if source == 'CADASTRE':
         fnadresses = os.path.join(os.environ['BANO_CACHE_DIR'],code_dept,code_insee,'{}-bal.csv'.format(code_insee))
