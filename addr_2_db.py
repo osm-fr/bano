@@ -792,6 +792,10 @@ def main(args):
     global commune_avec_suffixe
     global geom_suffixe
     global use_cache
+    global schema_cible
+
+    schema_cible = 'public'
+    if (os.environ['SCHEMA_CIBLE']) : schema_cible = (os.environ['SCHEMA_CIBLE'])
 
     use_cache = True
 
