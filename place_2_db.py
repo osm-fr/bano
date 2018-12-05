@@ -11,7 +11,7 @@ import sys
 import time
 import os
 from pg_connexion import get_pgc,get_pgc_layers
-from addr_2_db import get_code_cadastre_from_insee,get_cadastre_code_dept_from_insee,get_cache_filename
+from addr_2_db import get_cadastre_code_dept_from_insee,get_cache_filename
 from outils_de_gestion import batch_start_log,batch_end_log,get_cadastre_format,get_cadastre_etape_timestamp_debut
 # from outils_de_gestion import 
 
@@ -65,17 +65,17 @@ class Place:
 	def as_SQL_cadastre_row(self):
 		if self.has_cadastre:
 			if self.has_osm and self.has_fantoir:
-				return "(ST_PointFromText('POINT({:7f} {:7f})',4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','','{:s}',{:s},'')".format(self.cadastre.lon,self.cadastre.lat,format_toponyme(self.cadastre.name).replace('\'','\'\'').encode('utf8'),self.osm.name.replace('\'','\'\'').encode('utf8'),self.fantoir.name.replace('\'','\'\''),self.fantoir.fantoir,code_insee,code_cadastre,code_dept,'CADASTRE',self.fantoir.bati)
+				return "(ST_PointFromText('POINT({:7f} {:7f})',4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','','{:s}',{:s},'')".format(self.cadastre.lon,self.cadastre.lat,format_toponyme(self.cadastre.name).replace('\'','\'\''),self.osm.name.replace('\'','\'\''),self.fantoir.name.replace('\'','\'\''),self.fantoir.fantoir,code_insee,code_dept,'CADASTRE',self.fantoir.bati)
 			if self.has_fantoir:
-				return "(ST_PointFromText('POINT({:7f} {:7f})',4326),'{:s}',null,'{:s}','{:s}','{:s}','{:s}','{:s}','','{:s}',{:s},'')".format(self.cadastre.lon,self.cadastre.lat,format_toponyme(self.cadastre.name).replace('\'','\'\'').encode('utf8'),self.fantoir.name.replace('\'','\'\''),self.fantoir.fantoir,code_insee,code_cadastre,code_dept,'CADASTRE',self.fantoir.bati)
+				return "(ST_PointFromText('POINT({:7f} {:7f})',4326),'{:s}',null,'{:s}','{:s}','{:s}','{:s}','','{:s}',{:s},'')".format(self.cadastre.lon,self.cadastre.lat,format_toponyme(self.cadastre.name).replace('\'','\'\''),self.fantoir.name.replace('\'','\'\''),self.fantoir.fantoir,code_insee,code_dept,'CADASTRE',self.fantoir.bati)
 			if self.has_osm:
-				return "(ST_PointFromText('POINT({:7f} {:7f})',4326),'{:s}','{:s}',null,null,'{:s}','{:s}','{:s}','','{:s}',null,'')".format(self.cadastre.lon,self.cadastre.lat,format_toponyme(self.cadastre.name).replace('\'','\'\'').encode('utf8'),self.osm.name.replace('\'','\'\'').encode('utf8'),code_insee,code_cadastre,code_dept,'CADASTRE')
-			return "(ST_PointFromText('POINT({:7f} {:7f})',4326),'{:s}',null,null,null,'{:s}','{:s}','{:s}','','{:s}',null,'')".format(self.cadastre.lon,self.cadastre.lat,format_toponyme(self.cadastre.name).replace('\'','\'\'').encode('utf8'),code_insee,code_cadastre,code_dept,'CADASTRE')
+				return "(ST_PointFromText('POINT({:7f} {:7f})',4326),'{:s}','{:s}',null,null,'{:s}','{:s}','','{:s}',null,'')".format(self.cadastre.lon,self.cadastre.lat,format_toponyme(self.cadastre.name).replace('\'','\'\'').encode('utf8'),self.osm.name.replace('\'','\'\''),code_insee,code_dept,'CADASTRE')
+			return "(ST_PointFromText('POINT({:7f} {:7f})',4326),'{:s}',null,null,null,'{:s}','{:s}','','{:s}',null,'')".format(self.cadastre.lon,self.cadastre.lat,format_toponyme(self.cadastre.name).replace('\'','\'\''),code_insee,code_dept,'CADASTRE')
 	def as_SQL_osm_row(self):
 		if self.has_osm and self.has_fantoir:
-			return "(ST_PointFromText('POINT({:7f} {:7f})',4326),null,'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','','{:s}',{:s},'{:s}')".format(self.osm.lon,self.osm.lat,self.osm.name.replace('\'','\'\'').encode('utf8'),self.fantoir.name.replace('\'','\'\''),self.fantoir.fantoir,code_insee,code_cadastre,code_dept,'OSM',self.fantoir.bati,self.osm.place)
+			return "(ST_PointFromText('POINT({:7f} {:7f})',4326),null,'{:s}','{:s}','{:s}','{:s}','{:s}','','{:s}',{:s},'{:s}')".format(self.osm.lon,self.osm.lat,self.osm.name.replace('\'','\'\'').encode('utf8'),self.fantoir.name.replace('\'','\'\''),self.fantoir.fantoir,code_insee,code_dept,'OSM',self.fantoir.bati,self.osm.place)
 		if self.has_osm:
-			return "(ST_PointFromText('POINT({:7f} {:7f})',4326),null,'{:s}',null,null,'{:s}','{:s}','{:s}','','{:s}',null,'{:s}')".format(self.osm.lon,self.osm.lat,self.osm.name.replace('\'','\'\'').encode('utf8'),code_insee,code_cadastre,code_dept,'OSM',self.osm.place)
+			return "(ST_PointFromText('POINT({:7f} {:7f})',4326),null,'{:s}',null,null,'{:s}','{:s}','','{:s}',null,'{:s}')".format(self.osm.lon,self.osm.lat,self.osm.name.replace('\'','\'\'').encode('utf8'),code_insee,code_dept,'OSM',self.osm.place)
 class Places:
 	def __init__(self):
 		self.p = {}
@@ -182,9 +182,9 @@ def format_toponyme(s):
 	return s
 def get_data_from_pg(data_type,insee_com,cadastre_com,local=False,suffixe_data=None):
 	# print(data_type,insee_com,cadastre_com,suffixe_data)
-	cache_file = get_cache_filename(data_type,insee_com,cadastre_com)
+	cache_file = get_cache_filename(data_type,insee_com)
 	if not use_cache or not os.path.exists(cache_file) or (time.time() - os.path.getmtime(cache_file)) > 86400 :
-		fq = open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'sql/{:s}.sql'.format(data_type)),'rb')
+		fq = open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'sql/{:s}.sql'.format(data_type)),'r')
 		str_query = fq.read().replace('__com__',insee_com)
 		# print(str_query)
 		fq.close()
@@ -211,16 +211,16 @@ def get_data_from_pg(data_type,insee_com,cadastre_com,local=False,suffixe_data=N
 	f.close()
 	return res
 def load_cadastre():
-	fname = get_cache_filename('cadastre_2_places',code_insee,code_cadastre)
+	fname = get_cache_filename('cadastre_2_places',code_insee)
 	if os.path.exists(fname):
-		date_buildings_en_base = get_cadastre_etape_timestamp_debut(code_cadastre,'importBuildings','CADASTRE')
+		date_buildings_en_base = get_cadastre_etape_timestamp_debut(code_insee,'importBuildings','CADASTRE')
 		date_cache = os.path.getmtime(fname)
 		# print('date_buildings_en_base '+str(date_buildings_en_base))
 		# print('date_cache '+str(date_cache))
 		if date_cache > date_buildings_en_base:
 			os.utime(fname, None)
 			# print('utime')
-	data = get_data_from_pg('cadastre_2_places',code_insee,code_cadastre,True)
+	data = get_data_from_pg('cadastre_2_places',code_insee,True)
 	for d in data:
 		targets = places.match_name(d[2],'FANTOIR')
 		if targets:
@@ -253,7 +253,7 @@ def load_fantoir(insee):
 		p = Place(0,0,'',c[1],'','','',c[0],c[2])
 		places.add_place(p)
 def	load_osm():
-	data = get_data_from_pg('place_insee',code_insee,code_cadastre)
+	data = get_data_from_pg('place_insee',code_insee)
 	for d in data:
 		name = d[3].decode('utf8')
 		targets = places.match_name(name,'FANTOIR')
@@ -274,7 +274,7 @@ def load_to_db(places):
 
 	a_values_place = []
 
-	sload = 'INSERT INTO {:s} (geometrie,libelle_cadastre,libelle_osm,libelle_fantoir,fantoir,insee_com,cadastre_com,dept,code_postal,source,ld_bati,ld_osm) VALUES'.format(table)
+	sload = 'INSERT INTO {:s} (geometrie,libelle_cadastre,libelle_osm,libelle_fantoir,fantoir,insee_com,dept,code_postal,source,ld_bati,ld_osm) VALUES'.format(table)
 	# a_values = [places.p[a].as_SQL_cadastre_row() for a in places.p]
 	a_values = places.as_SQL_Cadastre_array()
 	nb_rec = len(a_values)
@@ -315,12 +315,12 @@ def main(args):
 		print(usage)
 		os._exit(0)
 
-	global pgc,fantoir,source,code_insee,code_cadastre,code_dept,dicts,use_cache,places
+	global pgc,fantoir,source,code_insee,code_dept,dicts,use_cache,places
 	
 	code_insee = args[1]
 	dicts = {}
 	load_dicts()
-	code_cadastre = get_code_cadastre_from_insee(code_insee)
+	# code_cadastre = get_code_cadastre_from_insee(code_insee)
 	code_dept = get_cadastre_code_dept_from_insee(code_insee)
 	format_cadastre = get_cadastre_format(code_insee)
 
@@ -330,10 +330,10 @@ def main(args):
 	places = Places()
 	load_fantoir(code_insee)
 	
-	batch_id_osm = batch_start_log('OSM','cumulPlaces',code_cadastre)
+	batch_id_osm = batch_start_log('OSM','cumulPlaces',code_insee)
 
 	if format_cadastre == 'VECT':
-		batch_id_cadastre = batch_start_log('CADASTRE','cumulPlaces',code_cadastre)
+		batch_id_cadastre = batch_start_log('CADASTRE','cumulPlaces',code_insee)
 		load_cadastre()
 	load_osm()
 		
