@@ -12,11 +12,12 @@ import xml.etree.ElementTree as ET
 os.umask(0000)
 
 class Adresse:
-    def __init__(self,node,num,voie,fantoir):
+    def __init__(self,node,num,voie,fantoir,code_postal):
         self.node = node
         self.numero = num
         self.voie = voie
         self.fantoir = fantoir
+        self.code_postal = code_postal
 
 class Adresses:
     def __init__(self):
@@ -300,6 +301,7 @@ class Pg_hsnr:
         if self.provenance == '3' or self.provenance == '4':
             self.set_street_name()
         self.set_fantoir()
+        self.code_postal = find_cp_in_tags(self.tags)
 
     def set_street_name(self):
         if 'type' in self.tags and self.tags['type'] == 'associatedStreet' and 'name' in self.tags:
@@ -309,6 +311,12 @@ class Pg_hsnr:
         if 'ref:FR:FANTOIR' in self.tags and len(self.tags['ref:FR:FANTOIR']) == 10 and self.tags['ref:FR:FANTOIR'][0:5] == code_insee:
             self.fantoir = self.tags['ref:FR:FANTOIR']
 
+def find_cp_in_tags(tags):
+    code_postal = ''
+    if 'addr:postcode' in tags : code_postal = tags['addr:postcode']
+    if code_postal == '' and 'postal_code' in tags : code_postal = tags['postal_code']
+    return code_postal
+    
 def add_fantoir_to_hsnr():
     for v in adresses.a:
         if v in dicts.fantoir:
@@ -443,45 +451,19 @@ def is_valid_fantoir(f):
         res = False
     return res
 
-def load_hsnr_from_cad_file(fnadresses,source):
-    xmladresses = ET.parse(fnadresses)
-    dict_node_relations = {}
-    for asso in xmladresses.iter('relation'):
-        dtags = get_tags(asso)
-        if not 'type' in dtags:
-            continue
-        if dtags['type'] != 'associatedStreet':
-            continue
-        if not 'name' in dtags:
-            continue
-        if len(dtags['name']) < 2:
-            continue
-        adresses.register(dtags['name'])
-        adresses.add_voie(dtags['name'],'CADASTRE')
-        for n in asso.iter('member'):
-            if n.get('type') == 'node':
-                if not n.get('ref') in dict_node_relations:
-                    dict_node_relations[n.get('ref')] = []
-                dict_node_relations[n.get('ref')].append(normalize(dtags['name']))
-    for n in xmladresses.iter('node'):
-        dtags = get_tags(n)
-        n_id = n.get('id')
-        if 'addr:housenumber' in dtags and n_id in dict_node_relations:
-            if is_valid_housenumber(dtags['addr:housenumber']):
-                for v in dict_node_relations[n_id]:
-                    nd = Node({'id':n_id,'lon':n.get('lon'),'lat':n.get('lat')},{})
-                    adresses.add_adresse(Adresse(nd,dtags['addr:housenumber'],adresses.a[v]['voies']['CADASTRE'],''),source)
-
 def load_hsnr_from_cad_file_csv(fnadresses,source):
     csvadresses = open(fnadresses,'r')
     dict_node_relations = {}
     for l in csvadresses :
         line_split = l.split(';')
-        cle_interop,housenumber,name,lon,lat = line_split[0],line_split[2]+line_split[3],line_split[5],line_split[13],line_split[14]
+        cle_interop,housenumber,pseudo_adresse,name,code_postal,lon,lat = line_split[0],line_split[2]+line_split[3],line_split[4],line_split[5],line_split[7],line_split[13],line_split[14]
 
         if len(name) < 2:
             continue
         if len(lon) < 1:
+            continue
+        if pseudo_adresse == 'true':
+            # print(l)
             continue
         adresses.register(name)
         adresses.add_voie(name,'CADASTRE')
@@ -490,7 +472,7 @@ def load_hsnr_from_cad_file_csv(fnadresses,source):
             dict_node_relations[cle_interop].append(normalize(name))
         if is_valid_housenumber(housenumber):
             nd = Node({'id':cle_interop,'lon':lon,'lat':lat},{})
-            adresses.add_adresse(Adresse(nd,housenumber,name,''),source)
+            adresses.add_adresse(Adresse(nd,housenumber,name,'',code_postal),source)
 
 def load_hsnr_bbox_from_pg_osm(insee_com):
     data = get_data_from_pg('hsnr_bbox_insee',insee_com)
@@ -502,7 +484,7 @@ def load_hsnr_bbox_from_pg_osm(insee_com):
         if oa.fantoir == '':
             continue
         adresses.register(oa.voie)
-        adresses.add_adresse(Adresse(n,oa.numero,oa.voie,oa.fantoir),source)
+        adresses.add_adresse(Adresse(n,oa.numero,oa.voie,oa.fantoir,oa.code_postal),source)
 
 def load_hsnr_from_pg_osm(insee_com):
     data = get_data_from_pg('hsnr_insee',insee_com)
@@ -512,7 +494,7 @@ def load_hsnr_from_pg_osm(insee_com):
         if oa.voie == None:
             continue
         adresses.register(oa.voie)
-        adresses.add_adresse(Adresse(n,oa.numero,oa.voie,oa.fantoir),source)
+        adresses.add_adresse(Adresse(n,oa.numero,oa.voie,oa.fantoir,oa.code_postal),source)
 
 def load_highways_bbox_from_pg_osm(insee_com):
     if commune_avec_suffixe:
@@ -676,6 +658,7 @@ def load_to_db(adresses,code_insee,source,code_dept):
         street_name_cadastre = ''
         street_name_osm = ''
         street_name_fantoir = ''
+        code_postal = ''
         cle_fantoir = get_best_fantoir(v)
         if 'OSM' in adresses.a[v]['voies']:
             street_name_osm =  adresses.a[v]['voies']['OSM']
@@ -690,7 +673,7 @@ def load_to_db(adresses,code_insee,source,code_dept):
 
         for num in adresses.a[v]['numeros']:
             numadresse = adresses.a[v]['numeros'][num]
-            a_values.append("(ST_PointFromText('POINT({:s} {:s})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}')".format(numadresse.node.attribs['lon'],numadresse.node.attribs['lat'],numadresse.numero.replace("'",""),street_name_cadastre.replace("'","''"),street_name_osm.replace("'","''"),street_name_fantoir.replace("'","''"),cle_fantoir,code_insee,code_dept,'',source).replace(",''",",null").replace(",''",",null"))
+            a_values.append("(ST_PointFromText('POINT({:s} {:s})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}')".format(numadresse.node.attribs['lon'],numadresse.node.attribs['lat'],numadresse.numero.replace("'",""),street_name_cadastre.replace("'","''"),street_name_osm.replace("'","''"),street_name_fantoir.replace("'","''"),cle_fantoir,code_insee,code_dept,numadresse.code_postal,source).replace(",''",",null").replace(",''",",null"))
             nb_rec +=1
         if len(a_values)>0:
             sload = sload+','.join(a_values)+';COMMIT;'
@@ -795,7 +778,7 @@ def main(args):
     global schema_cible
 
     schema_cible = 'public'
-    if (os.environ['SCHEMA_CIBLE']) : schema_cible = (os.environ['SCHEMA_CIBLE'])
+    if ('SCHEMA_CIBLE' in os.environ) : schema_cible = (os.environ['SCHEMA_CIBLE'])
 
     use_cache = True
 

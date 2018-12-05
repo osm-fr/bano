@@ -2,7 +2,7 @@
 
 export BANO_DIR=$HOME/bano
 export LOG_DIR=$BANO_DIR/log
-export DATA_DIR=$HOME/bano_data
+export DATA_DIR=/data/bano_data
 export BANO_CACHE_DIR=$DATA_DIR/bano_cache
 export CADASTRE_CACHE_DIR=$DATA_DIR/cadastre_cache
 export SCHEMA_CIBLE=dev
