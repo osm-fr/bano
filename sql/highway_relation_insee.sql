@@ -7,6 +7,7 @@ ON	r.parts @> ARRAY[l.osm_id]
 WHERE	p.tags ? 'ref:INSEE'		AND
 	p.tags->'ref:INSEE'='__com__'	AND
 	l.highway 	IS NOT NULL	AND
-	l.name 		IS NOT NULL
+	l.name 		IS NOT NULL AND
+    r.tags IS NOT NULL
 ORDER BY 3;
 				
