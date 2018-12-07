@@ -61,7 +61,7 @@ class Place:
 		self.cadastre = Cadastre(lon,lat,name)
 		self.has_cadastre = True
 	def as_string(self):
-		return "{:s}:{:s}\t{:s}\t{:6f}\t{:6f}\t{:s}\t{:s}\t{:6f}\t{:6f}\t{:s}".format(self.id.encode('utf8'),self.fantoir.name,self.fantoir.fantoir,self.osm.lon,self.osm.lat,self.osm.place,self.osm.name.encode('utf8'),self.cadastre.lon,self.cadastre.lat,self.cadastre.name)
+		return "{:s}:{:s}\t{:s}\t{:6f}\t{:6f}\t{:s}\t{:s}\t{:6f}\t{:6f}\t{:s}".format(self.id,self.fantoir.name,self.fantoir.fantoir,self.osm.lon,self.osm.lat,self.osm.place,self.osm.name,self.cadastre.lon,self.cadastre.lat,self.cadastre.name)
 	def as_SQL_cadastre_row(self):
 		if self.has_cadastre:
 			if self.has_osm and self.has_fantoir:
@@ -69,13 +69,13 @@ class Place:
 			if self.has_fantoir:
 				return "(ST_PointFromText('POINT({:7f} {:7f})',4326),'{:s}',null,'{:s}','{:s}','{:s}','{:s}','','{:s}',{:s},'')".format(self.cadastre.lon,self.cadastre.lat,format_toponyme(self.cadastre.name).replace('\'','\'\''),self.fantoir.name.replace('\'','\'\''),self.fantoir.fantoir,code_insee,code_dept,'CADASTRE',self.fantoir.bati)
 			if self.has_osm:
-				return "(ST_PointFromText('POINT({:7f} {:7f})',4326),'{:s}','{:s}',null,null,'{:s}','{:s}','','{:s}',null,'')".format(self.cadastre.lon,self.cadastre.lat,format_toponyme(self.cadastre.name).replace('\'','\'\'').encode('utf8'),self.osm.name.replace('\'','\'\''),code_insee,code_dept,'CADASTRE')
+				return "(ST_PointFromText('POINT({:7f} {:7f})',4326),'{:s}','{:s}',null,null,'{:s}','{:s}','','{:s}',null,'')".format(self.cadastre.lon,self.cadastre.lat,format_toponyme(self.cadastre.name).replace('\'','\'\''),self.osm.name.replace('\'','\'\''),code_insee,code_dept,'CADASTRE')
 			return "(ST_PointFromText('POINT({:7f} {:7f})',4326),'{:s}',null,null,null,'{:s}','{:s}','','{:s}',null,'')".format(self.cadastre.lon,self.cadastre.lat,format_toponyme(self.cadastre.name).replace('\'','\'\''),code_insee,code_dept,'CADASTRE')
 	def as_SQL_osm_row(self):
 		if self.has_osm and self.has_fantoir:
-			return "(ST_PointFromText('POINT({:7f} {:7f})',4326),null,'{:s}','{:s}','{:s}','{:s}','{:s}','','{:s}',{:s},'{:s}')".format(self.osm.lon,self.osm.lat,self.osm.name.replace('\'','\'\'').encode('utf8'),self.fantoir.name.replace('\'','\'\''),self.fantoir.fantoir,code_insee,code_dept,'OSM',self.fantoir.bati,self.osm.place)
+			return "(ST_PointFromText('POINT({:7f} {:7f})',4326),null,'{:s}','{:s}','{:s}','{:s}','{:s}','','{:s}',{:s},'{:s}')".format(self.osm.lon,self.osm.lat,self.osm.name.replace('\'','\'\''),self.fantoir.name.replace('\'','\'\''),self.fantoir.fantoir,code_insee,code_dept,'OSM',self.fantoir.bati,self.osm.place)
 		if self.has_osm:
-			return "(ST_PointFromText('POINT({:7f} {:7f})',4326),null,'{:s}',null,null,'{:s}','{:s}','','{:s}',null,'{:s}')".format(self.osm.lon,self.osm.lat,self.osm.name.replace('\'','\'\'').encode('utf8'),code_insee,code_dept,'OSM',self.osm.place)
+			return "(ST_PointFromText('POINT({:7f} {:7f})',4326),null,'{:s}',null,null,'{:s}','{:s}','','{:s}',null,'{:s}')".format(self.osm.lon,self.osm.lat,self.osm.name.replace('\'','\'\''),code_insee,code_dept,'OSM',self.osm.place)
 class Places:
 	def __init__(self):
 		self.p = {}
@@ -255,7 +255,7 @@ def load_fantoir(insee):
 def	load_osm():
 	data = get_data_from_pg('place_insee',code_insee)
 	for d in data:
-		name = d[3].decode('utf8')
+		name = d[3]
 		targets = places.match_name(name,'FANTOIR')
 		if targets:
 			# if len(targets)>1: print '**************\n'+str(targets)
@@ -291,7 +291,7 @@ def normalize(s):
 	s = s.split(' (')[0]		# parenthèses : on coupe avant
 	s = s.replace('-',' ')		# separateur espace
 	s = s.replace('\'',' ')		# separateur espace
-	s = s.replace('’'.decode('utf8'),' ')		# separateur espace
+	s = s.replace('’',' ')		# separateur espace
 	s = s.replace('/',' ')		# separateur espace
 	s = s.replace(':',' ')		# separateur deux points
 	s = ' '.join(s.split())		# separateur : 1 espace
@@ -299,7 +299,7 @@ def normalize(s):
 	for l in iter(dicts['lettre_a_lettre']):
 		for ll in dicts['lettre_a_lettre'][l]:
 			s = s.replace(ll,l)
-	s = s.encode('ascii','ignore')
+	# s = s.encode('ascii','ignore')
 
 	for c in dicts['mot_a_blanc']:
 		s = s.replace(' '+c+' ',' ') #en cours de mot

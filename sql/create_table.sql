@@ -1,6 +1,4 @@
-
-DROP TABLE IF EXISTS :schema_cible.fantoir_voie CASCADE;
-CREATE TABLE :schema_cible.fantoir_voie (
+CREATE TABLE IF NOT EXISTS :schema_cible.fantoir_voie (
                             code_dept       character(2),
                             code_dir        character(1),
                             code_com        character(3),
@@ -25,8 +23,7 @@ CREATE TABLE :schema_cible.fantoir_voie (
 CREATE INDEX idx_fantoir_voie_dept  ON      :schema_cible.fantoir_voie(code_dept);
 CREATE INDEX idx_fantoir_code_insee ON      :schema_cible.fantoir_voie(code_insee);
 
-DROP TABLE IF EXISTS :schema_cible.cumul_adresses CASCADE;
-CREATE TABLE :schema_cible.cumul_adresses (
+CREATE TABLE IF NOT EXISTS :schema_cible.cumul_adresses (
     geometrie       geometry ,
     numero          character varying (15),
     voie_cadastre   character varying (300),
@@ -46,8 +43,7 @@ CREATE INDEX cumul_adresses_geo ON :schema_cible.cumul_adresses USING gist (geom
 CREATE INDEX cumul_adresses_insee ON :schema_cible.cumul_adresses(insee_com) WITH (fillfactor=95);
 CREATE INDEX cumul_adresses_source ON :schema_cible.cumul_adresses(source) WITH (fillfactor=95);
 
-DROP TABLE IF EXISTS :schema_cible.cumul_voies CASCADE;
-CREATE TABLE :schema_cible.cumul_voies
+CREATE TABLE IF NOT EXISTS :schema_cible.cumul_voies
 (   geometrie       geometry ,
     voie_cadastre   character varying (300),
     voie_osm        character varying (300),
@@ -67,8 +63,7 @@ CREATE INDEX    cumul_voies_geo ON :schema_cible.cumul_voies USING gist (geometr
 CREATE INDEX    cumul_voies_insee ON :schema_cible.cumul_voies(insee_com) WITH (fillfactor=95);
 CREATE INDEX    cumul_voies_source ON :schema_cible.cumul_voies(source) WITH (fillfactor=95);
 
-DROP TABLE IF EXISTS :schema_cible.cumul_places CASCADE;
-CREATE TABLE :schema_cible.cumul_places
+CREATE TABLE IF NOT EXISTS :schema_cible.cumul_places
 (   geometrie       geometry ,
     libelle_cadastre    character varying (300),
     libelle_osm     character varying (300),
@@ -86,8 +81,7 @@ CREATE TABLE :schema_cible.cumul_places
 CREATE INDEX cumul_places_geo ON :schema_cible.cumul_places USING GIST(geometrie);
 CREATE INDEX cumul_places_insee_com ON :schema_cible.cumul_places (insee_com);
 
-DROP TABLE IF EXISTS :schema_cible.batch CASCADE;
-CREATE TABLE :schema_cible.batch (
+CREATE TABLE IF NOT EXISTS :schema_cible.batch (
     id_batch        serial,
     source          character varying (100),
     etape           character varying (100),
@@ -100,8 +94,7 @@ CREATE TABLE :schema_cible.batch (
     nom_com         character varying(250),
     nombre_adresses integer);
 
-DROP TABLE IF EXISTS :schema_cible.batch_historique CASCADE;
-CREATE TABLE :schema_cible.batch_historique (
+CREATE TABLE IF NOT EXISTS :schema_cible.batch_historique (
     id_batch                integer,
     source          character varying (100),
     etape           character varying (100),
@@ -114,8 +107,7 @@ CREATE TABLE :schema_cible.batch_historique (
     nom_com         character varying(250),
     nombre_adresses integer);
 
-DROP TABLE IF EXISTS :schema_cible.code_cadastre CASCADE;
-CREATE TABLE :schema_cible.code_cadastre (
+CREATE TABLE IF NOT EXISTS :schema_cible.code_cadastre (
         dept character varying(3),
         cadastre_dept character (3),
         nom_com character varying(250),
@@ -125,20 +117,17 @@ CREATE TABLE :schema_cible.code_cadastre (
         format_cadastre character varying(10),
         date_maj integer);
 
-DROP TABLE IF EXISTS :schema_cible.tmp_code_cadastre CASCADE;
-CREATE TABLE :schema_cible.tmp_code_cadastre
+CREATE TABLE IF NOT EXISTS :schema_cible.tmp_code_cadastre
 AS SELECT * FROM :schema_cible.code_cadastre LIMIT 0;
 
-DROP TABLE IF EXISTS :schema_cible.suffixe CASCADE;
-CREATE TABLE :schema_cible.suffixe (
+CREATE TABLE IF NOT EXISTS :schema_cible.suffixe (
                 geometrie               geometry,
                 insee_com               character(5),
                 libelle_suffixe character varying(100)
 );
 CREATE INDEX gidx_suffixe ON :schema_cible.suffixe USING GIST(geometrie);
 
-DROP TABLE IF EXISTS :schema_cible.parcelles CASCADE;
-CREATE TABLE :schema_cible.parcelles (
+CREATE TABLE IF NOT EXISTS :schema_cible.parcelles (
         geometrie       geometry,
         insee_com       character(5),
         id_cadastre     character varying(15),
@@ -149,8 +138,7 @@ CREATE TABLE :schema_cible.parcelles (
 CREATE INDEX parcelles_insee_com ON :schema_cible.parcelles(insee_com);
 CREATE INDEX gidx_parcelles      ON :schema_cible.parcelles USING gist (geometrie);
 
-DROP TABLE IF EXISTS :schema_cible.buildings CASCADE;
-CREATE TABLE :schema_cible.buildings (
+CREATE TABLE IF NOT EXISTS :schema_cible.buildings (
         geometrie       geometry,
         id_building     serial,
         insee_com       character(5),
@@ -159,8 +147,18 @@ CREATE TABLE :schema_cible.buildings (
 CREATE INDEX buildings_insee_com ON :schema_cible.buildings(insee_com);
 CREATE INDEX gidx_buildings      ON :schema_cible.buildings USING gist (geometrie);
 
-DROP TABLE IF EXISTS :schema_cible.parcelles_noms CASCADE;
-CREATE TABLE :schema_cible.parcelles_noms (
+CREATE TABLE IF NOT EXISTS :schema_cible.batiments (
+        insee_com       character(5),
+        nom        character varying(80),
+        type_batiment text,
+        created date,
+        updated date,
+        geometrie geometry(MultiPolygon,4326)
+);
+CREATE INDEX batiments_insee_com ON :schema_cible.batiments(insee_com);
+CREATE INDEX gidx_batiments      ON :schema_cible.batiments USING gist (geometrie);
+
+CREATE TABLE IF NOT EXISTS :schema_cible.parcelles_noms (
         geometrie       geometry,
         insee_com       character(5),
         libelle         character varying(100),
@@ -168,8 +166,7 @@ CREATE TABLE :schema_cible.parcelles_noms (
 );
 CREATE INDEX parcelles_noms_insee_com ON :schema_cible.parcelles_noms(insee_com);
 
-DROP TABLE IF EXISTS :schema_cible.type_voie CASCADE;
-CREATE TABLE :schema_cible.type_voie (
+CREATE TABLE IF NOT EXISTS :schema_cible.type_voie (
         id_voie integer,
         tag_value text,
         tag_index integer);
@@ -192,8 +189,7 @@ INSERT INTO :schema_cible.type_voie (id_voie,tag_value)
             (16,'motorway');
 UPDATE :schema_cible.type_voie SET tag_index = power(2,id_voie-1);
 
-DROP TABLE IF EXISTS :schema_cible.cadastre_noms_bruts CASCADE;
-CREATE TABLE :schema_cible.cadastre_noms_bruts (
+CREATE TABLE IF NOT EXISTS :schema_cible.cadastre_noms_bruts (
         insee_com       character(5),
         voie_cadastre   character varying (300),
         fantoir         character varying (10)
