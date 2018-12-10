@@ -20,8 +20,8 @@ CREATE TABLE IF NOT EXISTS :schema_cible.fantoir_voie (
                             type_voie       character(1),
                             ld_bati         character(1),
                             dernier_mot     character varying(8));
-CREATE INDEX idx_fantoir_voie_dept  ON      :schema_cible.fantoir_voie(code_dept);
-CREATE INDEX idx_fantoir_code_insee ON      :schema_cible.fantoir_voie(code_insee);
+CREATE INDEX IF NOT EXISTS idx_fantoir_voie_dept  ON      :schema_cible.fantoir_voie(code_dept);
+CREATE INDEX IF NOT EXISTS idx_fantoir_code_insee ON      :schema_cible.fantoir_voie(code_insee);
 
 CREATE TABLE IF NOT EXISTS :schema_cible.cumul_adresses (
     geometrie       geometry ,
@@ -37,11 +37,11 @@ CREATE TABLE IF NOT EXISTS :schema_cible.cumul_adresses (
     source          character varying (100),
     batch_import_id integer);
 
-CREATE INDEX cumul_adresses_fantoir ON :schema_cible.cumul_adresses(fantoir);
-CREATE INDEX cumul_adresses_fantoir_source_idx ON :schema_cible.cumul_adresses(fantoir, source);
-CREATE INDEX cumul_adresses_geo ON :schema_cible.cumul_adresses USING gist (geometrie);
-CREATE INDEX cumul_adresses_insee ON :schema_cible.cumul_adresses(insee_com) WITH (fillfactor=95);
-CREATE INDEX cumul_adresses_source ON :schema_cible.cumul_adresses(source) WITH (fillfactor=95);
+CREATE INDEX IF NOT EXISTS cumul_adresses_fantoir ON :schema_cible.cumul_adresses(fantoir);
+CREATE INDEX IF NOT EXISTS cumul_adresses_fantoir_source_idx ON :schema_cible.cumul_adresses(fantoir, source);
+CREATE INDEX IF NOT EXISTS cumul_adresses_geo ON :schema_cible.cumul_adresses USING gist (geometrie);
+CREATE INDEX IF NOT EXISTS cumul_adresses_insee ON :schema_cible.cumul_adresses(insee_com) WITH (fillfactor=95);
+CREATE INDEX IF NOT EXISTS cumul_adresses_source ON :schema_cible.cumul_adresses(source) WITH (fillfactor=95);
 
 CREATE TABLE IF NOT EXISTS :schema_cible.cumul_voies
 (   geometrie       geometry ,
@@ -57,11 +57,11 @@ CREATE TABLE IF NOT EXISTS :schema_cible.cumul_voies
     voie_index      integer,
     batch_import_id integer);
 
-CREATE INDEX    cumul_voies_fantoir ON :schema_cible.cumul_voies(fantoir);
-CREATE INDEX    cumul_voies_fantoir_source_idx ON :schema_cible.cumul_voies(fantoir, source);
-CREATE INDEX    cumul_voies_geo ON :schema_cible.cumul_voies USING gist (geometrie);
-CREATE INDEX    cumul_voies_insee ON :schema_cible.cumul_voies(insee_com) WITH (fillfactor=95);
-CREATE INDEX    cumul_voies_source ON :schema_cible.cumul_voies(source) WITH (fillfactor=95);
+CREATE INDEX IF NOT EXISTS    cumul_voies_fantoir ON :schema_cible.cumul_voies(fantoir);
+CREATE INDEX IF NOT EXISTS    cumul_voies_fantoir_source_idx ON :schema_cible.cumul_voies(fantoir, source);
+CREATE INDEX IF NOT EXISTS    cumul_voies_geo ON :schema_cible.cumul_voies USING gist (geometrie);
+CREATE INDEX IF NOT EXISTS    cumul_voies_insee ON :schema_cible.cumul_voies(insee_com) WITH (fillfactor=95);
+CREATE INDEX IF NOT EXISTS    cumul_voies_source ON :schema_cible.cumul_voies(source) WITH (fillfactor=95);
 
 CREATE TABLE IF NOT EXISTS :schema_cible.cumul_places
 (   geometrie       geometry ,
@@ -78,8 +78,8 @@ CREATE TABLE IF NOT EXISTS :schema_cible.cumul_places
     source          character varying (100),
     batch_import_id integer);
 
-CREATE INDEX cumul_places_geo ON :schema_cible.cumul_places USING GIST(geometrie);
-CREATE INDEX cumul_places_insee_com ON :schema_cible.cumul_places (insee_com);
+CREATE INDEX IF NOT EXISTS cumul_places_geo ON :schema_cible.cumul_places USING GIST(geometrie);
+CREATE INDEX IF NOT EXISTS cumul_places_insee_com ON :schema_cible.cumul_places (insee_com);
 
 CREATE TABLE IF NOT EXISTS :schema_cible.batch (
     id_batch        serial,
@@ -125,7 +125,7 @@ CREATE TABLE IF NOT EXISTS :schema_cible.suffixe (
                 insee_com               character(5),
                 libelle_suffixe character varying(100)
 );
-CREATE INDEX gidx_suffixe ON :schema_cible.suffixe USING GIST(geometrie);
+CREATE INDEX IF NOT EXISTS gidx_suffixe ON :schema_cible.suffixe USING GIST(geometrie);
 
 CREATE TABLE IF NOT EXISTS :schema_cible.parcelles (
         geometrie       geometry,
@@ -135,8 +135,8 @@ CREATE TABLE IF NOT EXISTS :schema_cible.parcelles (
         voie_cadastre   character varying (300),
         fantoir         character varying (10)
 );
-CREATE INDEX parcelles_insee_com ON :schema_cible.parcelles(insee_com);
-CREATE INDEX gidx_parcelles      ON :schema_cible.parcelles USING gist (geometrie);
+CREATE INDEX IF NOT EXISTS parcelles_insee_com ON :schema_cible.parcelles(insee_com);
+CREATE INDEX IF NOT EXISTS gidx_parcelles      ON :schema_cible.parcelles USING gist (geometrie);
 
 CREATE TABLE IF NOT EXISTS :schema_cible.buildings (
         geometrie       geometry,
@@ -144,8 +144,8 @@ CREATE TABLE IF NOT EXISTS :schema_cible.buildings (
         insee_com       character(5),
         wall            character varying (3)
 );
-CREATE INDEX buildings_insee_com ON :schema_cible.buildings(insee_com);
-CREATE INDEX gidx_buildings      ON :schema_cible.buildings USING gist (geometrie);
+CREATE INDEX IF NOT EXISTS buildings_insee_com ON :schema_cible.buildings(insee_com);
+CREATE INDEX IF NOT EXISTS gidx_buildings      ON :schema_cible.buildings USING gist (geometrie);
 
 CREATE TABLE IF NOT EXISTS :schema_cible.batiments (
         insee_com       character(5),
@@ -155,8 +155,18 @@ CREATE TABLE IF NOT EXISTS :schema_cible.batiments (
         updated date,
         geometrie geometry(MultiPolygon,4326)
 );
-CREATE INDEX batiments_insee_com ON :schema_cible.batiments(insee_com);
-CREATE INDEX gidx_batiments      ON :schema_cible.batiments USING gist (geometrie);
+CREATE INDEX IF NOT EXISTS batiments_insee_com ON :schema_cible.batiments(insee_com);
+CREATE INDEX IF NOT EXISTS gidx_batiments      ON :schema_cible.batiments USING gist (geometrie);
+
+CREATE TABLE IF NOT EXISTS :schema_cible.lieux_dits (
+        insee_com       character(5),
+        nom        character varying(80),
+        created date,
+        updated date,
+        geometrie geometry(MultiPolygon,4326)
+);
+CREATE INDEX IF NOT EXISTS lieux_dits_insee_com ON :schema_cible.lieux_dits(insee_com);
+CREATE INDEX IF NOT EXISTS gidx_lieux_dits      ON :schema_cible.lieux_dits USING gist (geometrie);
 
 CREATE TABLE IF NOT EXISTS :schema_cible.parcelles_noms (
         geometrie       geometry,
@@ -164,12 +174,13 @@ CREATE TABLE IF NOT EXISTS :schema_cible.parcelles_noms (
         libelle         character varying(100),
         fantoir         character varying (10)
 );
-CREATE INDEX parcelles_noms_insee_com ON :schema_cible.parcelles_noms(insee_com);
+CREATE INDEX IF NOT EXISTS parcelles_noms_insee_com ON :schema_cible.parcelles_noms(insee_com);
 
 CREATE TABLE IF NOT EXISTS :schema_cible.type_voie (
         id_voie integer,
         tag_value text,
         tag_index integer);
+TRUNCATE TABLE :schema_cible.type_voie; 
 INSERT INTO :schema_cible.type_voie (id_voie,tag_value) 
     VALUES (1,'steps'),
             (2,'path'),
@@ -194,5 +205,4 @@ CREATE TABLE IF NOT EXISTS :schema_cible.cadastre_noms_bruts (
         voie_cadastre   character varying (300),
         fantoir         character varying (10)
 );
-
-CREATE INDEX ON :schema_cible.cadastre_noms_bruts(insee_com);
+CREATE INDEX IF NOT EXISTS idx_cadastre_noms_bruts_insee_com ON :schema_cible.cadastre_noms_bruts(insee_com);
