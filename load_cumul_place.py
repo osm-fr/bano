@@ -6,8 +6,6 @@ import log_2_file as e
 import outils_de_gestion as o
 import sys
 import os,os.path
-import codecs
-
 
 # Wrap sys.stdout with a writer that knows how to handle encoding
 # Unicode data.

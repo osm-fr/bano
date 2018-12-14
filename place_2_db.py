@@ -180,8 +180,7 @@ def format_toponyme(s):
 	if len(s.strip())>1 and s.strip()[-1] == '\'':
 		s = s.strip()[0:-1]
 	return s
-def get_data_from_pg(data_type,insee_com,cadastre_com,local=False,suffixe_data=None):
-	# print(data_type,insee_com,cadastre_com,suffixe_data)
+def get_data_from_pg(data_type,insee_com,local=False,suffixe_data=None):
 	cache_file = get_cache_filename(data_type,insee_com)
 	if not use_cache or not os.path.exists(cache_file) or (time.time() - os.path.getmtime(cache_file)) > 86400 :
 		fq = open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'sql/{:s}.sql'.format(data_type)),'r')
