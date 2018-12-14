@@ -230,3 +230,4 @@ opendata/
 *.shx
 *.tgz
 code_cadastre.csv
+config
