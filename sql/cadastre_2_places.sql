@@ -12,7 +12,8 @@ AS
         nom,
         insee_com
 FROM lieux_dits
-WHERE insee_com = '__com__'),
+WHERE insee_com = '__com__' AND
+      nom IS NOT NULL ),
 mix
 AS
 (SELECT l.*,f.fantoir
