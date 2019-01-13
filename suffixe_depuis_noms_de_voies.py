@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # coding: UTF-8
+
+
 import sys
 import time
 import os,os.path
@@ -97,7 +99,7 @@ def load_suffixe_2_db(adds):
 def load_hsnr_from_cad_file_csv(fnadresses,source):
     csvadresses = open(fnadresses,'r')
     dict_node_relations = {}
-    for l in csvadresses :
+    for l in csvadresses:
         line_split = l.split(';')
         # cle_interop,housenumber,name,lon,lat = line_split[0],line_split[2]+line_split[3],line_split[5].decode('utf8'),line_split[13],line_split[14]
         cle_interop,housenumber,name,lon,lat = line_split[0],line_split[2]+line_split[3],line_split[5],line_split[13],line_split[14]
@@ -113,7 +115,7 @@ def load_hsnr_from_cad_file_csv(fnadresses,source):
             dict_node_relations[cle_interop].append(normalize(name))
         if is_valid_housenumber(housenumber):
             nd = Node({'id':cle_interop,'lon':lon,'lat':lat},{})
-            adresses.add_adresse(Adresse(nd,housenumber,name,''),source)
+            adresses.add_adresse(Adresse(nd,housenumber,name,'',''),source)
 def name_frequency():
     freq = {}
     for v in adresses.a:
