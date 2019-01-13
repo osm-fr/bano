@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# coding: UTF-8
 
 import urllib.request
 from http.cookiejar import CookieJar
@@ -30,7 +29,7 @@ for i, d in enumerate(a_0_depts):
     fw = open(fname, 'wb')
     fw.write(rep)
     fw.close()
-    fr = BeautifulSoup(open(fname, 'r').read(), "lxml")
+    fr = BeautifulSoup(open(fname, 'rb').read(), "lxml")
 
     for e in fr.find_all(attrs={"class": "parcelles"}):
         y = e.find(title="Ajouter au panier")
