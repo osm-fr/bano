@@ -23,6 +23,28 @@ CREATE TABLE IF NOT EXISTS :schema_cible.fantoir_voie (
 CREATE INDEX IF NOT EXISTS idx_fantoir_voie_dept  ON      :schema_cible.fantoir_voie(code_dept);
 CREATE INDEX IF NOT EXISTS idx_fantoir_code_insee ON      :schema_cible.fantoir_voie(code_insee);
 
+CREATE TABLE IF NOT EXISTS :schema_cible.bal_cadastre (
+    cle_interop text,
+    uid_adresse text,
+    numero  text,
+    suffixe text,
+    pseudo_numero boolean,
+    voie_nom text,
+    voie_code text,
+    code_postal text,
+    libelle_acheminement text,
+    destination_principale text,
+    commune_code text,
+    commune_nom text,
+    source text,
+    long float,
+    lat float,
+    x float,
+    y float,
+    position text,
+    date_der_maj date);
+CREATE INDEX IF NOT EXISTS idx_bal_cadastre_commune_code ON :schema_cible.bal_cadastre(commune_code);
+
 CREATE TABLE IF NOT EXISTS :schema_cible.cumul_adresses (
     geometrie       geometry ,
     numero          character varying (15),

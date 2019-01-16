@@ -474,6 +474,33 @@ def load_hsnr_from_cad_file_csv(fnadresses,source):
             nd = Node({'id':cle_interop,'lon':lon,'lat':lat},{})
             adresses.add_adresse(Adresse(nd,housenumber,name,'',code_postal),source)
 
+def load_cadastre_hsnr(code_insee):
+    dict_node_relations = {}
+    str_query = "SELECT * FROM bal_cadastre WHERE commune_code = '{}';".format(code_insee)
+    cur = pgc.cursor()
+    cur.execute(str_query)
+    for lt in cur:
+        line_split = list(lt)
+        # print(line_split)
+        cle_interop,housenumber,pseudo_adresse,name,code_postal,lon,lat = line_split[0],line_split[2]+str(line_split[3]),line_split[4],line_split[5],line_split[7],line_split[13],line_split[14]
+        if len(name) < 2:
+            continue
+        # if len(lon) < 1:
+        if not lon :
+            continue
+        if pseudo_adresse == 'true':
+            # print(l)
+            continue
+        adresses.register(name)
+        adresses.add_voie(name,'CADASTRE')
+        if not cle_interop in dict_node_relations:
+            dict_node_relations[cle_interop] = []
+            dict_node_relations[cle_interop].append(normalize(name))
+        if is_valid_housenumber(housenumber):
+            nd = Node({'id':cle_interop,'lon':lon,'lat':lat},{})
+            adresses.add_adresse(Adresse(nd,housenumber,name,'',code_postal),source)
+    cur.close()
+
 def load_hsnr_bbox_from_pg_osm(insee_com):
     data = get_data_from_pg('hsnr_bbox_insee',insee_com)
     for l in data:
@@ -673,7 +700,7 @@ def load_to_db(adresses,code_insee,source,code_dept):
 
         for num in adresses.a[v]['numeros']:
             numadresse = adresses.a[v]['numeros'][num]
-            a_values.append("(ST_PointFromText('POINT({:s} {:s})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}')".format(numadresse.node.attribs['lon'],numadresse.node.attribs['lat'],numadresse.numero.replace("'",""),street_name_cadastre.replace("'","''"),street_name_osm.replace("'","''"),street_name_fantoir.replace("'","''"),cle_fantoir,code_insee,code_dept,numadresse.code_postal,source).replace(",''",",null").replace(",''",",null"))
+            a_values.append("(ST_PointFromText('POINT({:6f} {:6f})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}')".format(numadresse.node.attribs['lon'],numadresse.node.attribs['lat'],numadresse.numero.replace("'",""),street_name_cadastre.replace("'","''"),street_name_osm.replace("'","''"),street_name_fantoir.replace("'","''"),cle_fantoir,code_insee,code_dept,numadresse.code_postal,source).replace(",''",",null").replace(",''",",null"))
             nb_rec +=1
         if len(a_values)>0:
             sload = sload+','.join(a_values)+';COMMIT;'
@@ -813,8 +840,9 @@ def main(args):
         geom_suffixe = get_geom_suffixes(code_insee)
 
     if source == 'CADASTRE':
-        fnadresses = os.path.join(os.environ['BANO_CACHE_DIR'],code_dept,code_insee,'{}-bal.csv'.format(code_insee))
-        load_hsnr_from_cad_file_csv(fnadresses,source)
+        # fnadresses = os.path.join(os.environ['BANO_CACHE_DIR'],code_dept,code_insee,'{}-bal.csv'.format(code_insee))
+        # load_hsnr_from_cad_file_csv(fnadresses,source)
+        load_cadastre_hsnr(code_insee)
     if source == 'OSM':
         load_hsnr_from_pg_osm(code_insee)
         load_hsnr_bbox_from_pg_osm(code_insee)
