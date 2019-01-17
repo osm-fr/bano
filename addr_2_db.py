@@ -407,6 +407,35 @@ def get_data_from_pg(data_type,insee_com,local=False,suffixe_data=None):
     f.close()
     return res
 
+def get_data_from_pg_direct(query_name,insee_com,local=False,suffixe_data=None):
+    # if (time.time() - os.path.getmtime(cache_file)) > 86400 :
+        fq = open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'sql/{:s}.sql'.format(query_name)),'r')
+        str_query = fq.read().replace('__com__',insee_com)
+        fq.close()
+        if local:
+            pgc = get_pgc()
+        else:
+            pgc = get_pgc_layers()
+        if suffixe_data:
+            str_query = str_query.replace('__suffixe_data__',suffixe_data)
+        cur = pgc.cursor()
+        cur.execute(str_query)
+        array_output = []
+        for lt in cur:
+            array_output.append('({})'.format(','.join(list(lt))))
+        cur.close()
+        cur_insert = get_pgc()
+        str_query = "DELETE FROM {} WHERE insee_com = '{}';".format(query_name,insee_com)
+        str_query+= "INSERT INTO {} VALUES {};".format(query_name,array_output)
+        cur.execute(str_query)
+    else :
+        f = open(cache_file,'r')
+    res = []
+    for l in f:
+        res.append(eval(l))
+    f.close()
+    return res
+
 def get_geom_suffixes(insee):
     data = get_data_from_pg('geom_suffixes_insee',insee,True)
     a_queries = []
@@ -514,7 +543,7 @@ def load_hsnr_bbox_from_pg_osm(insee_com):
         adresses.add_adresse(Adresse(n,oa.numero,oa.voie,oa.fantoir,oa.code_postal),source)
 
 def load_hsnr_from_pg_osm(insee_com):
-    data = get_data_from_pg('hsnr_insee',insee_com)
+    data = get_data_from_pg_direct('hsnr_insee',insee_com)
     for l in data:
         oa = Pg_hsnr(l)
         n = Node({'id':oa.osm_id,'lon':oa.x,'lat':oa.y},{})

@@ -228,3 +228,13 @@ CREATE TABLE IF NOT EXISTS :schema_cible.cadastre_noms_bruts (
         fantoir         character varying (10)
 );
 CREATE INDEX IF NOT EXISTS idx_cadastre_noms_bruts_insee_com ON :schema_cible.cadastre_noms_bruts(insee_com);
+
+CREATE TABLE IF NOT EXISTS :schema_cible.highway_insee (
+        name          text,
+        fantoir       text,
+        fantoir_left  text,
+        fantoir_right text,
+        suffixe       text,
+        insee_com     character(5)
+);
+CREATE INDEX IF NOT EXISTS idx_highway_insee_insee_com ON :schema_cible.highway_insee(insee_com);
