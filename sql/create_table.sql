@@ -235,6 +235,7 @@ CREATE TABLE IF NOT EXISTS :schema_cible.highway_insee (
         fantoir_left  text,
         fantoir_right text,
         suffixe       text,
-        insee_com     character(5)
+        insee_com     character(5),
+        timestamp_maj integer
 );
 CREATE INDEX IF NOT EXISTS idx_highway_insee_insee_com ON :schema_cible.highway_insee(insee_com);

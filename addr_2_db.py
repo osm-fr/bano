@@ -407,8 +407,19 @@ def get_data_from_pg(data_type,insee_com,local=False,suffixe_data=None):
     f.close()
     return res
 
+def get_last_base_update(query_name,insee_com):
+    resp = 0
+    str_query = "SELECT timestamp_maj FROM {} WHERE insee_com = '{}' LIMIT 1;".format(query_name,insee_com)
+    pgc = get_pgc()
+    cur = pgc.cursor()
+    cur.execute(str_query)
+    for l in cur :
+        resp = l[0]
+    return resp
+
 def get_data_from_pg_direct(query_name,insee_com,local=False,suffixe_data=None):
-    # if (time.time() - os.path.getmtime(cache_file)) > 86400 :
+    current_time = round(time.time())
+    if (current_time - get_last_base_update(query_name,insee_com)) > 5 :
         fq = open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'sql/{:s}.sql'.format(query_name)),'r')
         str_query = fq.read().replace('__com__',insee_com)
         fq.close()
@@ -420,14 +431,28 @@ def get_data_from_pg_direct(query_name,insee_com,local=False,suffixe_data=None):
             str_query = str_query.replace('__suffixe_data__',suffixe_data)
         cur = pgc.cursor()
         cur.execute(str_query)
-        array_output = []
+        list_output = list()
         for lt in cur:
-            array_output.append('({})'.format(','.join(list(lt))))
+            list_values = list()
+            for item in list(lt):
+                if item == None:
+                    list_values.append('null')
+                elif  type(item) == str :
+                    list_values.append("'{}'".format(item.replace("'","''")))
+                else :
+                    list_values.append(str(item))
+            list_values.append(str(current_time))
+
+            str_values = ','.join(list_values)
+            list_output.append(str_values)
+
         cur.close()
-        cur_insert = get_pgc()
+        pgc = get_pgc()
+        cur_insert = pgc.cursor()
         str_query = "DELETE FROM {} WHERE insee_com = '{}';".format(query_name,insee_com)
-        str_query+= "INSERT INTO {} VALUES {};".format(query_name,array_output)
-        cur.execute(str_query)
+        str_query+= "INSERT INTO {} VALUES ({});COMMIT;".format(query_name,'),('.join(list_output))
+        cur_insert.execute(str_query)
+        cur_insert.close()
     else :
         f = open(cache_file,'r')
     res = []
@@ -543,7 +568,7 @@ def load_hsnr_bbox_from_pg_osm(insee_com):
         adresses.add_adresse(Adresse(n,oa.numero,oa.voie,oa.fantoir,oa.code_postal),source)
 
 def load_hsnr_from_pg_osm(insee_com):
-    data = get_data_from_pg_direct('hsnr_insee',insee_com)
+    data = get_data_from_pg('hsnr_insee',insee_com)
     for l in data:
         oa = Pg_hsnr(l)
         n = Node({'id':oa.osm_id,'lon':oa.x,'lat':oa.y},{})
@@ -588,7 +613,7 @@ def load_highways_from_pg_osm(insee_com):
     if commune_avec_suffixe:
         data = get_data_from_pg('highway_suffixe_insee',insee_com,False,geom_suffixe)
     else:
-        data = get_data_from_pg('highway_insee',insee_com)
+        data = get_data_from_pg_direct('highway_insee',insee_com)
     for l in data:
         name = l[0]
         suffixe = ''
