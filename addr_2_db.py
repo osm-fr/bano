@@ -419,46 +419,56 @@ def get_last_base_update(query_name,insee_com):
 
 def get_data_from_pg_direct(query_name,insee_com,local=False,suffixe_data=None):
     current_time = round(time.time())
+    pgc_bano_rw = get_pgc()
+    cur_bano_rw = pgc_bano_rw.cursor()
     if (current_time - get_last_base_update(query_name,insee_com)) > 5 :
         fq = open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'sql/{:s}.sql'.format(query_name)),'r')
         str_query = fq.read().replace('__com__',insee_com)
         fq.close()
         if local:
-            pgc = get_pgc()
+            pgc_osm_ro = get_pgc()
         else:
-            pgc = get_pgc_layers()
+            pgc_osm_ro = get_pgc_layers()
         if suffixe_data:
             str_query = str_query.replace('__suffixe_data__',suffixe_data)
-        cur = pgc.cursor()
-        cur.execute(str_query)
+        cur_osm_ro = pgc_osm_ro.cursor()
+        cur_osm_ro.execute(str_query)
         list_output = list()
-        for lt in cur:
+        for lt in cur_osm_ro :
             list_values = list()
             for item in list(lt):
                 if item == None:
                     list_values.append('null')
                 elif  type(item) == str :
                     list_values.append("'{}'".format(item.replace("'","''")))
+                elif type(item) == list :
+                    list_values.append("hstore(ARRAY{})".format(str([s.replace("'","''") for s in item])))
                 else :
                     list_values.append(str(item))
             list_values.append(str(current_time))
+            # print(list_values)
 
-            str_values = ','.join(list_values)
+            str_values = ','.join(list_values).replace('"',"'")
+            # str_values = str_values.replace("'","''").replace('"',"'").replace("'',''","','").replace("'', ''","','")
+            # str_values = str_values.replace('"',"'")
+            # print(str_values)
             list_output.append(str_values)
-
-        cur.close()
-        pgc = get_pgc()
-        cur_insert = pgc.cursor()
+        cur_osm_ro.close()
+        # print(list_output)
+        # pgc = get_pgc()
         str_query = "DELETE FROM {} WHERE insee_com = '{}';".format(query_name,insee_com)
         str_query+= "INSERT INTO {} VALUES ({});COMMIT;".format(query_name,'),('.join(list_output))
-        cur_insert.execute(str_query)
-        cur_insert.close()
-    else :
-        f = open(cache_file,'r')
+        # print(str_query)
+        cur_bano_rw.execute(str_query)
+    str_query = "SELECT * FROM {} WHERE insee_com = '{}';".format(query_name,insee_com)
+    cur_bano_rw.execute(str_query)
+
     res = []
-    for l in f:
-        res.append(eval(l))
-    f.close()
+    for l in cur_bano_rw :
+        res.append(list(l))
+        # res.append(eval(l))
+    cur_bano_rw.close()
+    # print(res)
     return res
 
 def get_geom_suffixes(insee):
@@ -556,7 +566,7 @@ def load_cadastre_hsnr(code_insee):
     cur.close()
 
 def load_hsnr_bbox_from_pg_osm(insee_com):
-    data = get_data_from_pg('hsnr_bbox_insee',insee_com)
+    data = get_data_from_pg_direct('hsnr_bbox_insee',insee_com)
     for l in data:
         oa = Pg_hsnr(l)
         n = Node({'id':oa.osm_id,'lon':oa.x,'lat':oa.y},{})
@@ -568,7 +578,7 @@ def load_hsnr_bbox_from_pg_osm(insee_com):
         adresses.add_adresse(Adresse(n,oa.numero,oa.voie,oa.fantoir,oa.code_postal),source)
 
 def load_hsnr_from_pg_osm(insee_com):
-    data = get_data_from_pg('hsnr_insee',insee_com)
+    data = get_data_from_pg_direct('hsnr_insee',insee_com)
     for l in data:
         oa = Pg_hsnr(l)
         n = Node({'id':oa.osm_id,'lon':oa.x,'lat':oa.y},{})
@@ -581,7 +591,7 @@ def load_highways_bbox_from_pg_osm(insee_com):
     if commune_avec_suffixe:
         data = get_data_from_pg('highway_suffixe_insee',insee_com,False,geom_suffixe)
     else:
-        data = get_data_from_pg('highway_bbox_insee',insee_com)
+        data = get_data_from_pg_direct('highway_bbox_insee',insee_com)
     for l in data:
         fantoir = ''
         if len(l)>1:
@@ -614,6 +624,9 @@ def load_highways_from_pg_osm(insee_com):
         data = get_data_from_pg('highway_suffixe_insee',insee_com,False,geom_suffixe)
     else:
         data = get_data_from_pg_direct('highway_insee',insee_com)
+        # print(data)
+        # data = get_data_from_pg('highway_insee',insee_com)
+        # print(data)
     for l in data:
         name = l[0]
         suffixe = ''
