@@ -278,3 +278,47 @@ CREATE TABLE IF NOT EXISTS :schema_cible.highway_bbox_insee (
         timestamp_maj integer
 );
 CREATE INDEX IF NOT EXISTS idx_highway_bbox_insee_insee_com ON :schema_cible.highway_bbox_insee(insee_com);
+
+CREATE TABLE IF NOT EXISTS :schema_cible.highway_relation_insee (
+        name          text,
+        tags          hstore,
+        insee_com     character(5),
+        timestamp_maj integer
+);
+CREATE INDEX IF NOT EXISTS idx_highway_relation_bbox_insee_insee_com ON :schema_cible.highway_relation_insee(insee_com);
+
+CREATE TABLE IF NOT EXISTS :schema_cible.highway_relation_bbox_insee (
+        name          text,
+        tags          hstore,
+        insee_com     character(5),
+        timestamp_maj integer
+);
+CREATE INDEX IF NOT EXISTS idx_highway_relation_bbox_insee_insee_com ON :schema_cible.highway_relation_bbox_insee(insee_com);
+
+CREATE TABLE IF NOT EXISTS :schema_cible.point_par_rue_insee (
+        long          float,
+        lat           float,
+        name          text,
+        insee_com     character(5),
+        timestamp_maj integer
+);
+CREATE INDEX IF NOT EXISTS idx_point_par_rue_insee_insee_com ON :schema_cible.point_par_rue_insee(insee_com);
+
+CREATE TABLE IF NOT EXISTS :schema_cible.point_par_rue_complement_insee (
+        long          float,
+        lat           float,
+        name          text,
+        fantoir       text,
+        suffixe       text,
+        insee_com     character(5),
+        timestamp_maj integer
+);
+CREATE INDEX IF NOT EXISTS idx_point_par_rue_complement_insee_insee_com ON :schema_cible.point_par_rue_complement_insee(insee_com);
+
+CREATE TABLE IF NOT EXISTS :schema_cible.type_highway_insee (
+        name          text,
+        highway       text,
+        insee_com     character(5),
+        timestamp_maj integer
+);
+CREATE INDEX IF NOT EXISTS idx_type_highway_insee_insee_com ON :schema_cible.type_highway_insee(insee_com);

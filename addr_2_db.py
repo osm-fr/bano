@@ -4,6 +4,7 @@ from pg_connexion import get_pgc
 from pg_connexion import get_pgc_layers
 from outils_de_gestion import batch_start_log
 from outils_de_gestion import batch_end_log
+from outils_de_gestion import age_etape_dept
 import os,os.path
 import sys
 import time
@@ -415,13 +416,17 @@ def get_last_base_update(query_name,insee_com):
     cur.execute(str_query)
     for l in cur :
         resp = l[0]
+    if resp == 0 :
+        etape_dept = 'cache_dept_'+query_name
+        if age_etape_dept(etape_dept,get_short_code_dept_from_insee(insee_com))  < 3600 :
+            resp = round(time.time())
     return resp
 
 def get_data_from_pg_direct(query_name,insee_com,local=False,suffixe_data=None):
     current_time = round(time.time())
     pgc_bano_rw = get_pgc()
     cur_bano_rw = pgc_bano_rw.cursor()
-    if (current_time - get_last_base_update(query_name,insee_com)) > 5 :
+    if (current_time - get_last_base_update(query_name,insee_com)) > 3600 :
         fq = open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'sql/{:s}.sql'.format(query_name)),'r')
         str_query = fq.read().replace('__com__',insee_com)
         fq.close()
@@ -433,6 +438,7 @@ def get_data_from_pg_direct(query_name,insee_com,local=False,suffixe_data=None):
             str_query = str_query.replace('__suffixe_data__',suffixe_data)
         cur_osm_ro = pgc_osm_ro.cursor()
         cur_osm_ro.execute(str_query)
+        # print(str_query)
         list_output = list()
         for lt in cur_osm_ro :
             list_values = list()
@@ -440,13 +446,17 @@ def get_data_from_pg_direct(query_name,insee_com,local=False,suffixe_data=None):
                 if item == None:
                     list_values.append('null')
                 elif  type(item) == str :
-                    list_values.append("'{}'".format(item.replace("'","''")))
+                    # list_values.append("'{}'".format(item.replace("'","''")))
+                    list_values.append("'{}'".format(item.replace("'","''").replace('"','')))
                 elif type(item) == list :
-                    list_values.append("hstore(ARRAY{})".format(str([s.replace("'","''") for s in item])))
+                    if (len(item)) > 0 :
+                        # list_values.append("hstore(ARRAY{})".format(str([s.replace("'","''") for s in item])))
+                        list_values.append("hstore(ARRAY{})".format(str([s.replace("'","''").replace('"','') for s in item])))
+                    else :
+                        list_values.append('null')
                 else :
                     list_values.append(str(item))
-            list_values.append(str(current_time))
-            # print(list_values)
+            list_values.append(str(current_time))            # print(list_values)
 
             str_values = ','.join(list_values).replace('"',"'")
             # str_values = str_values.replace("'","''").replace('"',"'").replace("'',''","','").replace("'', ''","','")
@@ -457,9 +467,12 @@ def get_data_from_pg_direct(query_name,insee_com,local=False,suffixe_data=None):
         # print(list_output)
         # pgc = get_pgc()
         str_query = "DELETE FROM {} WHERE insee_com = '{}';".format(query_name,insee_com)
-        str_query+= "INSERT INTO {} VALUES ({});COMMIT;".format(query_name,'),('.join(list_output))
-        # print(str_query)
         cur_bano_rw.execute(str_query)
+        if len(list_output) > 0 :
+            str_query = "INSERT INTO {} VALUES ({});COMMIT;".format(query_name,'),('.join(list_output))
+            # print(str_query)
+            cur_bano_rw.execute(str_query)
+
     str_query = "SELECT * FROM {} WHERE insee_com = '{}';".format(query_name,insee_com)
     cur_bano_rw.execute(str_query)
 
@@ -546,7 +559,7 @@ def load_cadastre_hsnr(code_insee):
     for lt in cur:
         line_split = list(lt)
         # print(line_split)
-        cle_interop,housenumber,pseudo_adresse,name,code_postal,lon,lat = line_split[0],line_split[2]+str(line_split[3]),line_split[4],line_split[5],line_split[7],line_split[13],line_split[14]
+        cle_interop,housenumber,pseudo_adresse,name,code_postal,lon,lat = line_split[0],line_split[2]+(str(line_split[3]) if (line_split[3]) else ''),line_split[4],line_split[5],line_split[7],line_split[13],line_split[14]
         if len(name) < 2:
             continue
         # if len(lon) < 1:
@@ -658,7 +671,7 @@ def load_highways_relations_bbox_from_pg_osm(insee_com):
     if commune_avec_suffixe:
         data = get_data_from_pg('highway_relation_suffixe_insee',insee_com,False,geom_suffixe)
     else:
-        data = get_data_from_pg('highway_relation_bbox_insee',insee_com)
+        data = get_data_from_pg_direct('highway_relation_bbox_insee',insee_com)
     for l in data:
         fantoir = ''
         tags = tags_list_as_dict(l[1])
@@ -684,7 +697,7 @@ def load_highways_relations_from_pg_osm(insee_com):
     if commune_avec_suffixe:
         data = get_data_from_pg('highway_relation_suffixe_insee',insee_com,False,geom_suffixe)
     else:
-        data = get_data_from_pg('highway_relation_insee',insee_com)
+        data = get_data_from_pg_direct('highway_relation_insee',insee_com)
     for l in data:
         name = l[0]
         if len(name) < 2:
@@ -707,7 +720,7 @@ def load_highways_relations_from_pg_osm(insee_com):
         adresses.add_voie(name_suffixe,'OSM',name)
 
 def load_point_par_rue_from_pg_osm(insee_com):
-    data = get_data_from_pg('point_par_rue_insee',insee_com)
+    data = get_data_from_pg_direct('point_par_rue_insee',insee_com)
     for l in data:
         name = l[2]
         if len(name) < 2:
@@ -722,7 +735,7 @@ def load_point_par_rue_from_pg_osm(insee_com):
                 adresses.add_fantoir(cle,dicts.fantoir[cle],'OSM')
 
 def load_point_par_rue_complement_from_pg_osm(insee_com):
-    data = get_data_from_pg('point_par_rue_complement_insee',insee_com)
+    data = get_data_from_pg_direct('point_par_rue_complement_insee',insee_com)
     for l in data:
         name = l[2]
         if len(name) < 2:
@@ -779,7 +792,7 @@ def load_to_db(adresses,code_insee,source,code_dept):
     return(nb_rec)
 
 def load_type_highway_from_pg_osm(insee_com):
-    data = get_data_from_pg('type_highway_insee',insee_com)
+    data = get_data_from_pg_direct('type_highway_insee',insee_com)
     for l in data:
         name = l[0]
         adresses.register(name)
@@ -856,8 +869,13 @@ def replace_type_voie(s,nb):
 
 def tags_list_as_dict(ltags):
     res = {}
-    for i in range(0,int(len(ltags)/2)):
-        res[ltags[i*2]] = ltags[i*2+1]
+    if (ltags):
+        ltags = ltags.replace('"=>"','","')
+        ltags = ltags.split(',')
+        # print(ltags)
+        for i in range(0,int(len(ltags)/2)):
+            res[ltags[i*2]] = ltags[i*2+1]
+    # print(res)
     return res
 
 def main(args):
