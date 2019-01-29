@@ -117,6 +117,7 @@ class Dicts:
             cle = ' '.join(c[1].replace('-',' ').split())
             cle = normalize(cle)
             self.fantoir[cle] = c[0]
+        cur_fantoir.close()
 
     def load_addr_from_fantoir(self):
         for k in self.fantoir:
@@ -221,6 +222,7 @@ class Dicts:
         cur_hw.execute(str_query)
         for c in cur_hw:
             self.highway_types[c[1]] = c[0]
+        cur_hw.close()
 
     def load_all(self,code_insee_commune):
         self.load_lettre_a_lettre()
@@ -378,6 +380,7 @@ def get_code_cadastre_from_insee(insee):
     cur.execute(str_query)
     for c in cur:
         code_cadastre = c[0]
+    cur.close()
     return code_cadastre
 
 def get_data_from_pg(data_type,insee_com,local=False,suffixe_data=None):
@@ -420,6 +423,7 @@ def get_last_base_update(query_name,insee_com):
         etape_dept = 'cache_dept_'+query_name
         if age_etape_dept(etape_dept,get_short_code_dept_from_insee(insee_com))  < 3600 :
             resp = round(time.time())
+    cur.close()
     return resp
 
 def get_data_from_pg_direct(query_name,insee_com,local=False,suffixe_data=None):
@@ -514,6 +518,7 @@ def has_addreses_with_suffix(insee):
     for c in cur:
         if c[0]> 0 :
             res = True
+    cur.close()
     return res
 
 def is_valid_housenumber(hsnr):
@@ -752,9 +757,9 @@ def load_point_par_rue_complement_from_pg_osm(insee_com):
             adresses.add_fantoir(cle,fantoir,'OSM')
 
 def load_to_db(adresses,code_insee,source,code_dept):
+    cur_insert = pgc.cursor()
     for a in ['cumul_adresses','cumul_voies']:
         sload = "DELETE FROM {:s} WHERE insee_com = '{:s}' AND source = '{:s}';\n".format(a,code_insee,source)
-        cur_insert = pgc.cursor()
         cur_insert.execute(sload)
     nb_rec = 0
     a_values_voie = []
@@ -789,6 +794,7 @@ def load_to_db(adresses,code_insee,source,code_dept):
     if len(a_values_voie) > 0:
         sload_voie = sload_voie+','.join(a_values_voie)+';COMMIT;'
         cur_insert.execute(sload_voie)
+    cur_insert.close()
     return(nb_rec)
 
 def load_type_highway_from_pg_osm(insee_com):
@@ -870,6 +876,7 @@ def replace_type_voie(s,nb):
 def tags_list_as_dict(ltags):
     res = {}
     if (ltags):
+        # print(ltags)
         ltags = ltags.replace('"=>"','","')
         ltags = ltags.split(',')
         # print(ltags)
