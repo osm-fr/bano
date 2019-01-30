@@ -285,7 +285,7 @@ CREATE TABLE IF NOT EXISTS :schema_cible.highway_relation_insee (
         insee_com     character(5),
         timestamp_maj integer
 );
-CREATE INDEX IF NOT EXISTS idx_highway_relation_bbox_insee_insee_com ON :schema_cible.highway_relation_insee(insee_com);
+CREATE INDEX IF NOT EXISTS idx_highway_relation_insee_insee_com ON :schema_cible.highway_relation_insee(insee_com);
 
 CREATE TABLE IF NOT EXISTS :schema_cible.highway_relation_bbox_insee (
         name          text,
