@@ -6,6 +6,7 @@ from outils_de_gestion import batch_start_log
 from outils_de_gestion import batch_end_log
 from outils_de_gestion import age_etape_dept
 import os,os.path
+import re
 import sys
 import time
 import xml.etree.ElementTree as ET
@@ -558,6 +559,7 @@ def load_hsnr_from_cad_file_csv(fnadresses,source):
 
 def load_cadastre_hsnr(code_insee):
     dict_node_relations = {}
+    destinations_principales_retenues = 'habitation commerce industrie tourisme'
     str_query = "SELECT * FROM bal_cadastre WHERE commune_code = '{}';".format(code_insee)
     cur = pgc.cursor()
     cur.execute(str_query)
@@ -572,6 +574,8 @@ def load_cadastre_hsnr(code_insee):
             continue
         if pseudo_adresse == 'true':
             # print(l)
+            continue
+        if not re.search(destination_principale,destinations_principales_retenues):
             continue
         adresses.register(name)
         adresses.add_voie(name,'CADASTRE')
