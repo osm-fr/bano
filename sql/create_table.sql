@@ -240,6 +240,17 @@ CREATE TABLE IF NOT EXISTS :schema_cible.highway_insee (
 );
 CREATE INDEX IF NOT EXISTS idx_highway_insee_insee_com ON :schema_cible.highway_insee(insee_com);
 
+CREATE TABLE IF NOT EXISTS :schema_cible.highway_suffixe_insee (
+        name          text,
+        fantoir       text,
+        fantoir_left  text,
+        fantoir_right text,
+        suffixe       text,
+        insee_com     character(5),
+        timestamp_maj integer
+);
+CREATE INDEX IF NOT EXISTS idx_highway_suffixe_insee_insee_com ON :schema_cible.highway_suffixe_insee(insee_com);
+
 CREATE TABLE IF NOT EXISTS :schema_cible.hsnr_insee (
         long          float,
         lat           float,
@@ -294,6 +305,15 @@ CREATE TABLE IF NOT EXISTS :schema_cible.highway_relation_bbox_insee (
         timestamp_maj integer
 );
 CREATE INDEX IF NOT EXISTS idx_highway_relation_bbox_insee_insee_com ON :schema_cible.highway_relation_bbox_insee(insee_com);
+
+CREATE TABLE IF NOT EXISTS :schema_cible.highway_relation_suffixe_insee (
+        name          text,
+        tags          hstore,
+        suffixe       text,
+        insee_com     character(5),
+        timestamp_maj integer
+);
+CREATE INDEX IF NOT EXISTS idx_highway_relation_suffixe_insee_insee_com ON :schema_cible.highway_relation_suffixe_insee(insee_com);
 
 CREATE TABLE IF NOT EXISTS :schema_cible.point_par_rue_insee (
         long          float,
