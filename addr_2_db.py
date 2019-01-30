@@ -639,7 +639,7 @@ def load_highways_bbox_from_pg_osm(insee_com):
 
 def load_highways_from_pg_osm(insee_com):
     if commune_avec_suffixe:
-        data = get_data_from_pg('highway_suffixe_insee',insee_com,False,geom_suffixe)
+        data = get_data_from_pg_direct('highway_suffixe_insee',insee_com,False,geom_suffixe)
     else:
         data = get_data_from_pg_direct('highway_insee',insee_com)
         # print(data)
@@ -674,7 +674,7 @@ def load_highways_from_pg_osm(insee_com):
 
 def load_highways_relations_bbox_from_pg_osm(insee_com):
     if commune_avec_suffixe:
-        data = get_data_from_pg('highway_relation_suffixe_insee',insee_com,False,geom_suffixe)
+        data = get_data_from_pg_direct('highway_relation_suffixe_insee',insee_com,False,geom_suffixe)
     else:
         data = get_data_from_pg_direct('highway_relation_bbox_insee',insee_com)
     for l in data:
@@ -700,7 +700,7 @@ def load_highways_relations_bbox_from_pg_osm(insee_com):
 
 def load_highways_relations_from_pg_osm(insee_com):
     if commune_avec_suffixe:
-        data = get_data_from_pg('highway_relation_suffixe_insee',insee_com,False,geom_suffixe)
+        data = get_data_from_pg_direct('highway_relation_suffixe_insee',insee_com,False,geom_suffixe)
     else:
         data = get_data_from_pg_direct('highway_relation_insee',insee_com)
     for l in data:
