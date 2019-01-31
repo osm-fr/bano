@@ -27,16 +27,13 @@ def get_sql_like_dept_string(dept):
     return (dept+'___')[0:5]
 def get_geom_suffixes(dept):
     fq = open('sql/geom_suffixes_insee.sql','r')
-    str_query = fq.read().replace("='__com__"," LIKE  '{:s}'".format(get_sql_like_dept_string(dept)))
-    print(str_query)
+    str_query = fq.read().replace("='__com__'"," LIKE  '{:s}'".format(get_sql_like_dept_string(dept)))
     cursor_bano_ro = pgc.cursor()
     cursor_bano_ro.execute(str_query)
     a_queries = []
     for l in cursor_bano_ro :
         a_queries.append("SELECT ST_PolygonFromText('{:s}',3857) as geom,'{:s}'::text suffixe".format(l[0],l[1].replace('\'','\'\'')))
     cursor_bano_ro.close()
-    print(" UNION '.join(a_queries)")
-    print(' UNION '.join(a_queries))
     return ' UNION '.join(a_queries)
 def warning_message_no_suffixe(dept,etape):
     print("Pas de commune à suffixe dans le {}. Etape {} ignorée".format(dept,etape.upper()))
@@ -49,10 +46,10 @@ def get_data_by_dept_from_pg(query_name,dept,suffixe_data=None):
         print(u'Mise à jour du cache "{:s}"'.format(query_name.upper()))
         batch_id = o.batch_start_log(source,etape_dept,dept)
         fq = open('sql/{:s}.sql'.format(query_name),'r')
-        str_query = fq.read().replace('=\'__com__',' LIKE  \'{:s}'.format(get_sql_like_dept_string(dept)))
+        str_query = fq.read().replace("='__com__'"," LIKE  '{:s}'".format(get_sql_like_dept_string(dept)))
         if suffixe_data :
             str_query = str_query.replace('__suffixe_data__',suffixe_data)
-            print(str_query)            
+            # print(str_query)            
         fq.close()
         cur_osm_ro = pgcl.cursor()
         cur_osm_ro.execute(str_query)
@@ -82,24 +79,27 @@ def get_data_by_dept_from_pg(query_name,dept,suffixe_data=None):
         cur_bano_rw.execute(str_query)
         if len(list_output) > 0 :
             str_query = "INSERT INTO {} VALUES ({});COMMIT;".format(query_name,'),('.join(list_output))
+            strq = open('./query.txt','w')
+            strq.write(str_query)
+            strq.close()
             cur_bano_rw.execute(str_query)
 
         o.batch_end_log(0,batch_id)
 
 str_usage = 'USAGE : python load_cumul.py <numero de dept|FRANCE> <OSM|CADASTRE>'
 if len(sys.argv) != 3:
-    print('Mauvais nombre d\'arguments')
+    print("Mauvais nombre d'arguments")
     print(str_usage)
     os._exit(0)
 source = sys.argv[2].upper()
 if source != 'OSM' and source != 'CADASTRE':
-    print('La source doit etre OSM ou CADASTRE')
+    print("La source doit etre OSM ou CADASTRE")
     print(str_usage)
     os._exit(0)
 
 clause_vecteur = ''
 if source == 'CADASTRE':
-    clause_vecteur = ' AND format_cadastre = \'VECT\' '
+    clause_vecteur = " AND format_cadastre = 'VECT' "
 
 pgc = a.get_pgc()
 pgcl = a.get_pgc_layers()
@@ -118,7 +118,6 @@ for c_loop in cur_loop:
     f_log = e.start_log_to_file(source,os.path.basename(sys.argv[0]).split('.')[0],num_dept_cadastre)
     print('## Département {:s}'.format(num_dept_cadastre))
     geom_suffixe = get_geom_suffixes(num_dept_cadastre)
-    print(geom_suffixe)
     if source == 'OSM':
         get_data_by_dept_from_pg('hsnr_insee',num_dept_cadastre)
         if geom_suffixe :
@@ -147,8 +146,8 @@ for c_loop in cur_loop:
 
     clause_vecteur = ''
     if source == 'CADASTRE':
-        clause_vecteur = ' AND format_cadastre = \'VECT\' '
-    str_query = 'SELECT insee_com,nom_com FROM code_cadastre WHERE cadastre_dept = \'{:s}\' {:s} ORDER BY 2;'.format(num_dept_cadastre,clause_vecteur)
+        clause_vecteur = " AND format_cadastre = 'VECT' "
+    str_query = "SELECT insee_com,nom_com FROM code_cadastre WHERE dept = '{:s}' {:s} ORDER BY 2;".format(num_dept_cadastre,clause_vecteur)
     cur = pgc.cursor()
     cur.execute(str_query)
     for c in cur:

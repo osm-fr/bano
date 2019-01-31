@@ -565,15 +565,13 @@ def load_cadastre_hsnr(code_insee):
     cur.execute(str_query)
     for lt in cur:
         line_split = list(lt)
-        # print(line_split)
-        cle_interop,housenumber,pseudo_adresse,name,code_postal,destination_principale,lon,lat = line_split[0],line_split[2]+(str(line_split[3]) if (line_split[3]) else ''),line_split[4],line_split[5],line_split[7],line_split[9],line_split[13],line_split[14]
+        cle_interop,housenumber,pseudo_adresse,name,code_postal,destination_principale,lon,lat = line_split[0],line_split[2]+(str(line_split[3]) if (line_split[3]) else ''),line_split[4],line_split[5],(line_split[7] if line_split[7] else ''),line_split[9],line_split[13],line_split[14]
         if len(name) < 2:
             continue
         # if len(lon) < 1:
         if not lon :
             continue
         if pseudo_adresse == 'true':
-            # print(l)
             continue
         if not re.search(destination_principale,destinations_principales_retenues):
             continue
