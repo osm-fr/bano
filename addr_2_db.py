@@ -566,7 +566,7 @@ def load_cadastre_hsnr(code_insee):
     for lt in cur:
         line_split = list(lt)
         # print(line_split)
-        cle_interop,housenumber,pseudo_adresse,name,code_postal,lon,lat = line_split[0],line_split[2]+(str(line_split[3]) if (line_split[3]) else ''),line_split[4],line_split[5],line_split[7],line_split[13],line_split[14]
+        cle_interop,housenumber,pseudo_adresse,name,code_postal,destination_principale,lon,lat = line_split[0],line_split[2]+(str(line_split[3]) if (line_split[3]) else ''),line_split[4],line_split[5],line_split[7],line_split[9],line_split[13],line_split[14]
         if len(name) < 2:
             continue
         # if len(lon) < 1:
@@ -611,7 +611,7 @@ def load_hsnr_from_pg_osm(insee_com):
 
 def load_highways_bbox_from_pg_osm(insee_com):
     if commune_avec_suffixe:
-        data = get_data_from_pg('highway_suffixe_insee',insee_com,False,geom_suffixe)
+        data = get_data_from_pg_direct('highway_suffixe_insee',insee_com,False,geom_suffixe)
     else:
         data = get_data_from_pg_direct('highway_bbox_insee',insee_com)
     for l in data:
