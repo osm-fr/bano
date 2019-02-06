@@ -1,0 +1,50 @@
+tables:
+  planet_osm_points:
+    type: point
+    mapping:
+      name: [__any__]
+      'addr:housenumber': [__any__]
+      'addr:street': [__any__]
+      place: [__any__]
+      'ref:FR:FANTOIR': [__any__]
+      railway: [__any__]
+      amenity: [__any__]
+    columns:
+      name: way, type: geometry
+      name: osm_id, type: id
+      key: name, name: name, type: string
+      key: addr:housenumber, name: addr_housenumber, type: string
+      key: addr:street, name: addr:street, type: string
+      key: amenity, name: amenity, type: string
+      key: place, name: place, type: string
+      key: railway, name: railway, type: string
+      name: tags, type: hstore_tags
+  planet_osm_line:
+    type: line
+    mapping:
+      highway: [__any__]
+    columns:
+      name: way, type: geometry
+      name: osm_id, type: id
+      key: name, name: name, type: string
+      key: highway, name: highway, type: string
+      name: tags, type: hstore_tags
+  planet_osm_polygon:
+    mapping:
+      boundary: ['administrative']
+    columns:
+      name: way, type: geometry
+      name: osm_id, type: id
+      key: name, name: name, type: string
+      key: boundary, name: boundary, type: string
+      key: admin_level, name: admin_level, type: integer
+      key: addr:housenumber, name: addr_housenumber, type: string
+      key: addr:street, name: addr:street, type: string
+      key: ref:INSEE, name: ref:INSEE, type: string
+      key: name, name: name, type: string
+      key: amenity, name: amenity, type: string
+      key: landuse, name: landuse, type: string
+      name: tags, type: hstore_tags
+planet_osm_rels
+  parts
+  tags
