@@ -3,48 +3,60 @@ tables:
     type: point
     mapping:
       name: [__any__]
+      amenity: [__any__]
+      place: [__any__]
+      railway: [__any__]
       'addr:housenumber': [__any__]
       'addr:street': [__any__]
-      place: [__any__]
       'ref:FR:FANTOIR': [__any__]
-      railway: [__any__]
-      amenity: [__any__]
     columns:
-      name: way, type: geometry
-      name: osm_id, type: id
-      key: name, name: name, type: string
-      key: addr:housenumber, name: addr_housenumber, type: string
-      key: addr:street, name: addr:street, type: string
-      key: amenity, name: amenity, type: string
-      key: place, name: place, type: string
-      key: railway, name: railway, type: string
-      name: tags, type: hstore_tags
+      - {name: 'way', type: geometry}
+      - {name: 'osm_id', type: id}
+      - {name: 'tags', type: hstore_tags}
+      - {key: 'name', name: 'name', type: string}
+      - {key: 'addr:housenumber', name: 'addr:housenumber', type: string}
+      - {key: 'addr:street', name: 'addr:street', type: string}
+      - {key: 'amenity', name: 'amenity', type: string}
+      - {key: 'place', name: 'place', type: string}
+      - {key: 'railway', name: 'railway', type: string}
   planet_osm_line:
-    type: line
+    type: linestring
+    filters:
+      require:
+        name: [__any__]
     mapping:
       highway: [__any__]
     columns:
-      name: way, type: geometry
-      name: osm_id, type: id
-      key: name, name: name, type: string
-      key: highway, name: highway, type: string
-      name: tags, type: hstore_tags
+      - {name: 'way', type: geometry}
+      - {name: 'osm_id', type: id}
+      - {name: 'tags', type: hstore_tags}
+      - {key: 'name', name: 'name', type: string}
+      - {key: 'highway', name: 'highway', type: string}
   planet_osm_polygon:
+    type: polygon
+    filters:
+      require:
+        name: [__any__]
     mapping:
       boundary: ['administrative']
+      amenity: [__any__]
     columns:
-      name: way, type: geometry
-      name: osm_id, type: id
-      key: name, name: name, type: string
-      key: boundary, name: boundary, type: string
-      key: admin_level, name: admin_level, type: integer
-      key: addr:housenumber, name: addr_housenumber, type: string
-      key: addr:street, name: addr:street, type: string
-      key: ref:INSEE, name: ref:INSEE, type: string
-      key: name, name: name, type: string
-      key: amenity, name: amenity, type: string
-      key: landuse, name: landuse, type: string
-      name: tags, type: hstore_tags
-planet_osm_rels
-  parts
-  tags
+      - {name: 'way', type: geometry}
+      - {name: 'osm_id', type: id}
+      - {name: 'tags', type: hstore_tags}
+      - {key: 'name', name: 'name', type: string}
+      - {key: boundary, name: boundary, type: string}
+      - {key: admin_level, name: admin_level, type: integer}
+      - {key: 'addr:housenumber', name: 'addr:housenumber', type: string}
+      - {key: 'addr:street', name: 'addr:street', type: string}
+      - {key: 'ref:INSEE', name: 'ref:INSEE', type: string}
+      - {key: 'amenity', name: 'amenity', type: string}
+      - {key: 'landuse', name: 'landuse', type: string}
+  planet_osm_rels:
+    type: relation_member
+    mapping:
+      'ref:FR:FANTOIR': [__any__]
+    columns:
+      - {name: 'osm_id', type: member_id}
+      - {key: 'ref:FR:FANTOIR', name: 'ref:FR:FANTOIR', type: string}
+      - {key: 'name', name: 'name', type: string}
