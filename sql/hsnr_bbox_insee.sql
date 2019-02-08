@@ -14,17 +14,15 @@ FROM
 				pt.osm_id::character varying,
 				pt."addr:housenumber" hsnr,
 				null street_name,
-				r.tags,
-				p.tags->'ref:INSEE' insee_com
+				%% r.tags tags,
+				p."ref:INSEE" insee_com
 		FROM	planet_osm_polygon	p
 		JOIN	planet_osm_point 	pt
 		ON		pt.way && p.way
 		JOIN	planet_osm_rels 	r
-		ON		r.parts @> ARRAY[pt.osm_id]
-		WHERE	p.tags ? 'ref:INSEE'				AND
-				p.tags->'ref:INSEE'='__com__'		AND
-				pt."addr:housenumber"	IS NOT NULL     AND
-				r.tags IS NOT NULL
+		ON		r.osm_id = pt.osm_id
+		WHERE	p."ref:INSEE" = '__com__'		AND
+				pt."addr:housenumber" != ''
 		UNION
 -- way dans relation associatedStreet
 		SELECT	4,
@@ -32,20 +30,18 @@ FROM
 				w.osm_id::character varying,
 				w."addr:housenumber",
 				null,
-				r.tags,
-				p.tags->'ref:INSEE'
+				%% r.tags,
+				p."ref:INSEE"
 		FROM	planet_osm_polygon	p
 		JOIN	planet_osm_polygon 	w
 		ON		w.way && p.way
 		JOIN	planet_osm_rels 	r
-		ON		r.parts @> ARRAY[w.osm_id]
-		WHERE	p.tags ? 'ref:INSEE'				AND
-				p.tags->'ref:INSEE'='__com__'		AND
-				w."addr:housenumber"	IS NOT NULL     AND
-				r.tags IS NOT NULL
-		
+		ON		r.osm_id = w.osm_id
+		WHERE	p."ref:INSEE" = '__com__'		AND
+				w."addr:housenumber" != ''
 )a
 ORDER BY 9
 -- where hsnr is not null*/		
 ;
 
+ 

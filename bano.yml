@@ -1,5 +1,5 @@
 tables:
-  planet_osm_points:
+  planet_osm_point:
     type: point
     mapping:
       name: [__any__]
@@ -58,5 +58,6 @@ tables:
       'ref:FR:FANTOIR': [__any__]
     columns:
       - {name: 'osm_id', type: member_id}
+      - {name: 'tags', type: hstore_tags}
       - {key: 'ref:FR:FANTOIR', name: 'ref:FR:FANTOIR', type: string}
       - {key: 'name', name: 'name', type: string}
