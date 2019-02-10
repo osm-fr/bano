@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: UTF-8
 from pg_connexion import get_pgc
-from pg_connexion import get_pgc_layers
+from pg_connexion import get_pgc_osm
 from outils_de_gestion import batch_start_log
 from outils_de_gestion import batch_end_log
 from outils_de_gestion import age_etape_dept
@@ -298,12 +298,17 @@ class Pg_hsnr:
         self.y = d[1]
         self.provenance = d[2]
         self.osm_id = d[3]
+        if self.osm_id == 2953188825:
+            print(d)
         self.numero = d[4]
         self.voie = d[5]
         self.tags = tags_list_as_dict(d[6])
         self.fantoir = ''
         if self.provenance == '3' or self.provenance == '4':
             self.set_street_name()
+            if self.osm_id == 2953188825:
+                print(self.voie)
+                print(self.tags)
         self.set_fantoir()
         self.code_postal = find_cp_in_tags(self.tags)
 
@@ -393,7 +398,7 @@ def get_data_from_pg(data_type,insee_com,local=False,suffixe_data=None):
         if local:
             pgc = get_pgc()
         else:
-            pgc = get_pgc_layers()
+            pgc = get_pgc_osm()
         if suffixe_data:
             str_query = str_query.replace('__suffixe_data__',suffixe_data)
         cur = pgc.cursor()
@@ -427,20 +432,20 @@ def get_last_base_update(query_name,insee_com):
     cur.close()
     return resp
 
-def get_data_from_pg_direct(query_name,insee_com,local=False,suffixe_data=None):
+def get_data_from_pg_direct(query_name,insee_com,local=False):
     current_time = round(time.time())
     pgc_bano_rw = get_pgc()
     cur_bano_rw = pgc_bano_rw.cursor()
-    if (current_time - get_last_base_update(query_name,insee_com)) > 3600 :
+    if (current_time - get_last_base_update(query_name,insee_com)) > 10 :
         fq = open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'sql/{:s}.sql'.format(query_name)),'r')
         str_query = fq.read().replace('__com__',insee_com)
         fq.close()
         if local:
             pgc_osm_ro = get_pgc()
         else:
-            pgc_osm_ro = get_pgc_layers()
-        if suffixe_data:
-            str_query = str_query.replace('__suffixe_data__',suffixe_data)
+            pgc_osm_ro = get_pgc_osm()
+        # if suffixe_data:
+        #     str_query = str_query.replace('__suffixe_data__',suffixe_data)
         cur_osm_ro = pgc_osm_ro.cursor()
         cur_osm_ro.execute(str_query)
         # print(str_query)
@@ -483,18 +488,21 @@ def get_data_from_pg_direct(query_name,insee_com,local=False,suffixe_data=None):
 
     res = []
     for l in cur_bano_rw :
+        # print(l)
+        # print(list(l))
         res.append(list(l))
+        # res.append(l)
         # res.append(eval(l))
     cur_bano_rw.close()
     # print(res)
     return res
 
-def get_geom_suffixes(insee):
-    data = get_data_from_pg('geom_suffixes_insee',insee,True)
-    a_queries = []
-    for l in data:
-        a_queries.append('SELECT ST_PolygonFromText(\'{:s}\',3857) as geom,\'{:s}\'::text suffixe'.format(l[0],l[1].replace('\'','\'\'')))
-    return ' UNION '.join(a_queries)
+# def get_geom_suffixes(insee):
+#     data = get_data_from_pg('geom_suffixes_insee',insee,True)
+#     a_queries = []
+#     for l in data:
+#         a_queries.append('SELECT ST_PolygonFromText(\'{:s}\',3857) as geom,\'{:s}\'::text suffixe'.format(l[0],l[1].replace('\'','\'\'')))
+#     return ' UNION '.join(a_queries)
 
 def get_nb_parts(s):
     return len(s.split())
@@ -608,10 +616,10 @@ def load_hsnr_from_pg_osm(insee_com):
         adresses.add_adresse(Adresse(n,oa.numero,oa.voie,oa.fantoir,oa.code_postal),source)
 
 def load_highways_bbox_from_pg_osm(insee_com):
-    if commune_avec_suffixe:
-        data = get_data_from_pg_direct('highway_suffixe_insee',insee_com,False,geom_suffixe)
-    else:
-        data = get_data_from_pg_direct('highway_bbox_insee',insee_com)
+    # if commune_avec_suffixe:
+    data = get_data_from_pg_direct('highway_suffixe_insee',insee_com,False)
+    # else:
+    #     data = get_data_from_pg_direct('highway_bbox_insee',insee_com)
     for l in data:
         fantoir = ''
         if len(l)>1:
@@ -640,11 +648,11 @@ def load_highways_bbox_from_pg_osm(insee_com):
         adresses.add_voie(name_suffixe,'OSM',name)
 
 def load_highways_from_pg_osm(insee_com):
-    if commune_avec_suffixe:
-        data = get_data_from_pg_direct('highway_suffixe_insee',insee_com,False,geom_suffixe)
-    else:
-        data = get_data_from_pg_direct('highway_insee',insee_com)
-        # print(data)
+    # if commune_avec_suffixe:
+    data = get_data_from_pg_direct('highway_suffixe_insee',insee_com,False)
+    # else:
+    #     data = get_data_from_pg_direct('highway_insee',insee_com)
+    #     # print(data)
         # data = get_data_from_pg('highway_insee',insee_com)
         # print(data)
     for l in data:
@@ -675,10 +683,10 @@ def load_highways_from_pg_osm(insee_com):
         adresses.add_voie(name_suffixe,'OSM',name)
 
 def load_highways_relations_bbox_from_pg_osm(insee_com):
-    if commune_avec_suffixe:
-        data = get_data_from_pg_direct('highway_relation_suffixe_insee',insee_com,False,geom_suffixe)
-    else:
-        data = get_data_from_pg_direct('highway_relation_bbox_insee',insee_com)
+    # if commune_avec_suffixe:
+    data = get_data_from_pg_direct('highway_relation_suffixe_insee',insee_com,False)
+    # else:
+    #     data = get_data_from_pg_direct('highway_relation_bbox_insee',insee_com)
     for l in data:
         fantoir = ''
         tags = tags_list_as_dict(l[1])
@@ -701,10 +709,10 @@ def load_highways_relations_bbox_from_pg_osm(insee_com):
         adresses.add_voie(name_suffixe,'OSM',name)
 
 def load_highways_relations_from_pg_osm(insee_com):
-    if commune_avec_suffixe:
-        data = get_data_from_pg_direct('highway_relation_suffixe_insee',insee_com,False,geom_suffixe)
-    else:
-        data = get_data_from_pg_direct('highway_relation_insee',insee_com)
+    # if commune_avec_suffixe:
+    data = get_data_from_pg_direct('highway_relation_suffixe_insee',insee_com,False)
+    # else:
+    #     data = get_data_from_pg_direct('highway_relation_insee',insee_com)
     for l in data:
         name = l[0]
         if len(name) < 2:
@@ -875,16 +883,24 @@ def replace_type_voie(s,nb):
     s = dicts.abrev_type_voie[spd]+' '+spf
     return s
 
+# def tags_list_as_dict(ltags):
+#     res = {}
+#     if (ltags):
+#         # print(ltags)
+#         ltags = ltags.replace('"=>"','","')
+#         ltags = ltags.split(',')
+#         # print(ltags)
+#         for i in range(0,int(len(ltags)/2)):
+#             res[ltags[i*2]] = ltags[i*2+1]
+#     # print(res)
+#     return res
 def tags_list_as_dict(ltags):
     res = {}
     if (ltags):
-        # print(ltags)
-        ltags = ltags.replace('"=>"','","')
-        ltags = ltags.split(',')
-        # print(ltags)
-        for i in range(0,int(len(ltags)/2)):
-            res[ltags[i*2]] = ltags[i*2+1]
-    # print(res)
+        kv_list = ltags.split(', ')
+        for kv in kv_list:
+            kv = kv[1:-1].split('"=>"')
+            res[kv[0]] = kv[1]
     return res
 
 def main(args):
@@ -918,7 +934,7 @@ def main(args):
     adresses = Adresses()
 
     pgc = get_pgc()
-    pgcl = get_pgc_layers()
+    pgcl = get_pgc_osm()
 
     code_insee = args[1]
     code_dept = get_short_code_dept_from_insee(code_insee)
@@ -929,9 +945,9 @@ def main(args):
     dicts.load_all(code_insee)
 
     commune_avec_suffixe = has_addreses_with_suffix(code_insee)
-    geom_suffixe = None
-    if commune_avec_suffixe:
-        geom_suffixe = get_geom_suffixes(code_insee)
+    # geom_suffixe = None
+    # if commune_avec_suffixe:
+    #     geom_suffixe = get_geom_suffixes(code_insee)
 
     if source == 'CADASTRE':
         # fnadresses = os.path.join(os.environ['BANO_CACHE_DIR'],code_dept,code_insee,'{}-bal.csv'.format(code_insee))

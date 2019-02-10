@@ -1,81 +1,76 @@
-select 	ST_X(a.pt_geo)::character varying,
-		ST_Y(a.pt_geo)::character varying,
+select 	ST_X(ST_Transform(a.pt_geo,4326))::character varying,
+		ST_Y(ST_Transform(a.pt_geo,4326))::character varying,
 		a.provenance::character varying,
 		a.osm_id::character varying,
 		a.hsnr,
 		a.street_name,
 		a.tags,
-		h.suffixe,
-		insee_com
+		h.libelle_suffixe,
+		a.insee_com
 FROM 
 -- point avec addr:street
 		(SELECT	1 provenance,
-				ST_Transform(pt.way,4326) pt_geo,
+				pt.way pt_geo,
 				pt.osm_id::character varying,
 				pt."addr:housenumber" hsnr,
-				pt.tags->'addr:street' street_name,
+				pt."addr:street" street_name,
 				ARRAY[]::character[] tags,
-				p.tags->'ref:INSEE' insee_com
+				p."ref:INSEE" insee_com
 		 FROM	planet_osm_polygon	p
 		 JOIN	planet_osm_point 	pt
 		 ON		ST_Intersects(pt.way, p.way)
-		 WHERE	p.tags ? 'ref:INSEE'			AND
-				p.tags->'ref:INSEE'='__com__'	AND
-				pt."addr:housenumber"	IS NOT NULL AND
-				pt.tags->'addr:street'!=''
+		 WHERE	p."ref:INSEE" = '__com__'	AND
+				pt."addr:housenumber" != ''AND
+				pt."addr:street" !=''
 		UNION
 -- way avec addr:street
 		SELECT	2,
-				ST_Transform(ST_Centroid(w.way),4326),
+				ST_Centroid(w.way),
 				w.osm_id::character varying,
 				w."addr:housenumber",
-				w.tags->'addr:street',
+				w."addr:street",
 				ARRAY[]::character[],
-				p.tags->'ref:INSEE'
+				p."ref:INSEE"
 		 FROM	planet_osm_polygon	p
 		 JOIN	planet_osm_polygon 	w
 		 ON		ST_Intersects(w.way, p.way)
-		 WHERE	p.tags ? 'ref:INSEE'			AND
-				p.tags->'ref:INSEE'='__com__'	AND
-				-- w."addr:housenumber"	!='' AND
-				w."addr:housenumber"	IS NOT NULL AND
-				w.tags->'addr:street'!=''
+		 WHERE	p."ref:INSEE" = '__com__'	AND
+				w."addr:housenumber"	!='' AND
+				w.tags->'addr:street' != ''
 		UNION
 -- point dans relation associatedStreet
 		SELECT	3,
-				ST_Transform(pt.way,4326),
+				pt.way,
 				pt.osm_id::character varying,
 				pt."addr:housenumber",
 				null,
 				r.tags,
-				p.tags->'ref:INSEE'
+				p."ref:INSEE"
 		FROM	planet_osm_polygon	p
 		JOIN	planet_osm_point 	pt
 		ON		ST_Intersects(pt.way, p.way)
 		JOIN	planet_osm_rels 	r
-		ON		r.parts @> ARRAY[pt.osm_id]
-		WHERE	p.tags ? 'ref:INSEE'				AND
-				p.tags->'ref:INSEE'='__com__'		AND
-				pt."addr:housenumber"	IS NOT NULL
+		ON		r.osm_id = pt.osm_id
+		WHERE	p."ref:INSEE" = '__com__'		AND
+				pt."addr:housenumber"	!= ''
 		UNION
 -- way dans relation associatedStreet
 		SELECT	4,
-				ST_Transform(ST_Centroid(w.way),4326),
+				ST_Centroid(w.way),
 				w.osm_id::character varying,
 				w."addr:housenumber",
 				null,
 				r.tags,
-				p.tags->'ref:INSEE'
+				p."ref:INSEE"
 		FROM	planet_osm_polygon	p
 		JOIN	planet_osm_polygon 	w
 		ON		ST_Intersects(w.way, p.way)
 		JOIN	planet_osm_rels 	r
-		ON		r.parts @> ARRAY[w.osm_id]
-		WHERE	p.tags ? 'ref:INSEE'				AND
-				p.tags->'ref:INSEE'='__com__'		AND
-				w."addr:housenumber"	IS NOT NULL
+		ON		r.osm_id = w.osm_id
+		WHERE	p."ref:INSEE" = '__com__'		AND
+				w."addr:housenumber" != ''
 		
 )a
-LEFT OUTER JOIN (__suffixe_data__) h
-ON		ST_Intersects(a.pt_geo, ST_Transform(h.geom,4326));
+LEFT OUTER JOIN suffixe h
+ON		ST_Intersects(a.pt_geo, h.geometrie);
 

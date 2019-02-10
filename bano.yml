@@ -16,6 +16,8 @@ tables:
       - {key: 'name', name: 'name', type: string}
       - {key: 'addr:housenumber', name: 'addr:housenumber', type: string}
       - {key: 'addr:street', name: 'addr:street', type: string}
+      - {key: 'ref:FR:FANTOIR', name: 'ref:FR:FANTOIR', type: string}
+      - {key: 'highway', name: 'highway', type: string}
       - {key: 'amenity', name: 'amenity', type: string}
       - {key: 'place', name: 'place', type: string}
       - {key: 'railway', name: 'railway', type: string}
@@ -26,20 +28,25 @@ tables:
         name: [__any__]
     mapping:
       highway: [__any__]
+      waterway: [__any__]
     columns:
       - {name: 'way', type: geometry}
       - {name: 'osm_id', type: id}
       - {name: 'tags', type: hstore_tags}
       - {key: 'name', name: 'name', type: string}
+      - {key: 'ref:FR:FANTOIR', name: 'ref:FR:FANTOIR', type: string}
+      - {key: 'ref:FR:FANTOIR:left', name: 'ref:FR:FANTOIR:left', type: string}
+      - {key: 'ref:FR:FANTOIR:right', name: 'ref:FR:FANTOIR:right', type: string}
       - {key: 'highway', name: 'highway', type: string}
+      - {key: 'waterway', name: 'waterway', type: string}
   planet_osm_polygon:
     type: polygon
     filters:
-      require:
-        name: [__any__]
     mapping:
       boundary: ['administrative']
       amenity: [__any__]
+      addr:housenumber: [__any__]
+      ref:FR:FANTOIR: [__any__]
     columns:
       - {name: 'way', type: geometry}
       - {name: 'osm_id', type: id}
@@ -50,6 +57,10 @@ tables:
       - {key: 'addr:housenumber', name: 'addr:housenumber', type: string}
       - {key: 'addr:street', name: 'addr:street', type: string}
       - {key: 'ref:INSEE', name: 'ref:INSEE', type: string}
+      - {key: 'ref:FR:FANTOIR', name: 'ref:FR:FANTOIR', type: string}
+      - {key: 'ref:FR:FANTOIR:left', name: 'ref:FR:FANTOIR:left', type: string}
+      - {key: 'ref:FR:FANTOIR:right', name: 'ref:FR:FANTOIR:right', type: string}
+      - {key: 'highway', name: 'highway', type: string}
       - {key: 'amenity', name: 'amenity', type: string}
       - {key: 'landuse', name: 'landuse', type: string}
   planet_osm_rels:
@@ -61,3 +72,4 @@ tables:
       - {name: 'tags', type: hstore_tags}
       - {key: 'ref:FR:FANTOIR', name: 'ref:FR:FANTOIR', type: string}
       - {key: 'name', name: 'name', type: string}
+      - {key: 'type', name: 'type', type: string}

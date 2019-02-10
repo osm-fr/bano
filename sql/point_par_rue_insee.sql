@@ -1,16 +1,17 @@
-WITH w0
-AS (SELECT	l.way,
+WITH
+w0
+AS
+(SELECT	l.way,
 		unnest(array[l.name,l.tags->'alt_name',l.tags->'old_name']) as name,
-		p.tags->'ref:INSEE' as insee,
+		p."ref:INSEE" as insee,
 		ST_Within(l.way,p.way)::integer as within
 	FROM	planet_osm_polygon p
 	JOIN	planet_osm_line l
 	ON	ST_Intersects(l.way, p.way)
-	WHERE	p.tags ? 'ref:INSEE'		AND
-		p.tags->'ref:INSEE'='__com__'	AND
-		(l.highway IS NOT NULL		OR
+	WHERE	p."ref:INSEE" = '__com__'	AND
+		(l.highway != '' OR
 		l.waterway = 'dam')		AND
-		l.name IS NOT NULL),
+		l.name != ''),
 w1
 AS
 (SELECT *
@@ -37,7 +38,7 @@ AS
 	GROUP BY 2),
 a
 AS
-(SELECT	ST_Transform(ST_SetSRID(ST_ClosestPoint(wl.way,wp.way),900913),4326) point,
+(SELECT	ST_Transform(ST_SetSRID(ST_ClosestPoint(wl.way,wp.way),3857),4326) point,
 		wl.name,
 		wl.insee
 FROM	wl

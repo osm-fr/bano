@@ -1,36 +1,33 @@
-SELECT 	ST_X(way),
-		ST_Y(way),
+SELECT 	ST_X(ST_Transform(ST_SetSRID(way,3857),4326)),
+		ST_Y(ST_Transform(ST_SetSRID(way,3857),4326)),
 		name,
 		fantoir,
 		suffixe,
 		insee
-FROM	(SELECT	ST_Transform(ST_SetSRID(pl.way,900913),4326) way,
+FROM	(SELECT	pl.way,
 				pl.name,
-				pl.tags->'ref:FR:FANTOIR' fantoir,
+				pl."ref:FR:FANTOIR" fantoir,
 				'' suffixe,
-				p.tags->'ref:INSEE' insee
+				p."ref:INSEE" insee
 		FROM	planet_osm_polygon 	p
 		JOIN	planet_osm_point 	pl
 		ON		pl.way && p.way					AND
 				ST_Intersects(pl.way, p.way)
-		WHERE	p.tags ? 'ref:INSEE'			AND
-				p.tags->'ref:INSEE'='__com__'	AND
-				pl.tags->'ref:FR:FANTOIR'!=''	AND
-				pl.name 	IS NOT NULL
+		WHERE	p."ref:INSEE" = '__com__'	AND
+				pl."ref:FR:FANTOIR" != ''	AND
+				pl.name != ''
 		UNION
-		SELECT	ST_Transform(ST_SetSRID(ST_Centroid(pl.way),900913),4326),
+		SELECT	ST_Centroid(pl.way),
 				pl.name,
-				pl.tags->'ref:FR:FANTOIR' f,
+				pl."ref:FR:FANTOIR" f,
 				'' suffixe,
-				p.tags->'ref:INSEE'
+				p."ref:INSEE"
 		FROM	planet_osm_polygon 	p
 		JOIN	planet_osm_polygon 	pl
 		ON		pl.way && p.way					AND
 				ST_Intersects(pl.way, p.way)
-		WHERE	p.tags ? 'ref:INSEE'			AND
-				p.tags->'ref:INSEE'='__com__'	AND
---				coalesce(pl.highway,pl.tags->'ref:FR:FANTOIR') 	IS NOT NULL	AND
-				(	coalesce(pl.highway,pl.tags->'ref:FR:FANTOIR') 	IS NOT NULL		OR
+		WHERE	p."ref:INSEE" = '__com__'	AND
+				(	pl.highway||pl."ref:FR:FANTOIR" != ''	OR
 					pl.landuse = 'residential')	AND
-				pl.name 	IS NOT NULL)a
+				pl.name != '')a
 ORDER BY 6;

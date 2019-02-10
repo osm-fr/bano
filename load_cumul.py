@@ -25,20 +25,20 @@ def get_code_dept_from_insee(insee):
     return code_dept
 def get_sql_like_dept_string(dept):
     return (dept+'___')[0:5]
-def get_geom_suffixes(dept):
-    fq = open('sql/geom_suffixes_insee.sql','r')
-    str_query = fq.read().replace("='__com__'"," LIKE  '{:s}'".format(get_sql_like_dept_string(dept)))
-    cursor_bano_ro = pgc.cursor()
-    cursor_bano_ro.execute(str_query)
-    a_queries = []
-    for l in cursor_bano_ro :
-        a_queries.append("SELECT ST_PolygonFromText('{:s}',3857) as geom,'{:s}'::text suffixe".format(l[0],l[1].replace('\'','\'\'')))
-    cursor_bano_ro.close()
-    return ' UNION '.join(a_queries)
-def warning_message_no_suffixe(dept,etape):
-    print("Pas de commune à suffixe dans le {}. Etape {} ignorée".format(dept,etape.upper()))
+# def get_geom_suffixes(dept):
+#     fq = open('sql/geom_suffixes_insee.sql','r')
+#     str_query = fq.read().replace("='__com__'"," LIKE  '{:s}'".format(get_sql_like_dept_string(dept)))
+#     cursor_bano_ro = pgc.cursor()
+#     cursor_bano_ro.execute(str_query)
+#     a_queries = []
+#     for l in cursor_bano_ro :
+#         a_queries.append("SELECT ST_PolygonFromText('{:s}',3857) as geom,'{:s}'::text suffixe".format(l[0],l[1].replace('\'','\'\'')))
+#     cursor_bano_ro.close()
+#     return ' UNION '.join(a_queries)
+# def warning_message_no_suffixe(dept,etape):
+#     print("Pas de commune à suffixe dans le {}. Etape {} ignorée".format(dept,etape.upper()))
 
-def get_data_by_dept_from_pg(query_name,dept,suffixe_data=None):
+def get_data_by_dept_from_pg(query_name,dept):
     current_time = round(time.time())
     etape_dept = 'cache_dept_'+query_name
 # Cache gardé 1h
@@ -46,9 +46,9 @@ def get_data_by_dept_from_pg(query_name,dept,suffixe_data=None):
         print(u'Mise à jour du cache "{:s}"'.format(query_name.upper()))
         batch_id = o.batch_start_log(source,etape_dept,dept)
         fq = open('sql/{:s}.sql'.format(query_name),'r')
-        str_query = fq.read().replace("='__com__'"," LIKE  '{:s}'".format(get_sql_like_dept_string(dept)))
-        if suffixe_data :
-            str_query = str_query.replace('__suffixe_data__',suffixe_data)
+        str_query = fq.read().replace(" = '__com__'"," LIKE  '{:s}'".format(get_sql_like_dept_string(dept)))
+        # if suffixe_data :
+        #     str_query = str_query.replace('__suffixe_data__',suffixe_data)
             # print(str_query)            
         fq.close()
         cur_osm_ro = pgcl.cursor()
@@ -102,7 +102,7 @@ if source == 'CADASTRE':
     clause_vecteur = " AND format_cadastre = 'VECT' "
 
 pgc = a.get_pgc()
-pgcl = a.get_pgc_layers()
+pgcl = a.get_pgc_osm()
 
 if sys.argv[1].upper() == 'FRANCE':
     loop_query = 'SELECT DISTINCT dept FROM code_cadastre ORDER BY 1;'
@@ -117,13 +117,13 @@ for c_loop in cur_loop:
     global f_log
     f_log = e.start_log_to_file(source,os.path.basename(sys.argv[0]).split('.')[0],num_dept_cadastre)
     print('## Département {:s}'.format(num_dept_cadastre))
-    geom_suffixe = get_geom_suffixes(num_dept_cadastre)
+    # geom_suffixe = get_geom_suffixes(num_dept_cadastre)
     if source == 'OSM':
         get_data_by_dept_from_pg('hsnr_insee',num_dept_cadastre)
-        if geom_suffixe :
-            get_data_by_dept_from_pg('hsnr_suffixe_insee',num_dept_cadastre,geom_suffixe)
-        else :
-            warning_message_no_suffixe(num_dept_cadastre,'hsnr_suffixe_insee')
+        # if geom_suffixe :
+        get_data_by_dept_from_pg('hsnr_suffixe_insee',num_dept_cadastre)
+        # else :
+        #     warning_message_no_suffixe(num_dept_cadastre,'hsnr_suffixe_insee')
         get_data_by_dept_from_pg('hsnr_bbox_insee',num_dept_cadastre)
         get_data_by_dept_from_pg('point_par_rue_insee',num_dept_cadastre)
         get_data_by_dept_from_pg('point_par_rue_complement_insee',num_dept_cadastre)
@@ -131,16 +131,16 @@ for c_loop in cur_loop:
     # os._exit(0)
     
     get_data_by_dept_from_pg('highway_insee',num_dept_cadastre)
-    if geom_suffixe :
-        get_data_by_dept_from_pg('highway_suffixe_insee',num_dept_cadastre,geom_suffixe)
-    else :
-        warning_message_no_suffixe(num_dept_cadastre,'highway_suffixe_insee')
+    # if geom_suffixe :
+    get_data_by_dept_from_pg('highway_suffixe_insee',num_dept_cadastre)
+    # else :
+    #     warning_message_no_suffixe(num_dept_cadastre,'highway_suffixe_insee')
     get_data_by_dept_from_pg('highway_bbox_insee',num_dept_cadastre)
     get_data_by_dept_from_pg('highway_relation_insee',num_dept_cadastre)
-    if geom_suffixe :
-        get_data_by_dept_from_pg('highway_relation_suffixe_insee',num_dept_cadastre,geom_suffixe)
-    else :
-        warning_message_no_suffixe(num_dept_cadastre,'highway_relation_suffixe_insee')
+    # if geom_suffixe :
+    get_data_by_dept_from_pg('highway_relation_suffixe_insee',num_dept_cadastre)
+    # else :
+        # warning_message_no_suffixe(num_dept_cadastre,'highway_relation_suffixe_insee')
     get_data_by_dept_from_pg('highway_relation_bbox_insee',num_dept_cadastre)
     # os._exit(0)
 

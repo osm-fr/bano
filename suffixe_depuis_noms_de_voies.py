@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # coding: UTF-8
 
-
+import re
 import sys
 import time
 import os,os.path
 from pg_connexion import get_pgc
-from pg_connexion import get_pgc_layers
-# from addr_2_db import load_hsnr_from_cad_file_csv
+from pg_connexion import get_pgc_osm
+# from addr_2_db import load_cadastre_hsnr
 from addr_2_db import get_code_cadastre_from_insee
 from addr_2_db import get_short_code_dept_from_insee
 from addr_2_db import get_nb_parts
@@ -72,14 +72,13 @@ def collect_adresses_points(sel):
             s = 0
             max = 2
             for a in adresses.a[vv]['numeros']:
-                kres[k].append('SELECT \'{:s}\' hameau,\'{:s}\' code_insee,ST_BUFFER(ST_PointFromText(\'POINT({:s} {:s})\',4326),0.0003,2) as g'.format(k.replace("'","''"),code_insee,adresses.a[vv]['numeros'][a].node.attribs['lon'][0:8],adresses.a[vv]['numeros'][a].node.attribs['lat'][0:8]))
+                kres[k].append('SELECT \'{:s}\' hameau,\'{:s}\' code_insee,ST_BUFFER(ST_PointFromText(\'POINT({} {})\',4326),0.0003,2) as g'.format(k.replace("'","''"),code_insee,adresses.a[vv]['numeros'][a].node.attribs['lon'],adresses.a[vv]['numeros'][a].node.attribs['lat']))
                 s+=1
                 if s == max: break
     return kres
 def load_suffixe_2_db(adds):
     nb_res = 0
-    #f = open('q.txt','wb')
-    cur = pgc.cursor()
+    cur = pgc_osm.cursor()
     str_query = "DELETE FROM suffixe WHERE insee_com = '{:s}';COMMIT;".format(code_insee)
     cur.execute(str_query)
     for h in adds:
@@ -87,14 +86,9 @@ def load_suffixe_2_db(adds):
         if code_insee == '34003':
             continue
         print('\t{:s}'.format(h))
-        #str_query = 'DELETE FROM suffixe WHERE libelle_hameau = \'{:s}\' and insee_com = \'{:s}\';'.format(h.replace("'","''").encode('utf8'),code_insee)
-        str_query = 'INSERT INTO suffixe SELECT (ST_Dump(gu)).geom,code_insee,hameau FROM (SELECT ST_Union(g) gu,code_insee,hameau FROM({:s})a GROUP BY 2,3)a;COMMIT;'.format(' UNION ALL '.join(adds[h]))
-        # str_query += 'INSERT INTO suffixe SELECT ST_ConvexHull((ST_Dump(gu)).geom),code_insee,hameau FROM (SELECT ST_Union(g) gu,code_insee,hameau FROM({:s})a GROUP BY 2,3)a;COMMIT;'.format(' UNION ALL '.join(adds[h]))
-        # str_query+= 'DELETE FROM suffixe WHERE insee_com = \'{:s}\' and libelle_hameau = \'{:s}\' and st_area(geometrie) < (select sum(st_area(geometrie))/5 from suffixe a where insee_com = \'{:s}\' and libelle_hameau = \'{:s}\');COMMIT;'.format(code_insee,h.replace("'","''").encode('utf8'),code_insee,h.replace("'","''").encode('utf8'))
+        str_query = 'INSERT INTO suffixe SELECT ST_Transform(ST_SetSRID((ST_Dump(gu)).geom,4326),3857),code_insee,hameau FROM (SELECT ST_Union(g) gu,code_insee,hameau FROM({:s})a GROUP BY 2,3)a;COMMIT;'.format(' UNION ALL '.join(adds[h]))
         cur.execute(str_query)
-        #f.write(str_query+'\n')
         nb_res+=len(adds[h])
-    #f.close()
     return nb_res
 def load_hsnr_from_cad_file_csv(fnadresses,source):
     csvadresses = open(fnadresses,'r')
@@ -116,6 +110,33 @@ def load_hsnr_from_cad_file_csv(fnadresses,source):
         if is_valid_housenumber(housenumber):
             nd = Node({'id':cle_interop,'lon':lon,'lat':lat},{})
             adresses.add_adresse(Adresse(nd,housenumber,name,'',''),source)
+def load_cadastre_hsnr(code_insee):
+    dict_node_relations = {}
+    destinations_principales_retenues = 'habitation commerce industrie tourisme'
+    str_query = "SELECT * FROM bal_cadastre WHERE commune_code = '{}';".format(code_insee)
+    cur = pgc.cursor()
+    cur.execute(str_query)
+    for lt in cur:
+        line_split = list(lt)
+        cle_interop,housenumber,pseudo_adresse,name,code_postal,destination_principale,lon,lat = line_split[0],line_split[2]+(str(line_split[3]) if (line_split[3]) else ''),line_split[4],line_split[5],(line_split[7] if line_split[7] else ''),line_split[9],line_split[13],line_split[14]
+        if len(name) < 2:
+            continue
+        # if len(lon) < 1:
+        if not lon :
+            continue
+        if pseudo_adresse == 'true':
+            continue
+        if not re.search(destination_principale,destinations_principales_retenues):
+            continue
+        adresses.register(name)
+        adresses.add_voie(name,'CADASTRE')
+        if not cle_interop in dict_node_relations:
+            dict_node_relations[cle_interop] = []
+            dict_node_relations[cle_interop].append(normalize(name))
+        if is_valid_housenumber(housenumber):
+            nd = Node({'id':cle_interop,'lon':lon,'lat':lat},{})
+            adresses.add_adresse(Adresse(nd,housenumber,name,'',code_postal),source)
+    cur.close()
 def name_frequency():
     freq = {}
     for v in adresses.a:
@@ -160,8 +181,9 @@ def main(args):
         print(usage)
         os._exit(0)
 
-    global pgc,dicts,adresses,source,code_insee
+    global pgc,pgc_osm,dicts,adresses,source,code_insee
     pgc = get_pgc()
+    pgc_osm = get_pgc_osm()
     source = 'CADASTRE'
     adresses = Adresses()
     code_insee = args[1]
@@ -170,9 +192,10 @@ def main(args):
 
     batch_id = batch_start_log(source,'detectesuffixe',code_insee)
 
-    fnadresses = os.path.join(os.environ['BANO_CACHE_DIR'],code_dept,code_insee,'{}-bal.csv'.format(code_insee))
-    if (os.path.exists(fnadresses)):
-        load_hsnr_from_cad_file_csv(fnadresses, 'CADASTRE')
+    # fnadresses = os.path.join(os.environ['BANO_CACHE_DIR'],code_dept,code_insee,'{}-bal.csv'.format(code_insee))
+    # if (os.path.exists(fnadresses)):
+    #     # load_hsnr_from_cad_file_csv(fnadresses, 'CADASTRE')
+    load_cadastre_hsnr(code_insee)
     freq = name_frequency()
     sel = select_street_names_by_name(freq)
     adds = collect_adresses_points(sel)
