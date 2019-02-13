@@ -74,16 +74,16 @@ def get_data_by_dept_from_pg(query_name,dept):
             str_values = ','.join(list_values).replace('"',"'")
             list_output.append(str_values)
         cur_osm_ro.close()
-        cur_bano_rw = pgc.cursor()
+        cur_cache_rw = pgcl.cursor()
         str_query = "DELETE FROM {} WHERE insee_com LIKE '{}';".format(query_name,get_sql_like_dept_string(dept))
-        cur_bano_rw.execute(str_query)
+        cur_cache_rw.execute(str_query)
         if len(list_output) > 0 :
             str_query = "INSERT INTO {} VALUES ({});COMMIT;".format(query_name,'),('.join(list_output))
             strq = open('./query.txt','w')
             strq.write(str_query)
             strq.close()
-            cur_bano_rw.execute(str_query)
-
+            cur_cache_rw.execute(str_query)
+        cur_cache_rw.close()
         o.batch_end_log(0,batch_id)
 
 str_usage = 'USAGE : python load_cumul.py <numero de dept|FRANCE> <OSM|CADASTRE>'
@@ -153,7 +153,7 @@ for c_loop in cur_loop:
     for c in cur:
         print('{:s} - {:s}'.format(c[0],c[1]))
         try:
-            a.main(['',c[0],source])
+            a.main(['',c[0],source,True])
         except :
             e.write_log_to_file(f_log,'Commune : {:s}\n'.format(c[1]))
             e.write_log_to_file(f_log,str(sys.exc_info()[0]))

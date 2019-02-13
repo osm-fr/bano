@@ -432,25 +432,20 @@ def get_last_base_update(query_name,insee_com):
     cur.close()
     return resp
 
-def get_data_from_pg_direct(query_name,insee_com,local=False):
+def get_data_from_pg_direct(query_name,insee_com):
     current_time = round(time.time())
-    pgc_bano_rw = get_pgc()
-    cur_bano_rw = pgc_bano_rw.cursor()
-    if (current_time - get_last_base_update(query_name,insee_com)) > 10 :
+    pgc_cache = get_pgc_osm()
+    cur_cache = pgc_cache.cursor()
+    if not use_cache :
         fq = open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'sql/{:s}.sql'.format(query_name)),'r')
         str_query = fq.read().replace('__com__',insee_com)
         fq.close()
-        if local:
-            pgc_osm_ro = get_pgc()
-        else:
-            pgc_osm_ro = get_pgc_osm()
-        # if suffixe_data:
-        #     str_query = str_query.replace('__suffixe_data__',suffixe_data)
-        cur_osm_ro = pgc_osm_ro.cursor()
-        cur_osm_ro.execute(str_query)
-        # print(str_query)
+        print(round(time.time()))
+        print(str_query)
+        cur_cache.execute(str_query)
+        print(round(time.time()))
         list_output = list()
-        for lt in cur_osm_ro :
+        for lt in cur_cache :
             list_values = list()
             for item in list(lt):
                 if item == None:
@@ -469,31 +464,27 @@ def get_data_from_pg_direct(query_name,insee_com,local=False):
             list_values.append(str(current_time))            # print(list_values)
 
             str_values = ','.join(list_values).replace('"',"'")
-            # str_values = str_values.replace("'","''").replace('"',"'").replace("'',''","','").replace("'', ''","','")
-            # str_values = str_values.replace('"',"'")
-            # print(str_values)
             list_output.append(str_values)
-        cur_osm_ro.close()
         # print(list_output)
         # pgc = get_pgc()
         str_query = "DELETE FROM {} WHERE insee_com = '{}';".format(query_name,insee_com)
-        cur_bano_rw.execute(str_query)
+        cur_cache.execute(str_query)
         if len(list_output) > 0 :
             str_query = "INSERT INTO {} VALUES ({});COMMIT;".format(query_name,'),('.join(list_output))
             # print(str_query)
-            cur_bano_rw.execute(str_query)
+            cur_cache.execute(str_query)
 
     str_query = "SELECT * FROM {} WHERE insee_com = '{}';".format(query_name,insee_com)
-    cur_bano_rw.execute(str_query)
+    cur_cache.execute(str_query)
 
     res = []
-    for l in cur_bano_rw :
+    for l in cur_cache :
         # print(l)
         # print(list(l))
         res.append(list(l))
         # res.append(l)
         # res.append(eval(l))
-    cur_bano_rw.close()
+    cur_cache.close()
     # print(res)
     return res
 
@@ -617,7 +608,7 @@ def load_hsnr_from_pg_osm(insee_com):
 
 def load_highways_bbox_from_pg_osm(insee_com):
     # if commune_avec_suffixe:
-    data = get_data_from_pg_direct('highway_suffixe_insee',insee_com,False)
+    data = get_data_from_pg_direct('highway_suffixe_insee',insee_com)
     # else:
     #     data = get_data_from_pg_direct('highway_bbox_insee',insee_com)
     for l in data:
@@ -649,7 +640,7 @@ def load_highways_bbox_from_pg_osm(insee_com):
 
 def load_highways_from_pg_osm(insee_com):
     # if commune_avec_suffixe:
-    data = get_data_from_pg_direct('highway_suffixe_insee',insee_com,False)
+    data = get_data_from_pg_direct('highway_suffixe_insee',insee_com)
     # else:
     #     data = get_data_from_pg_direct('highway_insee',insee_com)
     #     # print(data)
@@ -684,7 +675,7 @@ def load_highways_from_pg_osm(insee_com):
 
 def load_highways_relations_bbox_from_pg_osm(insee_com):
     # if commune_avec_suffixe:
-    data = get_data_from_pg_direct('highway_relation_suffixe_insee',insee_com,False)
+    data = get_data_from_pg_direct('highway_relation_suffixe_insee',insee_com)
     # else:
     #     data = get_data_from_pg_direct('highway_relation_bbox_insee',insee_com)
     for l in data:
@@ -710,7 +701,7 @@ def load_highways_relations_bbox_from_pg_osm(insee_com):
 
 def load_highways_relations_from_pg_osm(insee_com):
     # if commune_avec_suffixe:
-    data = get_data_from_pg_direct('highway_relation_suffixe_insee',insee_com,False)
+    data = get_data_from_pg_direct('highway_relation_suffixe_insee',insee_com)
     # else:
     #     data = get_data_from_pg_direct('highway_relation_insee',insee_com)
     for l in data:
@@ -917,7 +908,7 @@ def main(args):
     schema_cible = 'public'
     if ('SCHEMA_CIBLE' in os.environ) : schema_cible = (os.environ['SCHEMA_CIBLE'])
 
-    use_cache = True
+    use_cache = False
 
     debut_total = time.time()
     usage = 'USAGE : python addr_cad_2_db.py <code INSEE> <OSM|CADASTRE> {use_cache=True}'
