@@ -44,7 +44,7 @@ FROM
 				pt.osm_id::character varying,
 				pt."addr:housenumber",
 				null,
-				r.tags,
+				%% r.tags,
 				p."ref:INSEE"
 		FROM	planet_osm_polygon	p
 		JOIN	planet_osm_point 	pt
@@ -60,7 +60,7 @@ FROM
 				w.osm_id::character varying,
 				w."addr:housenumber",
 				null,
-				r.tags,
+				%% r.tags,
 				p."ref:INSEE"
 		FROM	planet_osm_polygon	p
 		JOIN	planet_osm_polygon 	w
