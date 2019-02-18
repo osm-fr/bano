@@ -221,7 +221,6 @@ def load_cadastre():
             # print('utime')
     data = get_data_from_pg('cadastre_2_places',code_insee,True)
     for d in data:
-        print(d)
         targets = places.match_name(d[2],'FANTOIR')
         if targets:
             for t in targets:

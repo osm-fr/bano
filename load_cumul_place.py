@@ -13,6 +13,8 @@ import os,os.path
 # Replace sys.stdout with a writer
 # sys.stdout = wrapped_stdout
 
+def get_sql_like_dept_string(dept):
+    return (dept+'___')[0:5]
 
 def get_code_dept_from_insee(insee):
 	code_dept = insee[0:2]
@@ -28,13 +30,9 @@ def get_data_by_dept_from_pg(data_type,dept,local=False):
 		print(u'Mise à jour du cache "{:s}"'.format(data_type.upper()))
 		batch_id = o.batch_start_log('',etape_dept,dept)
 		fq = open('sql/{:s}.sql'.format(data_type),'r')
-		str_sql_dept_like = (dept+'___')[0:5]
-		str_query = fq.read().replace('=\'__com__',' LIKE  \'{:s}'.format(str_sql_dept_like))
+		str_query = fq.read().replace(" = '__com__'"," LIKE  '{:s}'".format(get_sql_like_dept_string(dept)))
 		fq.close()
-		if local:
-			pgc = a.get_pgc()
-		else:
-			pgc = a.get_pgc_layers()
+		pgc = a.get_pgc_osm()
 		cur = pgc.cursor()
 		cur.execute(str_query)
 		
