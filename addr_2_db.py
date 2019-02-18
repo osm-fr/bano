@@ -690,7 +690,8 @@ def load_highways_relations_bbox_from_pg_osm(insee_com):
         if len(name) < 2:
             continue
         suffixe = ''
-        if commune_avec_suffixe and l[-2]:
+        # if commune_avec_suffixe and l[-2]:
+        if l[-2]:
             suffixe = l[-2]
         name_suffixe = append_suffixe(name,suffixe)
         adresses.register(name_suffixe)
@@ -709,7 +710,7 @@ def load_highways_relations_from_pg_osm(insee_com):
         if len(name) < 2:
             continue
         suffixe = ''
-        if commune_avec_suffixe and l[-2]:
+        if l[-2]:
             suffixe = l[-2]
         name_suffixe = append_suffixe(name,suffixe)
         adresses.register(name_suffixe)
@@ -900,7 +901,7 @@ def main(args):
     global code_insee,code_cadastre,code_dept
     global dicts
     global nodes,ways,adresses
-    global commune_avec_suffixe
+    # global commune_avec_suffixe
     global geom_suffixe
     global use_cache
     global schema_cible
@@ -935,7 +936,7 @@ def main(args):
     dicts = Dicts()
     dicts.load_all(code_insee)
 
-    commune_avec_suffixe = has_addreses_with_suffix(code_insee)
+    # commune_avec_suffixe = has_addreses_with_suffix(code_insee)
     # geom_suffixe = None
     # if commune_avec_suffixe:
     #     geom_suffixe = get_geom_suffixes(code_insee)
