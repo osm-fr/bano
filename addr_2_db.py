@@ -110,7 +110,7 @@ class Dicts:
                                 WHERE    code_insee = '%s' AND
                                         caractere_annul NOT IN ('O','Q')) a
                         WHERE rang = 1;""" % insee)
-        pgc = get_pgc()
+        pgc = get_pgc_osm()
         cur_fantoir = pgc.cursor()
         cur_fantoir.execute(str_query)
         for c in cur_fantoir:
@@ -440,10 +440,10 @@ def get_data_from_pg_direct(query_name,insee_com):
         fq = open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'sql/{:s}.sql'.format(query_name)),'r')
         str_query = fq.read().replace('__com__',insee_com)
         fq.close()
-        print(round(time.time()))
-        print(str_query)
+        # print(round(time.time()))
+        # print(str_query)
         cur_cache.execute(str_query)
-        print(round(time.time()))
+        # print(round(time.time()))
         list_output = list()
         for lt in cur_cache :
             list_values = list()
@@ -479,13 +479,8 @@ def get_data_from_pg_direct(query_name,insee_com):
 
     res = []
     for l in cur_cache :
-        # print(l)
-        # print(list(l))
         res.append(list(l))
-        # res.append(l)
-        # res.append(eval(l))
     cur_cache.close()
-    # print(res)
     return res
 
 # def get_geom_suffixes(insee):
@@ -564,7 +559,8 @@ def load_cadastre_hsnr(code_insee):
     cur.execute(str_query)
     for lt in cur:
         line_split = list(lt)
-        cle_interop,housenumber,pseudo_adresse,name,code_postal,destination_principale,lon,lat = line_split[0],line_split[2]+(str(line_split[3]) if (line_split[3]) else ''),line_split[4],line_split[5],(line_split[7] if line_split[7] else ''),line_split[9],line_split[13],line_split[14]
+        # cle_interop,housenumber,pseudo_adresse,name,code_postal,destination_principale,lon,lat = line_split[0],line_split[2]+(str(line_split[3]) if (line_split[3]) else ''),line_split[4],line_split[5],(line_split[7] if line_split[7] else ''),line_split[9],line_split[13],line_split[14]
+        cle_interop,housenumber,pseudo_adresse,name,code_postal,destination_principale,lon,lat = line_split[0],line_split[2]+(' '+str(line_split[3]) if (line_split[3]) else ''),line_split[4],line_split[5],(line_split[7] if line_split[7] else ''),line_split[9],line_split[13],line_split[14]
         if len(name) < 2:
             continue
         # if len(lon) < 1:
