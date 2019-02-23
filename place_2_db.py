@@ -10,7 +10,7 @@
 import sys
 import time
 import os
-from pg_connexion import get_pgc,get_pgc_layers
+from pg_connexion import get_pgc,get_pgc_osm
 from addr_2_db import get_cadastre_code_dept_from_insee,get_cache_filename
 from outils_de_gestion import batch_start_log,batch_end_log,get_cadastre_format,get_cadastre_etape_timestamp_debut
 # from outils_de_gestion import 
@@ -180,46 +180,27 @@ def format_toponyme(s):
     if len(s.strip())>1 and s.strip()[-1] == '\'':
         s = s.strip()[0:-1]
     return s
-def get_data_from_pg(data_type,insee_com,local=False,suffixe_data=None):
-    cache_file = get_cache_filename(data_type,insee_com)
-    if not use_cache or not os.path.exists(cache_file) or (time.time() - os.path.getmtime(cache_file)) > 86400 :
-        fq = open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'sql/{:s}.sql'.format(data_type)),'r')
+def get_data_from_pg(query_name,insee_com):
+    pgc_cache = get_pgc_osm()
+    cur_cache = pgc_cache.cursor()
+    if not use_cache :
+        fq = open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'sql/{:s}.sql'.format(query_name)),'r')
         str_query = fq.read().replace('__com__',insee_com)
         # print(str_query)
         fq.close()
-        if local:
-            pgc = get_pgc()
-        else:
-            pgc = get_pgc_layers()
-        if suffixe_data:
-            str_query = str_query.replace('__suffixe_data__',suffixe_data)
-        cur = pgc.cursor()
-        cur.execute(str_query)
-        f = open(cache_file,'w+')
-        for lt in cur:
-            l = list(lt)
-            f.write(str(l)+'\n')
-        cur.close()
-        f.seek(0)
-    else :
-        f = open(cache_file,'r')
-        # print('open cache '+cache_file)
+        cur_cache.execute(str_query)
+
+    str_query = "SELECT * FROM {} WHERE insee_com = '{}';".format(query_name,insee_com)
+    cur_cache.execute(str_query)
+
     res = []
-    for l in f:
-        res.append(eval(l))
-    f.close()
+    for l in cur_cache :
+        res.append(list(l))
+    cur_cache.close()
     return res
+
 def load_cadastre():
-    # fname = get_cache_filename('cadastre_2_places',code_insee)
-    # if os.path.exists(fname):
-        # date_buildings_en_base = get_cadastre_etape_timestamp_debut(code_insee,'importBuildings','CADASTRE')
-        # date_cache = os.path.getmtime(fname)
-        # print('date_buildings_en_base '+str(date_buildings_en_base))
-        # print('date_cache '+str(date_cache))
-        # if date_cache > date_buildings_en_base:
-            # os.utime(fname, None)
-            # print('utime')
-    data = get_data_from_pg('cadastre_2_places',code_insee,True)
+    data = get_data_from_pg('cadastre_2_place',code_insee)
     for d in data:
         targets = places.match_name(d[2],'FANTOIR')
         if targets:
@@ -238,7 +219,7 @@ def load_dicts():
     dicts['mot_a_blanc'] = ['DE LA','DU','DES','LE','LA','LES','DE','D','L']
 
 def load_fantoir(insee):
-    pgc = get_pgc()
+    pgc = get_pgc_osm()
     str_query = "SELECT code_insee||id_voie||cle_rivoli,\
                         TRIM(BOTH FROM nature_voie||' '||libelle_voie),\
                         ld_bati\
@@ -251,6 +232,7 @@ def load_fantoir(insee):
     for c in cur_fantoir:
         p = Place(0,0,'',c[1],'','','',c[0],c[2])
         places.add_place(p)
+    cur_fantoir.close()
 def    load_osm():
     data = get_data_from_pg('place_insee',code_insee)
     for d in data:
@@ -323,7 +305,7 @@ def main(args):
     code_dept = get_cadastre_code_dept_from_insee(code_insee)
     format_cadastre = get_cadastre_format(code_insee)
 
-    use_cache = True
+    use_cache = False
     if len(args) > 2:
         use_cache = args[2]
     places = Places()

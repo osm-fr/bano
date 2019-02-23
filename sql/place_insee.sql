@@ -1,4 +1,4 @@
-DELETE FROM place_insee WHERE "ref:INSEE" = '__com__';
+DELETE FROM place_insee WHERE insee_com = '__com__';
 WITH
 a AS
 (SELECT	ST_Transform(pt.way,4326) pt_geo,
@@ -25,4 +25,5 @@ SELECT 	ST_X(pt_geo),
 		tags,
 		insee_com,
         round(extract(epoch from now()))
-FROM	a
+FROM	a;
+COMMIT;
