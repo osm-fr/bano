@@ -7,7 +7,8 @@ INSERT INTO :schema_cible.lieux_dits (insee_com,
                        updated,
                        geometrie)
 SELECT commune,
-       nom,
+       --nom,
+       regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(nom,'   ',' ','g'),'   ',' ','g'),'  ',' ','g'),'  ',' ','g'),'  ',' ','g'),
        created,
        updated,
        geometrie
