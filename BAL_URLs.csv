@@ -1,0 +1,17 @@
+OD_BAYONNE,https://static.data.gouv.fr/resources/adresses-au-format-bal-bayonne/20190103-151405/20190103-bal-216401026.csv
+OD_COMPIEGNE,https://files.geo.data.gouv.fr/link-proxy/geo.compiegnois.fr/2019-02-05/5c59d85466bcc7f3e265d729/payscompiegnois-bal.csv
+OD_LORIENT,https://sdem.opendatasoft.com/explore/dataset/base-adresse-locale-bal-ville-de-lorient/download?format=csv&timezone=Europe/Berlin&use_labels_for_header=true
+OD_NICE_COTE_D_AZUR,http://opendata.nicecotedazur.org/data/storage/f/2018-12-26T08%3A59%3A59.549Z/20181221-bal-200030195.csv
+OD_AGENCE_PUBLIQUE_DE_GESTION_LOCALE,https://static.data.gouv.fr/resources/base-adresse-locale-de-lagence-publique-de-gestion-locale-1/20190322-114850/adresses-22032019-apgl.csv
+OD_STRASBOURG,https://static.data.gouv.fr/resources/adresses-de-la-ville-de-strasbourg/20190115-124722/20190115-bal-246700488.csv
+OD_RENNES,https://data.rennesmetropole.fr/explore/dataset/rva-bal/download?format=csv&timezone=Europe/Berlin&use_labels_for_header=true
+OD_BREST,https://applications002.brest-metropole.fr/VIPDU72/Adresses/20190301_bal_200033736.csv
+OD_SAINT_BONNET_LE_BOURG,https://static.data.gouv.fr/resources/adresses-de-saint-bonnet-le-bourg/20190205-172526/20190204-bal-216303230.csv
+OD_GRAND_LYON,https://files.geo.data.gouv.fr/link-proxy/download.data.grandlyon.com/2019-02-25/5c743ef94d50293c46ededda/bal-200046977.csv
+OD_VENDEE,http://www.geovendee.fr/upload/gedit/1/BAL85/bal_85_actu.csv
+OD_COTES_D_ARMOR,http://datarmor.cotesdarmor.fr/data-unpaginated/dataserver/cg22/data/20180904_bal_200065928?&$inlinecount=allpages&$format=csv
+OD_DIGNE_LES_BAINS,https://trouver.datasud.fr/dataset/e198ead6-047b-4608-b1d7-7d488a773193/resource/a7a05846-037e-42cc-8f66-0197c64f4f5c/download/digne-bal-2018.csv
+
+Faire une table BAL_OPENDATA au format BAL AITF
+
+Faire un script qui appelle les URLs et sauvegarde un fichier OD_xxx.csv puis le purge & le charge dans la table BAL_OPENDATA
