@@ -45,27 +45,18 @@ CREATE TABLE IF NOT EXISTS :schema_cible.bal_cadastre (
     date_der_maj date);
 CREATE INDEX IF NOT EXISTS idx_bal_cadastre_commune_code ON :schema_cible.bal_cadastre(commune_code);
 
-CREATE TABLE IF NOT EXISTS :schema_cible.bal_open_data (
+CREATE TABLE IF NOT EXISTS :schema_cible.bal_locales (
     cle_interop text,
-    uid_adresse text,
-    numero  text,
-    suffixe text,
-    pseudo_numero boolean,
-    voie_nom text,
-    voie_code text,
-    code_postal text,
-    libelle_acheminement text,
-    destination_principale text,
     commune_code text,
     commune_nom text,
-    source text,
+    voie_code text,
+    voie_nom text,
+    numero  text,
+    suffixe text,
     long float,
     lat float,
-    x float,
-    y float,
-    position text,
-    date_der_maj date);
-CREATE INDEX IF NOT EXISTS idx_bal_open_data_commune_code ON :schema_cible.bal_open_data(commune_code);
+    license text);
+CREATE INDEX IF NOT EXISTS idx_bal_open_data_commune_code ON :schema_cible.bal_locales(commune_code);
 
 CREATE TABLE IF NOT EXISTS :schema_cible.cumul_adresses (
     geometrie       geometry ,
