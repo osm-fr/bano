@@ -86,14 +86,14 @@ def get_data_by_dept_from_pg(query_name,dept):
         cur_cache_rw.close()
         o.batch_end_log(0,batch_id)
 
-str_usage = 'USAGE : python load_cumul.py <numero de dept|FRANCE> <OSM|CADASTRE>'
+str_usage = 'USAGE : python load_cumul.py <numero de dept|FRANCE> <OSM|CADASTRE|BAL>'
 if len(sys.argv) != 3:
     print("Mauvais nombre d'arguments")
     print(str_usage)
     os._exit(0)
 source = sys.argv[2].upper()
-if source != 'OSM' and source != 'CADASTRE':
-    print("La source doit etre OSM ou CADASTRE")
+if source != 'OSM' and source != 'CADASTRE' and source != 'BAL':
+    print("La source doit etre OSM, CADASTRE ou BAL")
     print(str_usage)
     os._exit(0)
 

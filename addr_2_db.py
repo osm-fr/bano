@@ -110,8 +110,7 @@ class Dicts:
                                 WHERE    code_insee = '%s' AND
                                         caractere_annul NOT IN ('O','Q')) a
                         WHERE rang = 1;""" % insee)
-        pgc = get_pgc_osm()
-        cur_fantoir = pgc.cursor()
+        cur_fantoir = pgc_osm.cursor()
         cur_fantoir.execute(str_query)
         for c in cur_fantoir:
             self.code_fantoir_vers_nom_fantoir[c[0]] = c[1]
@@ -528,29 +527,6 @@ def is_valid_fantoir(f):
         res = False
     return res
 
-def load_hsnr_from_cad_file_csv(fnadresses,source):
-    csvadresses = open(fnadresses,'r')
-    dict_node_relations = {}
-    for l in csvadresses :
-        line_split = l.split(';')
-        cle_interop,housenumber,pseudo_adresse,name,code_postal,lon,lat = line_split[0],line_split[2]+line_split[3],line_split[4],line_split[5],line_split[7],line_split[13],line_split[14]
-
-        if len(name) < 2:
-            continue
-        if len(lon) < 1:
-            continue
-        if pseudo_adresse == 'true':
-            # print(l)
-            continue
-        adresses.register(name)
-        adresses.add_voie(name,'CADASTRE')
-        if not cle_interop in dict_node_relations:
-            dict_node_relations[cle_interop] = []
-            dict_node_relations[cle_interop].append(normalize(name))
-        if is_valid_housenumber(housenumber):
-            nd = Node({'id':cle_interop,'lon':lon,'lat':lat},{})
-            adresses.add_adresse(Adresse(nd,housenumber,name,'',code_postal),source)
-
 def load_cadastre_hsnr(code_insee):
     dict_node_relations = {}
     destinations_principales_retenues = 'habitation commerce industrie tourisme'
@@ -578,6 +554,28 @@ def load_cadastre_hsnr(code_insee):
         if is_valid_housenumber(housenumber):
             nd = Node({'id':cle_interop,'lon':lon,'lat':lat},{})
             adresses.add_adresse(Adresse(nd,housenumber,name,'',code_postal),source)
+    cur.close()
+
+def load_bases_adresses_locales_hsnr(code_insee):
+    dict_node_relations = {}
+    str_query = "SELECT * FROM bal_locales WHERE commune_code = '{}';".format(code_insee)
+    cur = pgc_osm.cursor()
+    cur.execute(str_query)
+    for lt in cur:
+        line_split = list(lt)
+        cle_interop,housenumber,name,lon,lat = line_split[0],line_split[5]+(' '+str(line_split[6]) if (line_split[6]) else ''),line_split[4],line_split[7],line_split[8]
+        if len(name) < 2:
+            continue
+        if not lon :
+            continue
+        adresses.register(name)
+        adresses.add_voie(name,'BAL')
+        if not cle_interop in dict_node_relations:
+            dict_node_relations[cle_interop] = []
+            dict_node_relations[cle_interop].append(normalize(name))
+        if is_valid_housenumber(housenumber):
+            nd = Node({'id':cle_interop,'lon':lon,'lat':lat},{})
+            adresses.add_adresse(Adresse(nd,housenumber,name,'',''),source)
     cur.close()
 
 def load_hsnr_bbox_from_pg_osm(insee_com):
@@ -778,6 +776,8 @@ def load_to_db(adresses,code_insee,source,code_dept):
             street_name_fantoir =  adresses.a[v]['voies']['FANTOIR']
         if 'CADASTRE' in adresses.a[v]['voies']:
             street_name_cadastre =  adresses.a[v]['voies']['CADASTRE']
+        if 'BAL' in adresses.a[v]['voies']:
+            street_name_cadastre =  adresses.a[v]['voies']['BAL']
         if len(adresses.a[v]['point_par_rue'])>1 and source == 'OSM':
             a_values_voie.append(("(ST_PointFromText('POINT({:6f} {:6f})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}',{:d})".format(adresses.a[v]['point_par_rue'][0],adresses.a[v]['point_par_rue'][1],street_name_cadastre.replace("'","''"),street_name_osm.replace("'","''"),street_name_fantoir.replace("'","''"),cle_fantoir,code_insee,code_dept,'',source,adresses.a[v]['highway_index'])).replace(",'',",",null,"))
 
@@ -893,11 +893,10 @@ def tags_list_as_dict(ltags):
 
 def main(args):
     global source,batch_id
-    global pgc,pgcl
+    global pgc,pgc_osm
     global code_insee,code_cadastre,code_dept
     global dicts
     global nodes,ways,adresses
-    # global commune_avec_suffixe
     global geom_suffixe
     global use_cache
     global schema_cible
@@ -908,21 +907,21 @@ def main(args):
     use_cache = False
 
     debut_total = time.time()
-    usage = 'USAGE : python addr_cad_2_db.py <code INSEE> <OSM|CADASTRE> {use_cache=True}'
+    usage = 'USAGE : python addr_cad_2_db.py <code INSEE> <OSM||BAL> {use_cache=True}'
     if len(args) < 3:
         print(usage)
         os._exit(0)
     if len(args) > 3:
         use_cache = args[3]
     source = args[2].upper()
-    if source not in ['OSM','CADASTRE']:
+    if source not in ['OSM','CADASTRE','BAL']:
         print(usage)
         os._exit(0)
 
     adresses = Adresses()
 
     pgc = get_pgc()
-    pgcl = get_pgc_osm()
+    pgc_osm = get_pgc_osm()
 
     code_insee = args[1]
     code_dept = get_short_code_dept_from_insee(code_insee)
@@ -936,10 +935,9 @@ def main(args):
     # geom_suffixe = None
     # if commune_avec_suffixe:
     #     geom_suffixe = get_geom_suffixes(code_insee)
-
+    if source == 'BAL':
+        load_bases_adresses_locales_hsnr(code_insee)
     if source == 'CADASTRE':
-        # fnadresses = os.path.join(os.environ['BANO_CACHE_DIR'],code_dept,code_insee,'{}-bal.csv'.format(code_insee))
-        # load_hsnr_from_cad_file_csv(fnadresses,source)
         load_cadastre_hsnr(code_insee)
     if source == 'OSM':
         load_hsnr_from_pg_osm(code_insee)

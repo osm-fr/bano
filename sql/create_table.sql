@@ -62,6 +62,7 @@ CREATE TABLE IF NOT EXISTS :schema_cible.cumul_adresses (
     geometrie       geometry ,
     numero          character varying (15),
     voie_cadastre   character varying (300),
+    voie_bal        character varying (300),
     voie_osm        character varying (300),
     voie_fantoir    character varying (300),
     fantoir         character varying (10),
