@@ -756,9 +756,10 @@ def load_to_db(adresses,code_insee,source,code_dept):
     a_values_voie = []
 
     for v in adresses.a:
-        sload = 'INSERT INTO cumul_adresses (geometrie,numero,voie_cadastre,voie_osm,voie_fantoir,fantoir,insee_com,dept,code_postal,source) VALUES'
+        sload = 'INSERT INTO cumul_adresses (geometrie,numero,voie_cadastre,voie_bal,voie_osm,voie_fantoir,fantoir,insee_com,dept,code_postal,source) VALUES'
         a_values = []
         street_name_cadastre = ''
+        street_name_bal = ''
         street_name_osm = ''
         street_name_fantoir = ''
         code_postal = ''
@@ -772,18 +773,18 @@ def load_to_db(adresses,code_insee,source,code_dept):
         if 'CADASTRE' in adresses.a[v]['voies']:
             street_name_cadastre =  adresses.a[v]['voies']['CADASTRE']
         if 'BAL' in adresses.a[v]['voies']:
-            street_name_cadastre =  adresses.a[v]['voies']['BAL']
+            street_name_bal =  adresses.a[v]['voies']['BAL']
         if len(adresses.a[v]['point_par_rue'])>1 and source == 'OSM':
-            a_values_voie.append(("(ST_PointFromText('POINT({:6f} {:6f})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}',{:d})".format(adresses.a[v]['point_par_rue'][0],adresses.a[v]['point_par_rue'][1],street_name_cadastre.replace("'","''"),street_name_osm.replace("'","''"),street_name_fantoir.replace("'","''"),cle_fantoir,code_insee,code_dept,'',source,adresses.a[v]['highway_index'])).replace(",'',",",null,"))
+            a_values_voie.append(("(ST_PointFromText('POINT({:6f} {:6f})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}',{:d})".format(adresses.a[v]['point_par_rue'][0],adresses.a[v]['point_par_rue'][1],street_name_cadastre.replace("'","''"),street_name_bal.replace("'","''"),street_name_osm.replace("'","''"),street_name_fantoir.replace("'","''"),cle_fantoir,code_insee,code_dept,'',source,adresses.a[v]['highway_index'])).replace(",'',",",null,"))
 
         for num in adresses.a[v]['numeros']:
             numadresse = adresses.a[v]['numeros'][num]
-            a_values.append("(ST_PointFromText('POINT({:6f} {:6f})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}')".format(numadresse.node.attribs['lon'],numadresse.node.attribs['lat'],numadresse.numero.replace("'",""),street_name_cadastre.replace("'","''"),street_name_osm.replace("'","''"),street_name_fantoir.replace("'","''"),cle_fantoir,code_insee,code_dept,numadresse.code_postal,source).replace(",''",",null").replace(",''",",null"))
+            a_values.append("(ST_PointFromText('POINT({:6f} {:6f})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}')".format(numadresse.node.attribs['lon'],numadresse.node.attribs['lat'],numadresse.numero.replace("'",""),street_name_cadastre.replace("'","''"),street_name_bal.replace("'","''"),street_name_osm.replace("'","''"),street_name_fantoir.replace("'","''"),cle_fantoir,code_insee,code_dept,numadresse.code_postal,source).replace(",''",",null").replace(",''",",null"))
             nb_rec +=1
         if len(a_values)>0:
             sload = sload+','.join(a_values)+';COMMIT;'
             cur_insert.execute(sload)
-    sload_voie = 'INSERT INTO cumul_voies (geometrie,voie_cadastre,voie_osm,voie_fantoir,fantoir,insee_com,dept,code_postal,source,voie_index) VALUES'
+    sload_voie = 'INSERT INTO cumul_voies (geometrie,voie_cadastre,voie_bal,voie_osm,voie_fantoir,fantoir,insee_com,dept,code_postal,source,voie_index) VALUES'
     if len(a_values_voie) > 0:
         sload_voie = sload_voie+','.join(a_values_voie)+';COMMIT;'
         cur_insert.execute(sload_voie)
