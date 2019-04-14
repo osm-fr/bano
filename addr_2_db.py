@@ -217,7 +217,7 @@ class Dicts:
                                 tag_value
                         FROM    type_voie
                         ORDER BY    tag_index;'''
-        pgc = get_pgc()
+        pgc = get_pgc_osm()
         cur_hw = pgc.cursor()
         cur_hw.execute(str_query)
         for c in cur_hw:
@@ -297,17 +297,12 @@ class Pg_hsnr:
         self.y = d[1]
         self.provenance = d[2]
         self.osm_id = d[3]
-        if self.osm_id == 2953188825:
-            print(d)
         self.numero = d[4]
         self.voie = d[5]
         self.tags = tags_list_as_dict(d[6])
         self.fantoir = ''
         if self.provenance == '3' or self.provenance == '4':
             self.set_street_name()
-            if self.osm_id == 2953188825:
-                print(self.voie)
-                print(self.tags)
         self.set_fantoir()
         self.code_postal = find_cp_in_tags(self.tags)
 
