@@ -22,6 +22,7 @@ CREATE INDEX IF NOT EXISTS cumul_adresses_source ON :schema_cible.cumul_adresses
 CREATE TABLE IF NOT EXISTS :schema_cible.cumul_voies
 (   geometrie       geometry ,
     voie_cadastre   character varying (300),
+    voie_bal        character varying (300),
     voie_osm        character varying (300),
     voie_fantoir    character varying (300),
     fantoir         character varying (10),
