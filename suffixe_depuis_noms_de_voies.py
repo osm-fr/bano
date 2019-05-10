@@ -78,7 +78,7 @@ def collect_adresses_points(sel):
     return kres
 def load_suffixe_2_db(adds):
     nb_res = 0
-    cur = pgc_osm.cursor()
+    cur = pgc.cursor()
     str_query = "DELETE FROM suffixe WHERE insee_com = '{:s}';COMMIT;".format(code_insee)
     cur.execute(str_query)
     for h in adds:
@@ -114,9 +114,9 @@ def load_cadastre_hsnr(code_insee):
     dict_node_relations = {}
     destinations_principales_retenues = 'habitation commerce industrie tourisme'
     str_query = "SELECT * FROM bal_cadastre WHERE commune_code = '{}';".format(code_insee)
-    cur = pgc.cursor()
-    cur.execute(str_query)
-    for lt in cur:
+    cur_bal = pgc_osm.cursor()
+    cur_bal.execute(str_query)
+    for lt in cur_bal:
         line_split = list(lt)
         cle_interop,housenumber,pseudo_adresse,name,code_postal,destination_principale,lon,lat = line_split[0],line_split[2]+(str(line_split[3]) if (line_split[3]) else ''),line_split[4],line_split[5],(line_split[7] if line_split[7] else ''),line_split[9],line_split[13],line_split[14]
         if len(name) < 2:
@@ -136,7 +136,7 @@ def load_cadastre_hsnr(code_insee):
         if is_valid_housenumber(housenumber):
             nd = Node({'id':cle_interop,'lon':lon,'lat':lat},{})
             adresses.add_adresse(Adresse(nd,housenumber,name,'',code_postal),source)
-    cur.close()
+    cur_bal.close()
 def name_frequency():
     freq = {}
     for v in adresses.a:

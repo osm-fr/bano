@@ -71,13 +71,6 @@ CREATE TABLE IF NOT EXISTS :schema_cible.code_cadastre (
 CREATE TABLE IF NOT EXISTS :schema_cible.tmp_code_cadastre
 AS SELECT * FROM :schema_cible.code_cadastre LIMIT 0;
 
-CREATE TABLE IF NOT EXISTS :schema_cible.suffixe (
-                geometrie               geometry,
-                insee_com               character(5),
-                libelle_suffixe character varying(100)
-);
-CREATE INDEX IF NOT EXISTS gidx_suffixe ON :schema_cible.suffixe USING GIST(geometrie);
-
 /*CREATE TABLE IF NOT EXISTS :schema_cible.parcelles (
         geometrie       geometry,
         insee_com       character(5),
