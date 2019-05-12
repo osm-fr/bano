@@ -526,7 +526,7 @@ def load_cadastre_hsnr(code_insee):
     dict_node_relations = {}
     destinations_principales_retenues = 'habitation commerce industrie tourisme'
     str_query = "SELECT * FROM bal_cadastre WHERE commune_code = '{}';".format(code_insee)
-    cur = pgc.cursor()
+    cur = pgc_osm.cursor()
     cur.execute(str_query)
     for lt in cur:
         line_split = list(lt)
@@ -903,7 +903,7 @@ def main(args):
     use_cache = False
 
     debut_total = time.time()
-    usage = 'USAGE : python addr_cad_2_db.py <code INSEE> <OSM||BAL> {use_cache=True}'
+    usage = 'USAGE : python addr_cad_2_db.py <code INSEE> <OSM|CADASTRE|BAL> {use_cache=True}'
     if len(args) < 3:
         print(usage)
         os._exit(0)
