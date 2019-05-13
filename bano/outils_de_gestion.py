@@ -2,8 +2,7 @@
 # coding: UTF-8
 
 import time
-import psycopg2
-from pg_connexion import get_pgc
+from .pg_connexion import get_pgc
 
 def batch_start_log(source,etape,code_insee):
 	t = time.localtime()

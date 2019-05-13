@@ -1,15 +1,17 @@
 #!/usr/bin/env python
 # coding: UTF-8
-from pg_connexion import get_pgc
-from pg_connexion import get_pgc_osm
-from outils_de_gestion import batch_start_log
-from outils_de_gestion import batch_end_log
-from outils_de_gestion import age_etape_dept
+
 import os,os.path
 import re
 import sys
 import time
 import xml.etree.ElementTree as ET
+
+from .pg_connexion import get_pgc
+from .pg_connexion import get_pgc_osm
+from .outils_de_gestion import batch_start_log
+from .outils_de_gestion import batch_end_log
+from .outils_de_gestion import age_etape_dept
 
 os.umask(0000)
 
@@ -292,7 +294,7 @@ class Node:
         return s
 
 class Pg_hsnr:
-    def __init__(self,d):
+    def __init__(self, d, code_insee):
         self.x = d[0]
         self.y = d[1]
         self.provenance = d[2]
@@ -303,14 +305,14 @@ class Pg_hsnr:
         self.fantoir = ''
         if self.provenance == '3' or self.provenance == '4':
             self.set_street_name()
-        self.set_fantoir()
+        self.set_fantoir(code_insee)
         self.code_postal = find_cp_in_tags(self.tags)
 
     def set_street_name(self):
         if 'type' in self.tags and self.tags['type'] == 'associatedStreet' and 'name' in self.tags:
             self.voie = self.tags['name']
 
-    def set_fantoir(self):
+    def set_fantoir(self, code_insee):
         if 'ref:FR:FANTOIR' in self.tags and len(self.tags['ref:FR:FANTOIR']) == 10 and self.tags['ref:FR:FANTOIR'][0:5] == code_insee:
             self.fantoir = self.tags['ref:FR:FANTOIR']
 
@@ -548,7 +550,7 @@ def load_cadastre_hsnr(code_insee):
             dict_node_relations[cle_interop].append(normalize(name))
         if is_valid_housenumber(housenumber):
             nd = Node({'id':cle_interop,'lon':lon,'lat':lat},{})
-            adresses.add_adresse(Adresse(nd,housenumber,name,'',code_postal),source)
+            adresses.add_adresse(Adresse(nd,housenumber,name,'',code_postal), 'CADASTRE')
     cur.close()
 
 def load_bases_adresses_locales_hsnr(code_insee):
@@ -570,30 +572,30 @@ def load_bases_adresses_locales_hsnr(code_insee):
             dict_node_relations[cle_interop].append(normalize(name))
         if is_valid_housenumber(housenumber):
             nd = Node({'id':cle_interop,'lon':lon,'lat':lat},{})
-            adresses.add_adresse(Adresse(nd,housenumber,name,'',''),source)
+            adresses.add_adresse(Adresse(nd,housenumber,name,'',''), 'BAL')
     cur.close()
 
 def load_hsnr_bbox_from_pg_osm(insee_com):
     data = get_data_from_pg_direct('hsnr_bbox_insee',insee_com)
     for l in data:
-        oa = Pg_hsnr(l)
+        oa = Pg_hsnr(l, insee_com)
         n = Node({'id':oa.osm_id,'lon':oa.x,'lat':oa.y},{})
         if oa.voie == None:
             continue
         if oa.fantoir == '':
             continue
         adresses.register(oa.voie)
-        adresses.add_adresse(Adresse(n,oa.numero,oa.voie,oa.fantoir,oa.code_postal),source)
+        adresses.add_adresse(Adresse(n,oa.numero,oa.voie,oa.fantoir,oa.code_postal), 'OSM')
 
 def load_hsnr_from_pg_osm(insee_com):
     data = get_data_from_pg_direct('hsnr_insee',insee_com)
     for l in data:
-        oa = Pg_hsnr(l)
+        oa = Pg_hsnr(l, insee_com)
         n = Node({'id':oa.osm_id,'lon':oa.x,'lat':oa.y},{})
         if oa.voie == None:
             continue
         adresses.register(oa.voie)
-        adresses.add_adresse(Adresse(n,oa.numero,oa.voie,oa.fantoir,oa.code_postal),source)
+        adresses.add_adresse(Adresse(n,oa.numero,oa.voie,oa.fantoir,oa.code_postal), 'OSM')
 
 def load_highways_bbox_from_pg_osm(insee_com):
     # if commune_avec_suffixe:
@@ -662,9 +664,9 @@ def load_highways_from_pg_osm(insee_com):
             dicts.add_fantoir_name(fantoir,name,'OSM')
         adresses.add_voie(name_suffixe,'OSM',name)
 
-def load_highways_relations_bbox_from_pg_osm(insee_com):
+def load_highways_relations_bbox_from_pg_osm(code_insee):
     # if commune_avec_suffixe:
-    data = get_data_from_pg_direct('highway_relation_suffixe_insee',insee_com)
+    data = get_data_from_pg_direct('highway_relation_suffixe_insee', code_insee)
     # else:
     #     data = get_data_from_pg_direct('highway_relation_bbox_insee',insee_com)
     for l in data:
@@ -689,9 +691,9 @@ def load_highways_relations_bbox_from_pg_osm(insee_com):
             continue
         adresses.add_voie(name_suffixe,'OSM',name)
 
-def load_highways_relations_from_pg_osm(insee_com):
+def load_highways_relations_from_pg_osm(code_insee):
     # if commune_avec_suffixe:
-    data = get_data_from_pg_direct('highway_relation_suffixe_insee',insee_com)
+    data = get_data_from_pg_direct('highway_relation_suffixe_insee', code_insee)
     # else:
     #     data = get_data_from_pg_direct('highway_relation_insee',insee_com)
     for l in data:
@@ -715,8 +717,8 @@ def load_highways_relations_from_pg_osm(insee_com):
             dicts.add_fantoir_name(fantoir,name,'OSM')
         adresses.add_voie(name_suffixe,'OSM',name)
 
-def load_point_par_rue_from_pg_osm(insee_com):
-    data = get_data_from_pg_direct('point_par_rue_insee',insee_com)
+def load_point_par_rue_from_pg_osm(code_insee):
+    data = get_data_from_pg_direct('point_par_rue_insee',code_insee)
     for l in data:
         name = l[2]
         if len(name) < 2:
@@ -887,10 +889,10 @@ def tags_list_as_dict(ltags):
             res[kv[0]] = kv[1]
     return res
 
-def main(args):
-    global source,batch_id
+def addr_2_db(code_insee, source):
+    global batch_id
     global pgc,pgc_osm
-    global code_insee,code_cadastre,code_dept
+    global code_cadastre,code_dept
     global dicts
     global nodes,ways,adresses
     global geom_suffixe
@@ -904,22 +906,12 @@ def main(args):
 
     debut_total = time.time()
     usage = 'USAGE : python addr_cad_2_db.py <code INSEE> <OSM|CADASTRE|BAL> {use_cache=True}'
-    if len(args) < 3:
-        print(usage)
-        os._exit(0)
-    if len(args) > 3:
-        use_cache = args[3]
-    source = args[2].upper()
-    if source not in ['OSM','CADASTRE','BAL']:
-        print(usage)
-        os._exit(0)
-
+    
     adresses = Adresses()
 
     pgc = get_pgc()
     pgc_osm = get_pgc_osm()
 
-    code_insee = args[1]
     code_dept = get_short_code_dept_from_insee(code_insee)
 
     batch_id = batch_start_log(source,'loadCumul',code_insee)
