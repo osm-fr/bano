@@ -7,6 +7,7 @@ import sys
 import time
 import xml.etree.ElementTree as ET
 
+from . import helpers as hp
 from .pg_connexion import get_pgc
 from .pg_connexion import get_pgc_osm
 from .outils_de_gestion import batch_start_log
@@ -45,7 +46,7 @@ class Adresses:
 
     def add_adresse(self,ad,source):
         """ une adresses est considérée dans la commune si sans Fantoir ou avec un Fantoir de la commune"""
-        if (ad.fantoir == '' or (is_valid_fantoir(ad.fantoir) and ad.fantoir[0:5] == code_insee)) and is_valid_housenumber(ad.numero):
+        if (ad.fantoir == '' or (is_valid_fantoir(ad.fantoir) and ad.fantoir[0:5] == code_insee)) and hp.is_valid_housenumber(ad.numero):
             cle = normalize(ad.voie)
             self.add_voie(ad.voie,source)
             self.a[cle]['numeros'][ad.numero] = ad
@@ -306,7 +307,7 @@ class Pg_hsnr:
         if self.provenance == '3' or self.provenance == '4':
             self.set_street_name()
         self.set_fantoir(code_insee)
-        self.code_postal = find_cp_in_tags(self.tags)
+        self.code_postal = hp.find_cp_in_tags(self.tags)
 
     def set_street_name(self):
         if 'type' in self.tags and self.tags['type'] == 'associatedStreet' and 'name' in self.tags:
@@ -316,12 +317,7 @@ class Pg_hsnr:
         if 'ref:FR:FANTOIR' in self.tags and len(self.tags['ref:FR:FANTOIR']) == 10 and self.tags['ref:FR:FANTOIR'][0:5] == code_insee:
             self.fantoir = self.tags['ref:FR:FANTOIR']
 
-def find_cp_in_tags(tags):
-    code_postal = ''
-    if 'addr:postcode' in tags : code_postal = tags['addr:postcode']
-    if code_postal == '' and 'postal_code' in tags : code_postal = tags['postal_code']
-    return code_postal
-    
+
 def add_fantoir_to_hsnr():
     for v in adresses.a:
         if v in dicts.fantoir:
@@ -512,11 +508,6 @@ def has_addreses_with_suffix(insee):
     cur.close()
     return res
 
-def is_valid_housenumber(hsnr):
-    is_valid = True
-    if len(hsnr.encode('utf8')) > 11:
-        is_valid = False
-    return is_valid
 
 def is_valid_fantoir(f):
     res = True
@@ -548,7 +539,7 @@ def load_cadastre_hsnr(code_insee):
         if not cle_interop in dict_node_relations:
             dict_node_relations[cle_interop] = []
             dict_node_relations[cle_interop].append(normalize(name))
-        if is_valid_housenumber(housenumber):
+        if hp.is_valid_housenumber(housenumber):
             nd = Node({'id':cle_interop,'lon':lon,'lat':lat},{})
             adresses.add_adresse(Adresse(nd,housenumber,name,'',code_postal), 'CADASTRE')
     cur.close()
@@ -570,7 +561,7 @@ def load_bases_adresses_locales_hsnr(code_insee):
         if not cle_interop in dict_node_relations:
             dict_node_relations[cle_interop] = []
             dict_node_relations[cle_interop].append(normalize(name))
-        if is_valid_housenumber(housenumber):
+        if hp.is_valid_housenumber(housenumber):
             nd = Node({'id':cle_interop,'lon':lon,'lat':lat},{})
             adresses.add_adresse(Adresse(nd,housenumber,name,'',''), 'BAL')
     cur.close()
