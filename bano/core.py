@@ -889,7 +889,7 @@ def tags_list_as_dict(ltags):
             res[kv[0]] = kv[1]
     return res
 
-def addr_2_db(code_insee, source):
+def addr_2_db(code_insee, source, **kwargs):
     global batch_id
     global pgc,pgc_osm
     global code_cadastre,code_dept

@@ -4,14 +4,15 @@ import sys
 from .core import addr_2_db
 
 def main():
-    print("à table", sys.argv)
-    parser = argparse.ArgumentParser(description='Traite une commune.')
-    parser.add_argument('code_insee', type=str, help='Code INSEE de la commune à traiter')
-    parser.add_argument('source', choices=['OSM', 'CADASTRE', 'BAL'], type=str, help='Source des données à traiter')
-    # parser.add_argument('--sum', dest='accumulate', action='store_const',
-    #                 const=sum, default=max,
-    #                 help='sum the integers (default: find the max)')
+    parser = argparse.ArgumentParser(prog='bano', description='Donne accès à tous les traitements')
+    subparsers = parser.add_subparsers(help='Commandes disponibles')
+    subparser = subparsers.add_parser('process_commune', help='a help', description='Traite une commune')
+    subparser.add_argument('source', choices=['OSM', 'CADASTRE', 'BAL'], type=str, help='Source des données à traiter')
+    subparser.add_argument('code_insee', type=str, help='Code INSEE de la commune à traiter')
+    subparser.set_defaults(func=addr_2_db)
 
     args = parser.parse_args()
     print(args)
-    addr_2_db(**vars(args))
+    args.func(**vars(args))
+
+
