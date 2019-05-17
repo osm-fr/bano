@@ -1,4 +1,6 @@
+from . import db
 from . import helpers as hp
+from .sources import fantoir
 
 
 class Adresse:
@@ -11,8 +13,9 @@ class Adresse:
 
 
 class Adresses:
-    def __init__(self):
+    def __init__(self, code_insee):
         self.a = {}
+        self.code_insee = code_insee
 
     def __contains__(self, item):
         return item in self.a
@@ -65,11 +68,58 @@ class Adresses:
                         break
         return cle
 
+    def get_best_fantoir(self, cle):
+        return self[cle]['fantoirs'].get('FANTOIR') or self[cle]['fantoirs'].get('OSM') or ''
+
     def has_already_fantoir(self,cle,source):
         return source in self[cle]['fantoirs']
 
     def add_highway_index(self,cle,val):
         self[cle]['highway_index']+=val
+
+    def save(self, source, code_dept):
+        cur_insert = db.bano.cursor()
+        for a in ['cumul_adresses','cumul_voies']:
+            sload = "DELETE FROM {:s} WHERE insee_com = '{:s}' AND source = '{:s}';\n".format(a, self.code_insee, source)
+            cur_insert.execute(sload)
+        nb_rec = 0
+        a_values_voie = []
+
+        for v in self:
+            sload = 'INSERT INTO cumul_adresses (geometrie,numero,voie_cadastre,voie_bal,voie_osm,voie_fantoir,fantoir,insee_com,dept,code_postal,source) VALUES'
+            a_values = []
+            street_name_cadastre = ''
+            street_name_bal = ''
+            street_name_osm = ''
+            street_name_fantoir = ''
+            code_postal = ''
+            cle_fantoir = self.get_best_fantoir(v)
+            if 'OSM' in self[v]['voies']:
+                street_name_osm =  self[v]['voies']['OSM']
+            else :
+                street_name_osm = fantoir.mapping.get_fantoir_name(cle_fantoir,'OSM')
+            if 'FANTOIR' in self[v]['voies']:
+                street_name_fantoir =  self[v]['voies']['FANTOIR']
+            if 'CADASTRE' in self[v]['voies']:
+                street_name_cadastre =  self[v]['voies']['CADASTRE']
+            if 'BAL' in self[v]['voies']:
+                street_name_bal =  self[v]['voies']['BAL']
+            if len(self[v]['point_par_rue'])>1 and source == 'OSM':
+                a_values_voie.append(("(ST_PointFromText('POINT({:6f} {:6f})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}',{:d})".format(self[v]['point_par_rue'][0],self[v]['point_par_rue'][1],street_name_cadastre.replace("'","''"),street_name_bal.replace("'","''"),street_name_osm.replace("'","''"), street_name_fantoir.replace("'","''"), cle_fantoir, self.code_insee,code_dept,'',source,self[v]['highway_index'])).replace(",'',",",null,"))
+
+            for num in self[v]['numeros']:
+                numadresse = self[v]['numeros'][num]
+                a_values.append("(ST_PointFromText('POINT({:6f} {:6f})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}')".format(numadresse.node.attribs['lon'],numadresse.node.attribs['lat'],numadresse.numero.replace("'",""),street_name_cadastre.replace("'","''"),street_name_bal.replace("'","''"),street_name_osm.replace("'","''"),street_name_fantoir.replace("'","''"),cle_fantoir,self.code_insee,code_dept,numadresse.code_postal,source).replace(",''",",null").replace(",''",",null"))
+                nb_rec +=1
+            if len(a_values)>0:
+                sload = sload+','.join(a_values)+';COMMIT;'
+                cur_insert.execute(sload)
+        sload_voie = 'INSERT INTO cumul_voies (geometrie,voie_cadastre,voie_bal,voie_osm,voie_fantoir,fantoir,insee_com,dept,code_postal,source,voie_index) VALUES'
+        if len(a_values_voie) > 0:
+            sload_voie = sload_voie+','.join(a_values_voie)+';COMMIT;'
+            cur_insert.execute(sload_voie)
+        cur_insert.close()
+        return(nb_rec)
 
 
 class Node:

@@ -42,13 +42,6 @@ def append_suffixe(name,suffixe):
             res = name+' '+suffixe
     return res
 
-def get_best_fantoir(cle):
-    res = ''
-    if 'FANTOIR' in adresses[cle]['fantoirs']:
-        res = adresses[cle]['fantoirs']['FANTOIR']
-    if 'OSM' in adresses[cle]['fantoirs']:
-        res = adresses[cle]['fantoirs']['OSM']
-    return res
 
 def get_cache_filename(data_type,insee_com):
     code_dept = get_short_code_dept_from_insee(insee_com)
@@ -502,9 +495,9 @@ def addr_2_db(code_insee, source, **kwargs):
     debut_total = time.time()
     usage = 'USAGE : python addr_cad_2_db.py <code INSEE> <OSM|CADASTRE|BAL> {use_cache=True}'
     
-    adresses = Adresses()
+    adresses = Adresses(code_insee)
 
-    fantoir.mapping.load_all(code_insee)
+    fantoir.mapping.load(code_insee)
 
     code_dept = get_short_code_dept_from_insee(code_insee)
 
@@ -529,7 +522,7 @@ def addr_2_db(code_insee, source, **kwargs):
     add_fantoir_to_hsnr()
     load_point_par_rue_from_pg_osm(code_insee)
     load_point_par_rue_complement_from_pg_osm(code_insee)
-    nb_rec = load_to_db(adresses,code_insee,source,code_dept)
+    nb_rec = adresses.save(source, code_dept)
     batch_end_log(nb_rec,batch_id)
     fin_total = time.time()
 

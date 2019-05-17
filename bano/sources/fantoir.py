@@ -1,4 +1,5 @@
 from bano import db
+from ..helpers import normalize
 
 class Mapping:
     def __init__(self):
@@ -6,7 +7,7 @@ class Mapping:
         self.code_fantoir_vers_nom_fantoir = {}
         self.code_fantoir_vers_noms = {}
 
-    def load_fantoir(self,insee):
+    def load(self,insee):
         str_query = ("""SELECT *
                         FROM    (SELECT code_insee||id_voie||cle_rivoli,
                                         nature_voie||' '||libelle_voie,
@@ -27,9 +28,6 @@ class Mapping:
     def load_addr_from_fantoir(self):
         for k in self.fantoir:
             adresses.add_fantoir(k,self.fantoir[k],'FANTOIR')
-
-    def load_all(self,code_insee_commune):
-        self.load_fantoir(code_insee_commune)
 
     def add_fantoir_name(self,fantoir,name,source):
         if not fantoir in self.code_fantoir_vers_noms:
