@@ -18,3 +18,10 @@ def test_is_valid_housenumber():
 ])
 def test_find_cp_in_tags(input, output):
     assert helpers.find_cp_in_tags(input) == output
+
+
+@pytest.mark.parametrize('input,output', [
+    ('Boulevard de Sébastopol', 'BD SEBASTOPOL')
+])
+def test_normalize(input, output):
+    assert helpers.normalize(input) == output

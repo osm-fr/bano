@@ -19,7 +19,7 @@ def main():
     subparser.set_defaults(func=bal.process)
 
     args = parser.parse_args()
-    # print(args)
+
     try:
         args.func(**vars(args))
     except ValueError as err:

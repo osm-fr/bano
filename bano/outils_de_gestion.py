@@ -2,14 +2,13 @@
 # coding: UTF-8
 
 import time
-from .pg_connexion import get_pgc
+from . import db
 
 def batch_start_log(source,etape,code_insee):
 	t = time.localtime()
 	th =  time.strftime('%d-%m-%Y %H:%M:%S',t)
 	t = round(time.mktime(t),0)
-	pgc = get_pgc()
-	cur = pgc.cursor()
+	cur = db.bano.cursor()
 	if len(etape)>10 and etape[0:10] == 'cache_dept':
 		whereclause = "dept = '{:s}' AND etape = '{:s}'".format(code_insee,etape)
 	else:
@@ -29,25 +28,14 @@ def batch_start_log(source,etape,code_insee):
 	c = cur.fetchone()
 	return c[0]
 def batch_end_log(nb,batch_id):
-	pgc = get_pgc()
-	cur = pgc.cursor()
+	cur = db.bano.cursor()
 	t = time.localtime()
 	th =  time.strftime('%d-%m-%Y %H:%M:%S',t)
 	whereclause = 'id_batch = {:d}'.format(batch_id)
 	str_query = 'UPDATE batch SET nombre_adresses = {:d},date_fin = \'{:s}\' WHERE {:s};COMMIT;'.format(nb,th,whereclause)
-	# print(str_query)
 	cur.execute(str_query)
-# def get_api_domaine_by_dept(code_dept):
-        # s_domaine = 'oapi-fr.openstreetmap.fr/oapi'
-        # s_domaine = 'api.openstreetmap.fr/oapi'
-	# s_domaine = 'api-fr.openstreetmap.fr/oapi'
-        # s_domaine = 'overpass-api.de/api'
-	# if code_dept[0:2] == '97':
-		# s_domaine = 'overpass-api.de/api'
-	# return s_domaine
 def age_etape_dept(etape,dept):
-    pgc = get_pgc()
-    cur = pgc.cursor()
+    cur = db.bano.cursor()
     t = time.localtime()
     t = round(time.mktime(t),0)
     str_query = 'SELECT timestamp_debut FROM batch WHERE etape = \'{:s}\' AND dept = \'{:s}\' UNION ALL SELECT 0 ORDER BY 1 DESC;'.format(etape,dept)
@@ -56,16 +44,14 @@ def age_etape_dept(etape,dept):
     return t - c[0]
 def get_cadastre_format(insee):
     str_query = 'SELECT format_cadastre FROM code_cadastre WHERE insee_com = \'{:s}\';'.format(insee)
-    pgc = get_pgc()
-    cur = pgc.cursor()
+    cur = db.bano.cursor()
     cur.execute(str_query)
     for c in cur:
         code_cadastre = c[0]
     return code_cadastre
 def get_cadastre_etape_timestamp_debut(code_cadastre,etape,source):
     str_query = "SELECT timestamp_debut FROM batch WHERE cadastre_com = '{:s}' AND etape = '{:s}' AND source = '{:s}';".format(code_cadastre,etape,source)
-    pgc = get_pgc()
-    cur = pgc.cursor()
+    cur = db.bano.cursor()
     cur.execute(str_query)
     for c in cur:
         code_cadastre = c[0]

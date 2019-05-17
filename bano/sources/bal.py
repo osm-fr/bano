@@ -9,7 +9,7 @@ from pathlib import Path
 import requests
 
 from ..constants import DEPARTEMENTS
-from ..pg_connexion import get_pgc_osm
+from .. import db
 
 
 def process(source, departements, **kwargs):
@@ -43,11 +43,10 @@ def import_to_pg(source, departement, **kwargs):
     fichier_source = get_destination(source, departement)
     with gzip.open(fichier_source, mode='rt') as f:
         f.readline()  # skip CSV headers
-        conn = get_pgc_osm()
-        with  conn.cursor() as cur_insert:
+        with  db.bano_cache.cursor() as cur_insert:
             cur_insert.execute("DELETE FROM bal_locales WHERE commune_code LIKE %s", (departement+'%',))
             cur_insert.copy_from(f, 'bal_locales', sep=';')
-            conn.commit()
+            db.bano_cache.commit()
     
     
 def get_destination(source, departement):
