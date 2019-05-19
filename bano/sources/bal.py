@@ -17,19 +17,24 @@ def process(source, departements, **kwargs):
     depts_inconnus =  departements - set(DEPARTEMENTS)
     if depts_inconnus:
         raise ValueError(f"Départements inconnus : {depts_inconnus}")
-    for dept in departements:
-        status = download(source, dept)
+    if source == 'CADASTRE':
+        suffixe_fichier = 'cadastre'
+    else:
+        suffixe_fichier = 'locales'
+    for dept in sorted(departements):
+        print(f"Processing {dept}")
+        status = download(suffixe_fichier, dept)
         if status:
-            import_to_pg(source, dept)
+            import_to_pg(suffixe_fichier, dept)
     
 
-def download(source, departement):
-    destination = get_destination(source, departement)
+def download(suffixe_fichier, departement):
+    destination = get_destination(suffixe_fichier, departement)
     headers = {}
     if destination.exists():
         headers['If-Modified-Since'] = formatdate(destination.stat().st_mtime)
 
-    resp = requests.get(f'https://adresse.data.gouv.fr/data/adresses-locales/latest/csv/adresses-locales-{departement}.csv.gz', headers=headers)
+    resp = requests.get(f'https://adresse.data.gouv.fr/data/adresses-{suffixe_fichier}/latest/csv/adresses-{suffixe_fichier}-{departement}.csv.gz', headers=headers)
     if resp.status_code == 200:
         with destination.open('wb') as f:
             f.write(resp.content)
@@ -39,21 +44,21 @@ def download(source, departement):
     return False
 
 
-def import_to_pg(source, departement, **kwargs):
-    fichier_source = get_destination(source, departement)
+def import_to_pg(suffixe_fichier, departement, **kwargs):
+    fichier_source = get_destination(suffixe_fichier, departement)
     with gzip.open(fichier_source, mode='rt') as f:
         f.readline()  # skip CSV headers
         with  db.bano_cache.cursor() as cur_insert:
-            cur_insert.execute("DELETE FROM bal_locales WHERE commune_code LIKE %s", (departement+'%',))
-            cur_insert.copy_from(f, 'bal_locales', sep=';')
+            cur_insert.execute(f"DELETE FROM bal_{suffixe_fichier} WHERE commune_code LIKE '{departement+'%'}'")
+            cur_insert.copy_from(f, f"bal_{suffixe_fichier}", sep=';', null='')
             db.bano_cache.commit()
     
     
-def get_destination(source, departement):
+def get_destination(suffixe_fichier, departement):
     try:
         cwd = Path(os.environ['BAL_CACHE_DIR'])
     except KeyError:
         raise ValueError(f"La variable BAL_CACHE_DIR n'est pas définie")
     if not cwd.exists():
         raise ValueError(f"Le répertoire {cwd} n'existe pas")
-    return cwd / f'adresses-locales-{departement}.csv.gz'
+    return cwd / f'adresses-{suffixe_fichier}-{departement}.csv.gz'
