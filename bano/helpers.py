@@ -83,6 +83,7 @@ def normalize(s):
         s = constants.SUBSTITUTION_COMPLETE[s]
     return s[0:30]
 
+
 def replace_type_voie(s,nb):
     sp = s.split()
     spd = ' '.join(sp[0:nb])
@@ -91,11 +92,5 @@ def replace_type_voie(s,nb):
     return s
 
 
-def tags_list_as_dict(ltags):
-    res = {}
-    if (ltags):
-        kv_list = ltags.split(', ')
-        for kv in kv_list:
-            kv = kv[1:-1].split('"=>"')
-            res[kv[0]] = kv[1]
-    return res
+def is_valid_fantoir(f, insee):
+    return (len(f) == 10 and f[0:5] == insee);

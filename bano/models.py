@@ -47,7 +47,7 @@ class Adresses:
 
     def add_adresse(self,ad,source):
         """ une adresses est considérée dans la commune si sans Fantoir ou avec un Fantoir de la commune"""
-        if (ad.fantoir == '' or (is_valid_fantoir(ad.fantoir) and ad.fantoir[0:5] == code_insee)) and hp.is_valid_housenumber(ad.numero):
+        if (ad.fantoir == '' or is_valid_fantoir(ad.fantoir, code_insee)) and hp.is_valid_housenumber(ad.numero):
             cle = hp.normalize(ad.voie)
             self.add_voie(ad.voie,source)
             self[cle]['numeros'][ad.numero] = ad
@@ -140,13 +140,8 @@ class Node:
 
 class Pg_hsnr:
     def __init__(self, d, code_insee):
-        self.x = d[0]
-        self.y = d[1]
-        self.provenance = d[2]
-        self.osm_id = d[3]
-        self.numero = d[4]
-        self.voie = d[5]
-        self.tags = hp.tags_list_as_dict(d[6])
+        self.x, self.y, self.provenance, self.osm_id, self.numero, self.voie, self.tags, *others = d
+        self.tags = self.tags or {} 
         self.fantoir = ''
         if self.provenance == '3' or self.provenance == '4':
             self.set_street_name()

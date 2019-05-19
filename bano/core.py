@@ -189,25 +189,16 @@ def has_addreses_with_suffix(insee):
     return res
 
 
-def is_valid_fantoir(f):
-    res = True
-    if len(f) != 10:
-        res = False
-    return res
-
 def load_cadastre_hsnr(code_insee):
     dict_node_relations = {}
     destinations_principales_retenues = 'habitation commerce industrie tourisme'
     str_query = "SELECT * FROM bal_cadastre WHERE commune_code = '{}';".format(code_insee)
     cur = db.bano_cache.cursor()
     cur.execute(str_query)
-    for lt in cur:
-        line_split = list(lt)
-        # cle_interop,housenumber,pseudo_adresse,name,code_postal,destination_principale,lon,lat = line_split[0],line_split[2]+(str(line_split[3]) if (line_split[3]) else ''),line_split[4],line_split[5],(line_split[7] if line_split[7] else ''),line_split[9],line_split[13],line_split[14]
-        cle_interop,housenumber,pseudo_adresse,name,code_postal,destination_principale,lon,lat = line_split[0],line_split[2]+(' '+str(line_split[3]) if (line_split[3]) else ''),line_split[4],line_split[5],(line_split[7] if line_split[7] else ''),line_split[9],line_split[13],line_split[14]
+    for cle_interop, ui_adresse, numero, suffixe, pseudo_adresse, name, voie_code, code_postal, libelle_acheminement, destination_principale, commune_code, commune_nom, source, lon, lat, *others in cur:
+        housenumber = numero+((' '+suffixe) if suffixe else '')
         if len(name) < 2:
             continue
-        # if len(lon) < 1:
         if not lon :
             continue
         if pseudo_adresse == 'true':
@@ -226,12 +217,10 @@ def load_cadastre_hsnr(code_insee):
 
 def load_bases_adresses_locales_hsnr(code_insee):
     dict_node_relations = {}
-    str_query = "SELECT * FROM bal_locales WHERE commune_code = '{}';".format(code_insee)
+    str_query = "SELECT cle_interop,TRIM (BOTH FROM (numero||' '||suffixe)), voie_nom, long, lat FROM bal_locales WHERE commune_code = '{}';".format(code_insee)
     cur = db.bano_cache.cursor()
     cur.execute(str_query)
-    for lt in cur:
-        line_split = list(lt)
-        cle_interop,housenumber,name,lon,lat = line_split[0],line_split[5]+(' '+str(line_split[6]) if (line_split[6]) else ''),line_split[4],line_split[7],line_split[8]
+    for cle_interop, housenumber, name, lon, lat in cur:
         if len(name) < 2:
             continue
         if not lon :
@@ -258,7 +247,7 @@ def load_hsnr_bbox_from_pg_osm(insee_com):
         adresses.add_adresse(Adresse(n,oa.numero,oa.voie,oa.fantoir,oa.code_postal), 'OSM')
 
 def load_hsnr_from_pg_osm(insee_com):
-    data = get_data_from_pg_direct('hsnr_insee',insee_com)
+    data = get_data_from_pg_direct('hsnr_insee', insee_com)
     for l in data:
         oa = Pg_hsnr(l, insee_com)
         n = Node({'id':oa.osm_id,'lon':oa.x,'lat':oa.y},{})
@@ -268,27 +257,16 @@ def load_hsnr_from_pg_osm(insee_com):
         adresses.add_adresse(Adresse(n,oa.numero,oa.voie,oa.fantoir,oa.code_postal), 'OSM')
 
 def load_highways_bbox_from_pg_osm(insee_com):
-    # if commune_avec_suffixe:
     data = get_data_from_pg_direct('highway_suffixe_insee',insee_com)
-    # else:
-    #     data = get_data_from_pg_direct('highway_bbox_insee',insee_com)
-    for l in data:
-        fantoir = ''
-        if len(l)>1:
-            if l[1] != None and l[1][0:5] == insee_com:
-                fantoir = l[1]
-        if len(l)>2 and fantoir == '':
-            if l[2] != None and l[2][0:5] == insee_com:
-                fantoir = l[2]
-        if len(l)>3 and fantoir == '':
-            if l[3] != None and l[3][0:5] == insee_com:
-                fantoir = l[3]
-        if fantoir == '':
+    for name, fantoir_unique, fantoir_gauche, fantoir_droit, suffixe, *others in data:
+        if fantoir_unique and hp.is_valid_fantoir(fantoir_unique, insee_com):
+            code_fantoir = fantoir_unique
+        elif fantoir_gauche and hp.is_valid_fantoir(fantoir_gauche, insee_com):
+            code_fantoir = fantoir_gauche
+        elif fantoir_droit and hp.is_valid_fantoir(fantoir_droit, insee_com):
+            code_fantoir = fantoir_droit
+        else:
             continue
-        name = l[0]
-        suffixe = ''
-        if l[4]:
-            suffixe = l[4]
         if len(name) < 2:
             continue
         name_suffixe = append_suffixe(name,suffixe)
@@ -296,21 +274,11 @@ def load_highways_bbox_from_pg_osm(insee_com):
         cle = hp.normalize(name_suffixe)
         if adresses.has_already_fantoir(cle,'OSM'):
             continue
-        adresses.add_fantoir(cle,fantoir,'OSM')
+        adresses.add_fantoir(cle,code_fantoir,'OSM')
 
 def load_highways_from_pg_osm(insee_com):
-    # if commune_avec_suffixe:
     data = get_data_from_pg_direct('highway_suffixe_insee',insee_com)
-    # else:
-    #     data = get_data_from_pg_direct('highway_insee',insee_com)
-    #     # print(data)
-        # data = get_data_from_pg('highway_insee',insee_com)
-        # print(data)
-    for l in data:
-        name = l[0]
-        suffixe = ''
-        if l[4]:
-            suffixe = l[4]
+    for name, fantoir_unique, fantoir_gauche, fantoir_droit, suffixe, *others in data:
         if len(name) < 2:
             continue
         name_suffixe = append_suffixe(name,suffixe)
@@ -318,80 +286,60 @@ def load_highways_from_pg_osm(insee_com):
         cle = hp.normalize(name_suffixe)
         if adresses.has_already_fantoir(cle,'OSM'):
             continue
-        fantoir = ''
-        if len(l)>1:
-            if l[1] != None and l[1][0:5] == insee_com:
-                fantoir = l[1]
-        if len(l)>2 and fantoir == '':
-            if l[2] != None and l[2][0:5] == insee_com:
-                fantoir = l[2]
-        if len(l)>3 and fantoir == '':
-            if l[3] != None and l[3][0:5] == insee_com:
-                fantoir = l[3]
-        if fantoir != '':
-            adresses.add_fantoir(cle,fantoir,'OSM')
-            fantoir.mapping.add_fantoir_name(fantoir,name,'OSM')
+        if fantoir_unique and hp.is_valid_fantoir(fantoir_unique, insee_com):
+            code_fantoir = fantoir_unique
+        elif fantoir_gauche and hp.is_valid_fantoir(fantoir_gauche, insee_com):
+            code_fantoir = fantoir_gauche
+        elif fantoir_droit and hp.is_valid_fantoir(fantoir_droit, insee_com):
+            code_fantoir = fantoir_droit
+        else:
+            code_fantoir = ''
+        if code_fantoir != '':
+            adresses.add_fantoir(cle,code_fantoir,'OSM')
+            fantoir.mapping.add_fantoir_name(code_fantoir,name_suffixe,'OSM')
 
 def load_highways_relations_bbox_from_pg_osm(code_insee):
-    # if commune_avec_suffixe:
-    data = get_data_from_pg_direct('highway_relation_suffixe_insee', code_insee)
-    # else:
-    #     data = get_data_from_pg_direct('highway_relation_bbox_insee',insee_com)
-    for l in data:
+    data = get_data_from_pg_direct('highway_relation_suffixe_insee', code_insee) # manque la version bbox
+    for name, tags, suffixe, insee, timestamp_maj in data:
         fantoir = ''
-        tags = hp.tags_list_as_dict(l[1])
-        if 'ref:FR:FANTOIR' in tags:
-            if tags['ref:FR:FANTOIR'][0:5] == code_insee and len(tags['ref:FR:FANTOIR']) == 10:
-                fantoir = tags['ref:FR:FANTOIR']
-        if fantoir == '':
+        if 'ref:FR:FANTOIR' in tags and hp.is_valid_fantoir(tags['ref:FR:FANTOIR'], code_insee):
+            fantoir = tags['ref:FR:FANTOIR']
+        else:
             continue
-        name = l[0]
         if len(name) < 2:
             continue
-        suffixe = ''
-        # if commune_avec_suffixe and l[-2]:
-        if l[-2]:
-            suffixe = l[-2]
-        name_suffixe = append_suffixe(name,suffixe)
+        name_suffixe = append_suffixe(name,suffixe or '')
         adresses.register(name_suffixe)
         cle = hp.normalize(name_suffixe)
         if adresses.has_already_fantoir(cle,'OSM'):
             continue
+        adresses.add_voie(name_suffixe,'OSM',name)
 
 def load_highways_relations_from_pg_osm(code_insee):
-    # if commune_avec_suffixe:
     data = get_data_from_pg_direct('highway_relation_suffixe_insee', code_insee)
-    # else:
-    #     data = get_data_from_pg_direct('highway_relation_insee',insee_com)
-    for l in data:
-        name = l[0]
+    for name, tags, suffixe, *others in data:
         if len(name) < 2:
             continue
-        suffixe = ''
-        if l[-2]:
-            suffixe = l[-2]
-        name_suffixe = append_suffixe(name,suffixe)
+        name_suffixe = append_suffixe(name,suffixe or '')
         adresses.register(name_suffixe)
         cle = hp.normalize(name_suffixe)
         if adresses.has_already_fantoir(cle,'OSM'):
             continue
-        fantoir = ''
-        tags = hp.tags_list_as_dict(l[1])
-        if 'ref:FR:FANTOIR' in tags:
-            if tags['ref:FR:FANTOIR'][0:5] == code_insee and len(tags['ref:FR:FANTOIR']) == 10:
-                fantoir = tags['ref:FR:FANTOIR']
-        if fantoir != '':
-            fantoir.mapping.add_fantoir_name(fantoir,name,'OSM')
+        if hp.is_valid_fantoir(tags.get('ref:FR:FANTOIR'), code_insee):
+            code_fantoir = tags.get('ref:FR:FANTOIR')
+        else:
+           code_fantoir = ''
+        if code_fantoir != '':
+            fantoir.mapping.add_fantoir_name(code_fantoir,name,'OSM')
 
 def load_point_par_rue_from_pg_osm(code_insee):
     data = get_data_from_pg_direct('point_par_rue_insee',code_insee)
-    for l in data:
-        name = l[2]
+    for lon, lat, name, *others in data:
         if len(name) < 2:
             continue
         adresses.register(name)
         cle = hp.normalize(name)
-        adresses[cle]['point_par_rue'] = l[0:2]
+        adresses[cle]['point_par_rue'] = [lon, lat]
         if 'OSM' not in adresses[cle]['fantoirs']:
             if cle in fantoir.mapping.fantoir:
                 adresses.add_fantoir(cle,fantoir.mapping.fantoir[cle],'OSM')
@@ -457,27 +405,15 @@ def load_to_db(adresses,code_insee,source,code_dept):
     cur_insert.close()
     return(nb_rec)
 
+
 def load_type_highway_from_pg_osm(insee_com):
     data = get_data_from_pg_direct('type_highway_insee',insee_com)
-    # import ipdb; ipdb.set_trace()
     for name, highway_type, *_ in data:
         adresses.register(name)
         cle = hp.normalize(name)
         if highway_type in constants.HIGHWAY_TYPES_INDEX:
             adresses.add_highway_index(cle,constants.HIGHWAY_TYPES_INDEX[highway_type])
 
-
-# def hp.tags_list_as_dict(ltags):
-#     res = {}
-#     if (ltags):
-#         # print(ltags)
-#         ltags = ltags.replace('"=>"','","')
-#         ltags = ltags.split(',')
-#         # print(ltags)
-#         for i in range(0,int(len(ltags)/2)):
-#             res[ltags[i*2]] = ltags[i*2+1]
-#     # print(res)
-#     return res
 
 def addr_2_db(code_insee, source, **kwargs):
     global batch_id
