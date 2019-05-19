@@ -11,6 +11,8 @@ DEPARTEMENTS = [
     for n in [*range(1, 20), "2A", "2B", *range(21, 96), *range(971, 975), "976"]
 ]
 
+DEPARTEMENTS_3CHAR = [('0'+s)[-3:] for s in DEPARTEMENTS]
+
 LETTRE_A_LETTRE = {
     "A": ["Â", "À"],
     "C": ["Ç"],
