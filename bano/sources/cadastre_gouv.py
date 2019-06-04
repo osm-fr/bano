@@ -16,7 +16,7 @@ def read_from_cadastre_gouv_to_file():
         reponse = s.get('https://www.cadastre.gouv.fr/scpc/rechercherPlan.do')
         token = reponse.text.split('CSRF_TOKEN=')[1].split('"')[0]
 
-    with open(Path(os.environ['DATA_DIR'] / 'code_cadastre.csv'), 'w') as output:
+    with open(Path(os.environ['DATA_DIR']) / 'code_cadastre.csv', 'w') as output:
         for index, dept in enumerate(DEPARTEMENTS_3CHAR):
             time.sleep(1)
             reponse = BeautifulSoup(s.get(f"https://www.cadastre.gouv.fr/scpc/listerCommune.do?CSRF_TOKEN={token}&codeDepartement={dept}&libelle=&keepVolatileSession=&offset=5000").text, "lxml")
