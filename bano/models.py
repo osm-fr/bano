@@ -1,3 +1,5 @@
+import re
+
 from . import db
 from . import helpers as hp
 from .sources import fantoir
@@ -41,9 +43,7 @@ class Adresses:
 
     def add_voie(self,voie_cle,source,voie=None):
         cle = hp.normalize(voie_cle)
-        if not voie:
-            voie = voie_cle
-        self[cle]['voies'][source] = voie
+        self[cle]['voies'][source] = voie or voie_cle
 
     def add_adresse(self,ad,source):
         """ une adresses est considérée dans la commune si sans Fantoir ou avec un Fantoir de la commune"""
@@ -76,6 +76,32 @@ class Adresses:
 
     def add_highway_index(self,cle,val):
         self[cle]['highway_index']+=val
+
+    def load_cadastre_hsnr(self):
+        dict_node_relations = {}
+        destinations_principales_retenues = 'habitation commerce industrie tourisme'
+        str_query = "SELECT * FROM bal_cadastre WHERE commune_code = '{}';".format(self.code_insee)
+        cur = db.bano_cache.cursor()
+        cur.execute(str_query)
+        for cle_interop, ui_adresse, numero, suffixe, pseudo_adresse, name, voie_code, code_postal, libelle_acheminement, destination_principale, commune_code, commune_nom, source, lon, lat, *others in cur:
+            housenumber = numero+((' '+suffixe) if suffixe else '')
+            if len(name) < 2:
+                continue
+            if not lon :
+                continue
+            if pseudo_adresse == 'true':
+                continue
+            if not re.search(destination_principale,destinations_principales_retenues):
+                continue
+            self.register(name)
+            
+            if not cle_interop in dict_node_relations:
+                dict_node_relations[cle_interop] = []
+                dict_node_relations[cle_interop].append(hp.normalize(name))
+            if hp.is_valid_housenumber(housenumber):
+                nd = Node({'id':cle_interop,'lon':lon,'lat':lat},{})
+                self.add_adresse(Adresse(nd,housenumber,name,'',code_postal), 'CADASTRE')
+        cur.close()
 
     def save(self, source, code_dept):
         cur_insert = db.bano.cursor()
