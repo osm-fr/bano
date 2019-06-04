@@ -21,6 +21,8 @@ def get_part_debut(s,nb_parts):
 def is_valid_housenumber(hsnr):
     return len(hsnr) <= 11
 
+def is_valid_dept(dept):
+    return dept in constants.DEPARTEMENTS
 
 def normalize(s):
     s = s.upper()                # tout en majuscules
@@ -94,3 +96,6 @@ def replace_type_voie(s,nb):
 
 def is_valid_fantoir(f, insee):
     return (len(f) == 10 and f[0:5] == insee);
+
+def display_insee_commune(code_insee, nom_commune):
+    print(f"{code_insee} - {nom_commune}")

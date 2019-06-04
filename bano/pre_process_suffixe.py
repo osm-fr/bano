@@ -11,6 +11,8 @@ from .outils_de_gestion import batch_start_log
 from .outils_de_gestion import batch_end_log
 
 from . import db
+from . import helpers as hp
+from . import db_helpers as dh
 from .models import Adresses
 
 def collect_adresses_points(selection, adresses):
@@ -35,7 +37,7 @@ def load_suffixe_2_db(adds, code_insee):
             # Agde (34003): detection de 'Mer' abusif, pas d'autres suffixes dans la commune
             if code_insee == '34003':
                 continue
-            print('\t{:s}'.format(h))
+            print(f"......... {h}")
             str_query = 'INSERT INTO suffixe SELECT ST_Transform(ST_SetSRID((ST_Dump(gu)).geom,4326),3857),code_insee,hameau FROM (SELECT ST_Union(g) gu,code_insee,hameau FROM({:s})a GROUP BY 2,3)a;COMMIT;'.format(' UNION ALL '.join(adds[h]))
             cur.execute(str_query)
             nb_res+=len(adds[h])
@@ -77,17 +79,21 @@ def select_street_names_by_name(freq):
             sel[k] = freq[k]
     return sel
 
-def process(code_insee, **kwargs):
-    debut_total = time.time()
+def process(departements, **kwargs):
     source = 'CADASTRE'
-    adresses = Adresses(code_insee)
- 
-    batch_id = batch_start_log(source,'detectesuffixe',code_insee)
+    for dept in departements:
+        if hp.is_valid_dept(dept):
+            for code_insee, nom_commune in dh.get_insee_name_list_by_dept(dept):
+                debut_total = time.time()
+                hp.display_insee_commune(code_insee, nom_commune)
+                adresses = Adresses(code_insee)
+             
+                batch_id = batch_start_log(source,'detectesuffixe',code_insee)
 
-    adresses.load_cadastre_hsnr()
-    freq = name_frequency(adresses)
-    selection = select_street_names_by_name(freq)
-    adds = collect_adresses_points(selection, adresses)
-    nb_rec = load_suffixe_2_db(adds, code_insee)
+                adresses.load_cadastre_hsnr()
+                freq = name_frequency(adresses)
+                selection = select_street_names_by_name(freq)
+                adds = collect_adresses_points(selection, adresses)
+                nb_rec = load_suffixe_2_db(adds, code_insee)
 
-    batch_end_log(nb_rec,batch_id)
+                batch_end_log(nb_rec,batch_id)

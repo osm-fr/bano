@@ -24,7 +24,8 @@ def main():
     subparser.set_defaults(func=cadastre_gouv.process)
     
     subparser = subparsers.add_parser('pre_process_suffixe', help='b help', description="Détermine les zones où les noms dans le Cadastre sont suffixés")
-    subparser.add_argument('code_insee', type=str, help='Code INSEE de la commune à traiter')
+    # subparser.add_argument('code_insee', type=str, help='Code INSEE de la commune à traiter')
+    subparser.add_argument('departements', type=str, help='Départements à traiter', nargs='*', default=DEPARTEMENTS)
     subparser.set_defaults(func=pre_process_suffixe.process)
 
     args = parser.parse_args()
