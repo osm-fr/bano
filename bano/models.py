@@ -47,7 +47,7 @@ class Adresses:
 
     def add_adresse(self,ad,source):
         """ une adresses est considérée dans la commune si sans Fantoir ou avec un Fantoir de la commune"""
-        if (ad.fantoir == '' or is_valid_fantoir(ad.fantoir, code_insee)) and hp.is_valid_housenumber(ad.numero):
+        if (ad.fantoir == '' or hp.is_valid_fantoir(ad.fantoir, self.code_insee)) and hp.is_valid_housenumber(ad.numero):
             cle = hp.normalize(ad.voie)
             self.add_voie(ad.voie,source)
             self[cle]['numeros'][ad.numero] = ad

@@ -24,6 +24,15 @@ def is_valid_housenumber(hsnr):
 def is_valid_dept(dept):
     return dept in constants.DEPARTEMENTS
 
+def get_code_dept_from_insee(code_insee):
+    code_dept = insee[0:2]
+    if code_dept == '97':
+        code_dept = insee[0:3]
+    return code_dept
+
+def get_sql_like_dept_string(dept):
+    return (dept+'___')[0:5]
+
 def normalize(s):
     s = s.upper()                # tout en majuscules
     s = s.split(' (')[0]        # parenthèses : on coupe avant

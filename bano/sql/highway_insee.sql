@@ -13,7 +13,7 @@ AS
 	ON		pl.way && p.way					AND
 			ST_Intersects(pl.way, p.way)
 	WHERE	p.tags ? 'ref:INSEE'			AND
-			p.tags->'ref:INSEE'='__com__'	AND
+			p.tags->'ref:INSEE' {clause_insee}	AND
 			pl.tags->'ref:FR:FANTOIR'!=''			AND
 			pl.name 	IS NOT NULL
 	UNION
@@ -27,7 +27,7 @@ AS
 	JOIN	planet_osm_line 	l
 	ON		ST_Intersects(l.way, p.way)
 	WHERE	p.tags ? 'ref:INSEE'			AND
-			p.tags->'ref:INSEE'='__com__'	AND
+			p.tags->'ref:INSEE' {clause_insee}	AND
 			l.highway 	IS NOT NULL			AND
 			l.name 		IS NOT NULL
 	UNION
@@ -43,7 +43,7 @@ AS
 	ON		pl.way && p.way					AND
 			ST_Intersects(pl.way, p.way)
 	WHERE	p.tags ? 'ref:INSEE'			AND
-			p.tags->'ref:INSEE'='__com__'	AND
+			p.tags->'ref:INSEE' {clause_insee}	AND
 			(	coalesce(pl.highway,pl.tags->'ref:FR:FANTOIR') 	IS NOT NULL		OR
 				pl.landuse = 'residential'										OR
 				pl.amenity = 'parking')		AND

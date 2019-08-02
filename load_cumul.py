@@ -23,8 +23,6 @@ def get_code_dept_from_insee(insee):
     if insee[0:2] == '97':
         code_dept = insee[0:3]
     return code_dept
-def get_sql_like_dept_string(dept):
-    return (dept+'___')[0:5]
 # def get_geom_suffixes(dept):
 #     fq = open('sql/geom_suffixes_insee.sql','r')
 #     str_query = fq.read().replace("='__com__'"," LIKE  '{:s}'".format(get_sql_like_dept_string(dept)))

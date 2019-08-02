@@ -9,10 +9,11 @@ import xml.etree.ElementTree as ET
 
 from . import constants, db
 from . import helpers as hp
+from . import db_helpers as dbhp
 from .models import Adresse, Adresses, Node, Pg_hsnr
 from .outils_de_gestion import batch_start_log
 from .outils_de_gestion import batch_end_log
-from .outils_de_gestion import age_etape_dept
+# from .outils_de_gestion import age_etape_dept
 from .sources import fantoir
 
 os.umask(0000)
@@ -51,17 +52,17 @@ def get_cache_filename(data_type,insee_com):
     cache_filename = os.path.join(cache_dir,'{:s}-{:s}.csv'.format(insee_com,data_type))
     return cache_filename
 
-def get_cadastre_code_dept_from_insee(insee):
-    code_dept = '0'+insee[0:2]
-    if insee[0:2] == '97':
-        code_dept = insee[0:3]
-    return code_dept
+# def get_cadastre_code_dept_from_insee(insee):
+#     code_dept = '0'+insee[0:2]
+#     if insee[0:2] == '97':
+#         code_dept = insee[0:3]
+#     return code_dept
 
-def get_short_code_dept_from_insee(insee):
-    code_dept = insee[0:2]
-    if insee[0:2] == '97':
-        code_dept = insee[0:3]
-    return code_dept
+# def get_short_code_dept_from_insee(insee):
+#     code_dept = insee[0:2]
+#     if insee[0:2] == '97':
+#         code_dept = insee[0:3]
+#     return code_dept
 
 def get_code_cadastre_from_insee(insee):
     str_query = 'SELECT cadastre_com FROM code_cadastre WHERE insee_com = \'{:s}\';'.format(insee)
@@ -110,7 +111,7 @@ def get_last_base_update(query_name,insee_com):
         resp = l[0]
     if resp == 0 :
         etape_dept = 'cache_dept_'+query_name
-        if age_etape_dept(etape_dept,get_short_code_dept_from_insee(insee_com))  < 3600 :
+        if dbhp.age_etape_dept(etape_dept,get_short_code_dept_from_insee(insee_com))  < 3600 :
             resp = round(time.time())
     cur.close()
     return resp
@@ -414,6 +415,46 @@ def load_type_highway_from_pg_osm(insee_com):
         if highway_type in constants.HIGHWAY_TYPES_INDEX:
             adresses.add_highway_index(cle,constants.HIGHWAY_TYPES_INDEX[highway_type])
 
+def update_dept_cache(query_name,dept):
+    etape_dept = 'cache_dept_'+query_name
+    print(f"Mise à jour du cache {query_name.upper()}")
+    batch_id = o.batch_start_log(source,etape_dept,dept)
+    with open('sql/{:s}.sql'.format(query_name),'r') as fq:
+        str_query = fq.read().replace(" = '__com__'"," LIKE  '{:s}'".format(hp.get_sql_like_dept_string(dept)))
+        cur_osm_ro = pgcl.cursor()
+        cur_osm_ro.execute(str_query)
+
+        list_output = list()
+        for lt in cur_osm_ro :
+            list_values = list()
+            for item in list(lt):
+                if item == None:
+                    list_values.append('null')
+                elif  type(item) == str :
+                    list_values.append("'{}'".format(item.replace("'","''").replace('"','')))
+                elif type(item) == list :
+                    if (len(item)) > 0 :
+                        list_values.append("hstore(ARRAY{})".format(str([s.replace("'","''").replace('"','') for s in item])))
+                    else :
+                        list_values.append('null')
+                else :
+                    list_values.append(str(item))
+            list_values.append(str(current_time))
+
+            str_values = ','.join(list_values).replace('"',"'")
+            list_output.append(str_values)
+        cur_osm_ro.close()
+        cur_cache_rw = pgcl.cursor()
+        str_query = "DELETE FROM {} WHERE insee_com LIKE '{}';".format(query_name,hp.get_sql_like_dept_string(dept))
+        cur_cache_rw.execute(str_query)
+        if len(list_output) > 0 :
+            str_query = "INSERT INTO {} VALUES ({});COMMIT;".format(query_name,'),('.join(list_output))
+            strq = open('./query.txt','w')
+            strq.write(str_query)
+            strq.close()
+            cur_cache_rw.execute(str_query)
+        cur_cache_rw.close()
+        o.batch_end_log(0,batch_id)
 
 def addr_2_db(code_insee, source, **kwargs):
     global batch_id
@@ -462,5 +503,22 @@ def addr_2_db(code_insee, source, **kwargs):
     batch_end_log(nb_rec,batch_id)
     fin_total = time.time()
 
-if __name__ == '__main__':
-    main(sys.argv)
+def process(source, code_insee, depts, France, **kwargs):
+    # si code_insee : update code insee puis addr2db
+    # si depts ou france : boucle sur les depts
+    #   update du dept puis boucle sur les codes insee pour addr2db
+
+    # print(source, code_insee, depts, France)
+    liste_codes_insee = []
+    if code_insee:
+        liste_codes_insee = [dbhp.get_insee_name(code_insee)]
+    if not liste_codes_insee:
+        for d in (depts or France):
+            liste_codes_insee += dbhp.get_insee_name_list_by_dept(d)
+    # for d in France:
+    #     liste_codes_insee.append(dbhp.get_insee_name_list_by_dept(d))
+    for code_insee, nom in liste_codes_insee:
+        print(f"{code_insee} - {nom}")
+        addr_2_db(code_insee, source)
+# if __name__ == '__main__':
+#     main(sys.argv)
