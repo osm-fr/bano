@@ -58,18 +58,18 @@ CREATE TABLE IF NOT EXISTS :schema_cible.bal_locales (
     license text);
 CREATE INDEX IF NOT EXISTS idx_bal_open_data_commune_code ON :schema_cible.bal_locales(commune_code);
 
-CREATE TABLE IF NOT EXISTS :schema_cible.code_cadastre (
-        dept character varying(3),
-        cadastre_dept character (3),
-        nom_com character varying(250),
-        cadastre_com character(5),
-        insee_com character(5),
-        code_postal character(5),
-        format_cadastre character varying(10),
-        date_maj integer);
+-- CREATE TABLE IF NOT EXISTS :schema_cible.code_cadastre (
+--         dept character varying(3),
+--         cadastre_dept character (3),
+--         nom_com character varying(250),
+--         cadastre_com character(5),
+--         insee_com character(5),
+--         code_postal character(5),
+--         format_cadastre character varying(10),
+--         date_maj integer);
 
-CREATE TABLE IF NOT EXISTS :schema_cible.tmp_code_cadastre
-AS SELECT * FROM :schema_cible.code_cadastre LIMIT 0;
+-- CREATE TABLE IF NOT EXISTS :schema_cible.tmp_code_cadastre
+-- AS SELECT * FROM :schema_cible.code_cadastre LIMIT 0;
 
 /*CREATE TABLE IF NOT EXISTS :schema_cible.parcelles (
         geometrie       geometry,
