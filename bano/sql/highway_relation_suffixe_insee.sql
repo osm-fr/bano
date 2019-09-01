@@ -1,5 +1,6 @@
+INSERT INTO highway_relation_suffixe_insee
 SELECT	DISTINCT l.name,
-		%% r.tags,
+		r.tags,
 		h.libelle_suffixe,
 		p."ref:INSEE"
 FROM	planet_osm_polygon 	p
@@ -12,5 +13,6 @@ ON		ST_Intersects(l.way, h.geometrie)
 WHERE	p."ref:INSEE" = '__com__' AND
 		l.highway != '' AND
 		l.name != ''
-ORDER BY 4;
+--ORDER BY 4
+;
 				

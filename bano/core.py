@@ -43,27 +43,6 @@ def append_suffixe(name,suffixe):
             res = name+' '+suffixe
     return res
 
-
-def get_cache_filename(data_type,insee_com):
-    code_dept = get_short_code_dept_from_insee(insee_com)
-    cache_dir = os.path.join(os.environ['BANO_CACHE_DIR'],code_dept,insee_com)
-    if not os.path.exists(cache_dir):
-        os.mkdir(cache_dir)
-    cache_filename = os.path.join(cache_dir,'{:s}-{:s}.csv'.format(insee_com,data_type))
-    return cache_filename
-
-# def get_cadastre_code_dept_from_insee(insee):
-#     code_dept = '0'+insee[0:2]
-#     if insee[0:2] == '97':
-#         code_dept = insee[0:3]
-#     return code_dept
-
-# def get_short_code_dept_from_insee(insee):
-#     code_dept = insee[0:2]
-#     if insee[0:2] == '97':
-#         code_dept = insee[0:3]
-#     return code_dept
-
 def get_code_cadastre_from_insee(insee):
     str_query = 'SELECT cadastre_com FROM code_cadastre WHERE insee_com = \'{:s}\';'.format(insee)
     code_cadastre = []
@@ -73,34 +52,6 @@ def get_code_cadastre_from_insee(insee):
         code_cadastre = c[0]
     cur.close()
     return code_cadastre
-
-def get_data_from_pg(data_type,insee_com,local=False,suffixe_data=None):
-    cache_file = get_cache_filename(data_type,insee_com)
-    if not use_cache or not os.path.exists(cache_file) or (time.time() - os.path.getmtime(cache_file)) > 86400 :
-        fq = open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'sql/{:s}.sql'.format(data_type)),'r')
-        str_query = fq.read().replace('__com__',insee_com)
-        fq.close()
-        if local:
-            conn = db.bano
-        else:
-            conn = db.bano_cache
-        if suffixe_data:
-            str_query = str_query.replace('__suffixe_data__',suffixe_data)
-        cur = conn.cursor()
-        cur.execute(str_query)
-        f = open(cache_file,'w+')
-        for lt in cur:
-            l = list(lt)
-            f.write(str(l)+'\n')
-        cur.close()
-        f.seek(0)
-    else :
-        f = open(cache_file,'r')
-    res = []
-    for l in f:
-        res.append(eval(l))
-    f.close()
-    return res
 
 def get_last_base_update(query_name,insee_com):
     resp = 0
@@ -116,46 +67,15 @@ def get_last_base_update(query_name,insee_com):
     cur.close()
     return resp
 
-def get_data_from_pg_direct(query_name,insee_com):
-    current_time = round(time.time())
+def get_data_from_pg(query_name,insee_com):
+    # current_time = round(time.time())
     cur_cache = db.bano_cache.cursor()
-    if not use_cache :
-        fq = open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'sql/{:s}.sql'.format(query_name)),'r')
-        str_query = fq.read().replace('__com__',insee_com)
-        fq.close()
-        # print(round(time.time()))
-        # print(str_query)
-        cur_cache.execute(str_query)
-        # print(round(time.time()))
-        list_output = list()
-        for lt in cur_cache :
-            list_values = list()
-            for item in list(lt):
-                if item == None:
-                    list_values.append('null')
-                elif  type(item) == str :
-                    # list_values.append("'{}'".format(item.replace("'","''")))
-                    list_values.append("'{}'".format(item.replace("'","''").replace('"','')))
-                elif type(item) == list :
-                    if (len(item)) > 0 :
-                        # list_values.append("hstore(ARRAY{})".format(str([s.replace("'","''") for s in item])))
-                        list_values.append("hstore(ARRAY{})".format(str([s.replace("'","''").replace('"','') for s in item])))
-                    else :
-                        list_values.append('null')
-                else :
-                    list_values.append(str(item))
-            list_values.append(str(current_time))            # print(list_values)
+    str_query = "DELETE FROM {} WHERE insee_com = '{}';".format(query_name,insee_com)
+    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'sql/{:s}.sql'.format(query_name)),'r') as fq:
+        str_query+=fq.read().replace('__com__',insee_com)
+    # cur_cache.execute(str_query)
 
-            str_values = ','.join(list_values).replace('"',"'")
-            list_output.append(str_values)
-        str_query = "DELETE FROM {} WHERE insee_com = '{}';".format(query_name,insee_com)
-        cur_cache.execute(str_query)
-        if len(list_output) > 0 :
-            str_query = "INSERT INTO {} VALUES ({});COMMIT;".format(query_name,'),('.join(list_output))
-            # print(str_query)
-            cur_cache.execute(str_query)
-
-    str_query = "SELECT * FROM {} WHERE insee_com = '{}';".format(query_name,insee_com)
+    str_query+= "SELECT * FROM {} WHERE insee_com = '{}';".format(query_name,insee_com)
     cur_cache.execute(str_query)
 
     res = []
@@ -163,14 +83,6 @@ def get_data_from_pg_direct(query_name,insee_com):
         res.append(list(l))
     cur_cache.close()
     return res
-
-# def get_geom_suffixes(insee):
-#     data = get_data_from_pg('geom_suffixes_insee',insee,True)
-#     a_queries = []
-#     for l in data:
-#         a_queries.append('SELECT ST_PolygonFromText(\'{:s}\',3857) as geom,\'{:s}\'::text suffixe'.format(l[0],l[1].replace('\'','\'\'')))
-#     return ' UNION '.join(a_queries)
-
 
 def get_tags(xmlo):
     dtags = {}
@@ -188,7 +100,6 @@ def has_addreses_with_suffix(insee):
             res = True
     cur.close()
     return res
-
 
 def load_cadastre_hsnr(code_insee):
     dict_node_relations = {}
@@ -236,7 +147,8 @@ def load_bases_adresses_locales_hsnr(code_insee):
     cur.close()
 
 def load_hsnr_bbox_from_pg_osm(insee_com):
-    data = get_data_from_pg_direct('hsnr_bbox_insee',insee_com)
+    # data = get_data_from_pg_direct('hsnr_bbox_insee',insee_com)
+    data = get_data_from_pg('hsnr_bbox_insee',insee_com)
     for l in data:
         oa = Pg_hsnr(l, insee_com)
         n = Node({'id':oa.osm_id,'lon':oa.x,'lat':oa.y},{})
@@ -248,7 +160,8 @@ def load_hsnr_bbox_from_pg_osm(insee_com):
         adresses.add_adresse(Adresse(n,oa.numero,oa.voie,oa.fantoir,oa.code_postal), 'OSM')
 
 def load_hsnr_from_pg_osm(insee_com):
-    data = get_data_from_pg_direct('hsnr_insee', insee_com)
+    # data = get_data_from_pg_direct('hsnr_insee', insee_com)
+    data = get_data_from_pg('hsnr_insee', insee_com)
     for l in data:
         oa = Pg_hsnr(l, insee_com)
         n = Node({'id':oa.osm_id,'lon':oa.x,'lat':oa.y},{})
@@ -258,7 +171,7 @@ def load_hsnr_from_pg_osm(insee_com):
         adresses.add_adresse(Adresse(n,oa.numero,oa.voie,oa.fantoir,oa.code_postal), 'OSM')
 
 def load_highways_bbox_from_pg_osm(insee_com):
-    data = get_data_from_pg_direct('highway_suffixe_insee',insee_com)
+    data = get_data_from_pg('highway_suffixe_insee',insee_com)
     for name, fantoir_unique, fantoir_gauche, fantoir_droit, suffixe, *others in data:
         if fantoir_unique and hp.is_valid_fantoir(fantoir_unique, insee_com):
             code_fantoir = fantoir_unique
@@ -278,7 +191,7 @@ def load_highways_bbox_from_pg_osm(insee_com):
         adresses.add_fantoir(cle,code_fantoir,'OSM')
 
 def load_highways_from_pg_osm(insee_com):
-    data = get_data_from_pg_direct('highway_suffixe_insee',insee_com)
+    data = get_data_from_pg('highway_suffixe_insee',insee_com)
     for name, fantoir_unique, fantoir_gauche, fantoir_droit, suffixe, *others in data:
         if len(name) < 2:
             continue
@@ -300,7 +213,7 @@ def load_highways_from_pg_osm(insee_com):
             fantoir.mapping.add_fantoir_name(code_fantoir,name_suffixe,'OSM')
 
 def load_highways_relations_bbox_from_pg_osm(code_insee):
-    data = get_data_from_pg_direct('highway_relation_suffixe_insee', code_insee) # manque la version bbox
+    data = get_data_from_pg('highway_relation_suffixe_insee', code_insee) # manque la version bbox
     for name, tags, suffixe, insee, timestamp_maj in data:
         fantoir = ''
         if 'ref:FR:FANTOIR' in tags and hp.is_valid_fantoir(tags['ref:FR:FANTOIR'], code_insee):
@@ -317,7 +230,7 @@ def load_highways_relations_bbox_from_pg_osm(code_insee):
         adresses.add_voie(name_suffixe,'OSM',name)
 
 def load_highways_relations_from_pg_osm(code_insee):
-    data = get_data_from_pg_direct('highway_relation_suffixe_insee', code_insee)
+    data = get_data_from_pg('highway_relation_suffixe_insee', code_insee)
     for name, tags, suffixe, *others in data:
         if len(name) < 2:
             continue
@@ -334,7 +247,7 @@ def load_highways_relations_from_pg_osm(code_insee):
             fantoir.mapping.add_fantoir_name(code_fantoir,name,'OSM')
 
 def load_point_par_rue_from_pg_osm(code_insee):
-    data = get_data_from_pg_direct('point_par_rue_insee',code_insee)
+    data = get_data_from_pg('point_par_rue_insee',code_insee)
     for lon, lat, name, *others in data:
         if len(name) < 2:
             continue
@@ -346,7 +259,7 @@ def load_point_par_rue_from_pg_osm(code_insee):
                 adresses.add_fantoir(cle,fantoir.mapping.fantoir[cle],'OSM')
 
 def load_point_par_rue_complement_from_pg_osm(insee_com):
-    data = get_data_from_pg_direct('point_par_rue_complement_insee',insee_com)
+    data = get_data_from_pg('point_par_rue_complement_insee',insee_com)
     for l in data:
         name = l[2]
         if len(name) < 2:
@@ -362,128 +275,74 @@ def load_point_par_rue_complement_from_pg_osm(insee_com):
         if fantoir:
             adresses.add_fantoir(cle,fantoir,'OSM')
 
-def load_to_db(adresses,code_insee,source,code_dept):
-    cur_insert = db.bano.cursor()
-    for a in ['cumul_adresses','cumul_voies']:
-        sload = "DELETE FROM {:s} WHERE insee_com = '{:s}' AND source = '{:s}';\n".format(a,code_insee,source)
-        cur_insert.execute(sload)
-    nb_rec = 0
-    a_values_voie = []
-
-    for v in adresses:
-        sload = 'INSERT INTO cumul_adresses (geometrie,numero,voie_cadastre,voie_bal,voie_osm,voie_fantoir,fantoir,insee_com,dept,code_postal,source) VALUES'
-        a_values = []
-        street_name_cadastre = ''
-        street_name_bal = ''
-        street_name_osm = ''
-        street_name_fantoir = ''
-        code_postal = ''
-        cle_fantoir = get_best_fantoir(v)
-        if 'OSM' in adresses[v]['voies']:
-            street_name_osm =  adresses[v]['voies']['OSM']
-        else :
-            street_name_osm = fantoir.mapping.get_fantoir_name(cle_fantoir,'OSM')
-        if 'FANTOIR' in adresses[v]['voies']:
-            street_name_fantoir =  adresses[v]['voies']['FANTOIR']
-        if 'CADASTRE' in adresses[v]['voies']:
-            street_name_cadastre =  adresses[v]['voies']['CADASTRE']
-        if 'BAL' in adresses[v]['voies']:
-            street_name_bal =  adresses[v]['voies']['BAL']
-        if len(adresses[v]['point_par_rue'])>1 and source == 'OSM':
-            a_values_voie.append(("(ST_PointFromText('POINT({:6f} {:6f})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}',{:d})".format(adresses[v]['point_par_rue'][0],adresses[v]['point_par_rue'][1],street_name_cadastre.replace("'","''"),street_name_bal.replace("'","''"),street_name_osm.replace("'","''"),street_name_fantoir.replace("'","''"),cle_fantoir,code_insee,code_dept,'',source,adresses[v]['highway_index'])).replace(",'',",",null,"))
-
-        for num in adresses[v]['numeros']:
-            numadresse = adresses[v]['numeros'][num]
-            a_values.append("(ST_PointFromText('POINT({:6f} {:6f})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}')".format(numadresse.node.attribs['lon'],numadresse.node.attribs['lat'],numadresse.numero.replace("'",""),street_name_cadastre.replace("'","''"),street_name_bal.replace("'","''"),street_name_osm.replace("'","''"),street_name_fantoir.replace("'","''"),cle_fantoir,code_insee,code_dept,numadresse.code_postal,source).replace(",''",",null").replace(",''",",null"))
-            nb_rec +=1
-        if len(a_values)>0:
-            sload = sload+','.join(a_values)+';COMMIT;'
-            cur_insert.execute(sload)
-    sload_voie = 'INSERT INTO cumul_voies (geometrie,voie_cadastre,voie_bal,voie_osm,voie_fantoir,fantoir,insee_com,dept,code_postal,source,voie_index) VALUES'
-    if len(a_values_voie) > 0:
-        sload_voie = sload_voie+','.join(a_values_voie)+';COMMIT;'
-        cur_insert.execute(sload_voie)
-    cur_insert.close()
-    return(nb_rec)
-
-
 def load_type_highway_from_pg_osm(insee_com):
-    data = get_data_from_pg_direct('type_highway_insee',insee_com)
+    data = get_data_from_pg('type_highway_insee',insee_com)
     for name, highway_type, *_ in data:
         adresses.register(name)
         cle = hp.normalize(name)
         if highway_type in constants.HIGHWAY_TYPES_INDEX:
             adresses.add_highway_index(cle,constants.HIGHWAY_TYPES_INDEX[highway_type])
 
-def update_dept_cache(query_name,dept):
-    etape_dept = 'cache_dept_'+query_name
-    print(f"Mise à jour du cache {query_name.upper()}")
-    batch_id = o.batch_start_log(source,etape_dept,dept)
-    with open('sql/{:s}.sql'.format(query_name),'r') as fq:
-        str_query = fq.read().replace(" = '__com__'"," LIKE  '{:s}'".format(hp.get_sql_like_dept_string(dept)))
-        cur_osm_ro = pgcl.cursor()
-        cur_osm_ro.execute(str_query)
+# def update_dept_cache(query_name,dept):
+#     etape_dept = 'cache_dept_'+query_name
+#     print(f"Mise à jour du cache {query_name.upper()}")
+#     batch_id = o.batch_start_log(source,etape_dept,dept)
+#     with open('sql/{:s}.sql'.format(query_name),'r') as fq:
+#         str_query = fq.read().replace(" = '__com__'"," LIKE  '{:s}'".format(hp.get_sql_like_dept_string(dept)))
+#         cur_osm_ro = pgcl.cursor()
+#         cur_osm_ro.execute(str_query)
 
-        list_output = list()
-        for lt in cur_osm_ro :
-            list_values = list()
-            for item in list(lt):
-                if item == None:
-                    list_values.append('null')
-                elif  type(item) == str :
-                    list_values.append("'{}'".format(item.replace("'","''").replace('"','')))
-                elif type(item) == list :
-                    if (len(item)) > 0 :
-                        list_values.append("hstore(ARRAY{})".format(str([s.replace("'","''").replace('"','') for s in item])))
-                    else :
-                        list_values.append('null')
-                else :
-                    list_values.append(str(item))
-            list_values.append(str(current_time))
+#         list_output = list()
+#         for lt in cur_osm_ro :
+#             list_values = list()
+#             for item in list(lt):
+#                 if item == None:
+#                     list_values.append('null')
+#                 elif  type(item) == str :
+#                     list_values.append("'{}'".format(item.replace("'","''").replace('"','')))
+#                 elif type(item) == list :
+#                     if (len(item)) > 0 :
+#                         list_values.append("hstore(ARRAY{})".format(str([s.replace("'","''").replace('"','') for s in item])))
+#                     else :
+#                         list_values.append('null')
+#                 else :
+#                     list_values.append(str(item))
+#             list_values.append(str(current_time))
 
-            str_values = ','.join(list_values).replace('"',"'")
-            list_output.append(str_values)
-        cur_osm_ro.close()
-        cur_cache_rw = pgcl.cursor()
-        str_query = "DELETE FROM {} WHERE insee_com LIKE '{}';".format(query_name,hp.get_sql_like_dept_string(dept))
-        cur_cache_rw.execute(str_query)
-        if len(list_output) > 0 :
-            str_query = "INSERT INTO {} VALUES ({});COMMIT;".format(query_name,'),('.join(list_output))
-            strq = open('./query.txt','w')
-            strq.write(str_query)
-            strq.close()
-            cur_cache_rw.execute(str_query)
-        cur_cache_rw.close()
-        o.batch_end_log(0,batch_id)
+#             str_values = ','.join(list_values).replace('"',"'")
+#             list_output.append(str_values)
+#         cur_osm_ro.close()
+#         cur_cache_rw = pgcl.cursor()
+#         str_query = "DELETE FROM {} WHERE insee_com LIKE '{}';".format(query_name,hp.get_sql_like_dept_string(dept))
+#         cur_cache_rw.execute(str_query)
+#         if len(list_output) > 0 :
+#             str_query = "INSERT INTO {} VALUES ({});COMMIT;".format(query_name,'),('.join(list_output))
+#             strq = open('./query.txt','w')
+#             strq.write(str_query)
+#             strq.close()
+#             cur_cache_rw.execute(str_query)
+#         cur_cache_rw.close()
+#         o.batch_end_log(0,batch_id)
 
 def addr_2_db(code_insee, source, **kwargs):
     global batch_id
     global code_cadastre,code_dept
     global nodes,ways,adresses
-    global geom_suffixe
-    global use_cache
     global schema_cible
 
     schema_cible = 'public'
     if ('SCHEMA_CIBLE' in os.environ) : schema_cible = (os.environ['SCHEMA_CIBLE'])
 
-    use_cache = False
-
     debut_total = time.time()
-    usage = 'USAGE : python addr_cad_2_db.py <code INSEE> <OSM|CADASTRE|BAL> {use_cache=True}'
     
     adresses = Adresses(code_insee)
 
     fantoir.mapping.load(code_insee)
 
-    code_dept = get_short_code_dept_from_insee(code_insee)
+    code_dept = hp.get_code_dept_from_insee(code_insee)
 
     batch_id = batch_start_log(source,'loadCumul',code_insee)
 
-    # commune_avec_suffixe = has_addreses_with_suffix(code_insee)
-    # geom_suffixe = None
-    # if commune_avec_suffixe:
-    #     geom_suffixe = get_geom_suffixes(code_insee)
     if source == 'BAL':
         load_bases_adresses_locales_hsnr(code_insee)
     if source == 'CADASTRE':
@@ -504,21 +363,12 @@ def addr_2_db(code_insee, source, **kwargs):
     fin_total = time.time()
 
 def process(source, code_insee, depts, France, **kwargs):
-    # si code_insee : update code insee puis addr2db
-    # si depts ou france : boucle sur les depts
-    #   update du dept puis boucle sur les codes insee pour addr2db
-
-    # print(source, code_insee, depts, France)
     liste_codes_insee = []
     if code_insee:
-        liste_codes_insee = [dbhp.get_insee_name(code_insee)]
+        liste_codes_insee = dbhp.get_insee_name(code_insee)
     if not liste_codes_insee:
         for d in (depts or France):
             liste_codes_insee += dbhp.get_insee_name_list_by_dept(d)
-    # for d in France:
-    #     liste_codes_insee.append(dbhp.get_insee_name_list_by_dept(d))
     for code_insee, nom in liste_codes_insee:
         print(f"{code_insee} - {nom}")
         addr_2_db(code_insee, source)
-# if __name__ == '__main__':
-#     main(sys.argv)

@@ -1,3 +1,4 @@
+INSERT INTO highway_suffixe_insee
 SELECT	pl.name,
 		pl."ref:FR:FANTOIR" f,
 		'' fl,
@@ -45,5 +46,4 @@ WHERE	p."ref:INSEE" = '__com__'		AND
 		            (pl.highway||pl."ref:FR:FANTOIR" != ''	OR
 					pl.landuse = 'residential'				OR
 					pl.amenity = 'parking')	AND
-		pl.name 	!= ''
-		;
+		pl.name 	!= '';

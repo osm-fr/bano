@@ -1,3 +1,4 @@
+INSERT INTO point_par_rue_complement_insee
 SELECT 	ST_X(ST_Transform(ST_SetSRID(way,3857),4326)),
 		ST_Y(ST_Transform(ST_SetSRID(way,3857),4326)),
 		name,

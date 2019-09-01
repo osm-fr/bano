@@ -1,3 +1,4 @@
+INSERT INTO type_highway_insee
 SELECT  pl.name,
         pl.highway,
         p."ref:INSEE"
@@ -29,4 +30,5 @@ SELECT  pl.name,
         WHERE   p."ref:INSEE" = '__com__'    AND
                 pl.highway     != ''            AND
                 pl.name     != ''
-ORDER BY 1;
+--ORDER BY 1
+;

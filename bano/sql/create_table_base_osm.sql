@@ -58,50 +58,6 @@ CREATE TABLE IF NOT EXISTS :schema_cible.bal_locales (
     license text);
 CREATE INDEX IF NOT EXISTS idx_bal_open_data_commune_code ON :schema_cible.bal_locales(commune_code);
 
--- CREATE TABLE IF NOT EXISTS :schema_cible.code_cadastre (
---         dept character varying(3),
---         cadastre_dept character (3),
---         nom_com character varying(250),
---         cadastre_com character(5),
---         insee_com character(5),
---         code_postal character(5),
---         format_cadastre character varying(10),
---         date_maj integer);
-
--- CREATE TABLE IF NOT EXISTS :schema_cible.tmp_code_cadastre
--- AS SELECT * FROM :schema_cible.code_cadastre LIMIT 0;
-
-/*CREATE TABLE IF NOT EXISTS :schema_cible.parcelles (
-        geometrie       geometry,
-        insee_com       character(5),
-        id_cadastre     character varying(15),
-        numero          character varying (15),
-        voie_cadastre   character varying (300),
-        fantoir         character varying (10)
-);
-CREATE INDEX IF NOT EXISTS parcelles_insee_com ON :schema_cible.parcelles(insee_com);
-CREATE INDEX IF NOT EXISTS gidx_parcelles      ON :schema_cible.parcelles USING gist (geometrie); */
-
-/*CREATE TABLE IF NOT EXISTS :schema_cible.buildings (
-        geometrie       geometry,
-        id_building     serial,
-        insee_com       character(5),
-        wall            character varying (3)
-);
-CREATE INDEX IF NOT EXISTS buildings_insee_com ON :schema_cible.buildings(insee_com);
-CREATE INDEX IF NOT EXISTS gidx_buildings      ON :schema_cible.buildings USING gist (geometrie);
-
-CREATE TABLE IF NOT EXISTS :schema_cible.batiments (
-        insee_com       character(5),
-        nom        character varying(80),
-        type_batiment text,
-        created date,
-        updated date,
-        geometrie geometry(MultiPolygon,4326)
-);
-CREATE INDEX IF NOT EXISTS batiments_insee_com ON :schema_cible.batiments(insee_com);
-CREATE INDEX IF NOT EXISTS gidx_batiments      ON :schema_cible.batiments USING gist (geometrie);
-*/
 CREATE TABLE IF NOT EXISTS :schema_cible.lieux_dits (
         insee_com       character(5),
         nom        character varying(80),
@@ -151,16 +107,16 @@ UPDATE :schema_cible.type_voie SET tag_index = power(2,id_voie-1);
 );
 CREATE INDEX IF NOT EXISTS idx_cadastre_noms_bruts_insee_com ON :schema_cible.cadastre_noms_bruts(insee_com);
 */
-CREATE TABLE IF NOT EXISTS :schema_cible.highway_insee (
+/*CREATE TABLE IF NOT EXISTS :schema_cible.highway_insee (
         name          text,
         fantoir       text,
         fantoir_left  text,
         fantoir_right text,
         suffixe       text,
         insee_com     character(5),
-        timestamp_maj integer
+        timestamp_maj integer DEFAULT (date_part('epoch'::text, CURRENT_TIMESTAMP))::integer
 );
-CREATE INDEX IF NOT EXISTS idx_highway_insee_insee_com ON :schema_cible.highway_insee(insee_com);
+CREATE INDEX IF NOT EXISTS idx_highway_insee_insee_com ON :schema_cible.highway_insee(insee_com);*/
 
 CREATE TABLE IF NOT EXISTS :schema_cible.highway_suffixe_insee (
         name          text,
@@ -169,7 +125,7 @@ CREATE TABLE IF NOT EXISTS :schema_cible.highway_suffixe_insee (
         fantoir_right text,
         suffixe       text,
         insee_com     character(5),
-        timestamp_maj integer
+        timestamp_maj integer DEFAULT (date_part('epoch'::text, CURRENT_TIMESTAMP))::integer
 );
 CREATE INDEX IF NOT EXISTS idx_highway_suffixe_insee_insee_com ON :schema_cible.highway_suffixe_insee(insee_com);
 
@@ -183,7 +139,7 @@ CREATE TABLE IF NOT EXISTS :schema_cible.hsnr_insee (
         tags          hstore,
         suffixe       text,
         insee_com     character(5),
-        timestamp_maj integer
+        timestamp_maj integer DEFAULT (date_part('epoch'::text, CURRENT_TIMESTAMP))::integer
 );
 CREATE INDEX IF NOT EXISTS idx_hsnr_insee_insee_com ON :schema_cible.hsnr_insee(insee_com);
 
@@ -197,7 +153,7 @@ CREATE TABLE IF NOT EXISTS :schema_cible.hsnr_bbox_insee (
         tags          hstore,
         suffixe       text,
         insee_com     character(5),
-        timestamp_maj integer
+        timestamp_maj integer DEFAULT (date_part('epoch'::text, CURRENT_TIMESTAMP))::integer
 );
 CREATE INDEX IF NOT EXISTS idx_hsnr_bbox_insee_insee_com ON :schema_cible.hsnr_bbox_insee(insee_com);
 
@@ -211,7 +167,7 @@ CREATE TABLE IF NOT EXISTS :schema_cible.hsnr_suffixe_insee (
         tags          hstore,
         suffixe       text,
         insee_com     character(5),
-        timestamp_maj integer
+        timestamp_maj integer DEFAULT (date_part('epoch'::text, CURRENT_TIMESTAMP))::integer
 );
 CREATE INDEX IF NOT EXISTS idx_hsnr_suffixe_insee_insee_com ON :schema_cible.hsnr_suffixe_insee(insee_com);
 
@@ -222,7 +178,7 @@ CREATE TABLE IF NOT EXISTS :schema_cible.highway_bbox_insee (
         fantoir_right text,
         suffixe       text,
         insee_com     character(5),
-        timestamp_maj integer
+        timestamp_maj integer DEFAULT (date_part('epoch'::text, CURRENT_TIMESTAMP))::integer
 );
 CREATE INDEX IF NOT EXISTS idx_highway_bbox_insee_insee_com ON :schema_cible.highway_bbox_insee(insee_com);
 
@@ -230,7 +186,7 @@ CREATE TABLE IF NOT EXISTS :schema_cible.highway_relation_insee (
         name          text,
         tags          hstore,
         insee_com     character(5),
-        timestamp_maj integer
+        timestamp_maj integer DEFAULT (date_part('epoch'::text, CURRENT_TIMESTAMP))::integer
 );
 CREATE INDEX IF NOT EXISTS idx_highway_relation_insee_insee_com ON :schema_cible.highway_relation_insee(insee_com);
 
@@ -238,7 +194,7 @@ CREATE TABLE IF NOT EXISTS :schema_cible.highway_relation_bbox_insee (
         name          text,
         tags          hstore,
         insee_com     character(5),
-        timestamp_maj integer
+        timestamp_maj integer DEFAULT (date_part('epoch'::text, CURRENT_TIMESTAMP))::integer
 );
 CREATE INDEX IF NOT EXISTS idx_highway_relation_bbox_insee_insee_com ON :schema_cible.highway_relation_bbox_insee(insee_com);
 
@@ -247,7 +203,7 @@ CREATE TABLE IF NOT EXISTS :schema_cible.highway_relation_suffixe_insee (
         tags          hstore,
         suffixe       text,
         insee_com     character(5),
-        timestamp_maj integer
+        timestamp_maj integer DEFAULT (date_part('epoch'::text, CURRENT_TIMESTAMP))::integer
 );
 CREATE INDEX IF NOT EXISTS idx_highway_relation_suffixe_insee_insee_com ON :schema_cible.highway_relation_suffixe_insee(insee_com);
 
@@ -256,7 +212,7 @@ CREATE TABLE IF NOT EXISTS :schema_cible.point_par_rue_insee (
         lat           float,
         name          text,
         insee_com     character(5),
-        timestamp_maj integer
+        timestamp_maj integer DEFAULT (date_part('epoch'::text, CURRENT_TIMESTAMP))::integer
 );
 CREATE INDEX IF NOT EXISTS idx_point_par_rue_insee_insee_com ON :schema_cible.point_par_rue_insee(insee_com);
 
@@ -267,7 +223,7 @@ CREATE TABLE IF NOT EXISTS :schema_cible.point_par_rue_complement_insee (
         fantoir       text,
         suffixe       text,
         insee_com     character(5),
-        timestamp_maj integer
+        timestamp_maj integer DEFAULT (date_part('epoch'::text, CURRENT_TIMESTAMP))::integer
 );
 CREATE INDEX IF NOT EXISTS idx_point_par_rue_complement_insee_insee_com ON :schema_cible.point_par_rue_complement_insee(insee_com);
 
@@ -275,7 +231,7 @@ CREATE TABLE IF NOT EXISTS :schema_cible.type_highway_insee (
         name          text,
         highway       text,
         insee_com     character(5),
-        timestamp_maj integer
+        timestamp_maj integer DEFAULT (date_part('epoch'::text, CURRENT_TIMESTAMP))::integer
 );
 CREATE INDEX IF NOT EXISTS idx_type_highway_insee_insee_com ON :schema_cible.type_highway_insee(insee_com);
 
@@ -295,7 +251,7 @@ CREATE TABLE IF NOT EXISTS place_insee (
         ld_bati       text,
         tags          hstore,
         insee_com     character(5),
-        timestamp_maj integer
+        timestamp_maj integer DEFAULT (date_part('epoch'::text, CURRENT_TIMESTAMP))::integer
 );
 CREATE INDEX IF NOT EXISTS idx_place_insee_insee_com ON place_insee(insee_com);
 
@@ -305,6 +261,6 @@ CREATE TABLE IF NOT EXISTS cadastre_2_place (
         nom           text,
         fantoir       text,
         insee_com     character(5),
-        timestamp_maj integer
+        timestamp_maj integer DEFAULT (date_part('epoch'::text, CURRENT_TIMESTAMP))::integer
 );
 CREATE INDEX IF NOT EXISTS idx_cadastre_2_place_insee_com ON cadastre_2_place(insee_com);

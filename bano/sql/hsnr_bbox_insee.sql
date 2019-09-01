@@ -1,7 +1,8 @@
-select 	ST_X(pt_geo)::character varying,
-		ST_Y(pt_geo)::character varying,
-		provenance::character varying,
-		osm_id::character varying,
+INSERT INTO hsnr_bbox_insee
+SELECT 	ST_X(pt_geo),
+		ST_Y(pt_geo),
+		provenance,
+		osm_id,
 		hsnr,
 		street_name,
 		tags,
@@ -11,10 +12,10 @@ FROM
 -- point dans relation associatedStreet
 		(SELECT	3 provenance,
 				ST_Transform(pt.way,4326) pt_geo,
-				pt.osm_id::character varying,
+				pt.osm_id,
 				pt."addr:housenumber" hsnr,
-				null street_name,
-				%% r.tags tags,
+				null::text street_name,
+				r.tags tags,
 				p."ref:INSEE" insee_com
 --		FROM	planet_osm_polygon	p
 		FROM	(SELECT ST_SetSRID(ST_Extent(way),3857) way, "ref:INSEE" FROM planet_osm_polygon	WHERE "ref:INSEE" = '__com__'  GROUP BY 2) p
@@ -28,10 +29,10 @@ FROM
 -- way dans relation associatedStreet
 		SELECT	4,
 				ST_Transform(ST_Centroid(w.way),4326),
-				w.osm_id::character varying,
+				w.osm_id,
 				w."addr:housenumber",
 				null,
-				%% r.tags,
+				r.tags,
 				p."ref:INSEE"
 --		FROM	planet_osm_polygon	p
 		FROM	(SELECT ST_SetSRID(ST_Extent(way),3857) way, "ref:INSEE" FROM planet_osm_polygon	WHERE "ref:INSEE" = '__com__'  GROUP BY 2) p
@@ -42,7 +43,7 @@ FROM
 		WHERE	p."ref:INSEE" = '__com__'		AND
 				w."addr:housenumber" != ''
 )a
-ORDER BY 9
+--ORDER BY 9
 -- where hsnr is not null*/		
 ;
 

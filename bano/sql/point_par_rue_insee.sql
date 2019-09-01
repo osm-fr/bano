@@ -44,7 +44,7 @@ AS
 FROM	wl
 JOIN	wp
 ON		wl.name = wp.name) 
-
+INSERT INTO point_par_rue_insee
 SELECT	ST_x(point),
 		ST_y(point),
 		name,
