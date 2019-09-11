@@ -10,8 +10,8 @@ tables:
       'addr:street': [__any__]
       'ref:FR:FANTOIR': [__any__]
     columns:
-      - {name: 'way', type: geometry}
       - {name: 'osm_id', type: id}
+      - {name: 'way', type: geometry}
       - {name: 'tags', type: hstore_tags}
       - {key: 'name', name: 'name', type: string}
       - {key: 'addr:housenumber', name: 'addr:housenumber', type: string}
@@ -31,8 +31,8 @@ tables:
       highway: [__any__]
       waterway: [__any__]
     columns:
-      - {name: 'way', type: geometry}
       - {name: 'osm_id', type: id}
+      - {name: 'way', type: geometry}
       - {name: 'tags', type: hstore_tags}
       - {key: 'name', name: 'name', type: string}
       - {key: 'ref:FR:FANTOIR', name: 'ref:FR:FANTOIR', type: string}
@@ -49,8 +49,8 @@ tables:
       addr:housenumber: [__any__]
       ref:FR:FANTOIR: [__any__]
     columns:
-      - {name: 'way', type: geometry}
       - {name: 'osm_id', type: id}
+      - {name: 'way', type: geometry}
       - {name: 'tags', type: hstore_tags}
       - {key: 'name', name: 'name', type: string}
       - {key: boundary, name: boundary, type: string}
@@ -69,6 +69,7 @@ tables:
     mapping:
       'ref:FR:FANTOIR': [__any__]
     columns:
+      - {name: 'rel_id', type: id}
       - {name: 'osm_id', type: member_id}
       - {name: 'tags', type: hstore_tags}
       - {key: 'ref:FR:FANTOIR', name: 'ref:FR:FANTOIR', type: string}
