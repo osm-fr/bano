@@ -85,7 +85,7 @@ class Adresses:
         cur.execute(str_query)
         for cle_interop, ui_adresse, numero, suffixe, pseudo_adresse, name, voie_code, code_postal, libelle_acheminement, destination_principale, commune_code, commune_nom, source, lon, lat, *others in cur:
             housenumber = numero+((' '+suffixe) if suffixe else '')
-            if len(name) < 2:
+            if not name or len(name) < 2:
                 continue
             if not lon :
                 continue

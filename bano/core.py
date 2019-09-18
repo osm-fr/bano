@@ -109,7 +109,7 @@ def load_cadastre_hsnr(code_insee):
     cur.execute(str_query)
     for cle_interop, ui_adresse, numero, suffixe, pseudo_adresse, name, voie_code, code_postal, libelle_acheminement, destination_principale, commune_code, commune_nom, source, lon, lat, *others in cur:
         housenumber = numero+((' '+suffixe) if suffixe else '')
-        if len(name) < 2:
+        if not name or len(name) < 2:
             continue
         if not lon :
             continue
@@ -133,7 +133,7 @@ def load_bases_adresses_locales_hsnr(code_insee):
     cur = db.bano_cache.cursor()
     cur.execute(str_query)
     for cle_interop, housenumber, name, lon, lat in cur:
-        if len(name) < 2:
+        if not name or len(name) < 2:
             continue
         if not lon :
             continue
@@ -160,7 +160,6 @@ def load_hsnr_bbox_from_pg_osm(insee_com):
         adresses.add_adresse(Adresse(n,oa.numero,oa.voie,oa.fantoir,oa.code_postal), 'OSM')
 
 def load_hsnr_from_pg_osm(insee_com):
-    # data = get_data_from_pg_direct('hsnr_insee', insee_com)
     data = get_data_from_pg('hsnr_insee', insee_com)
     for l in data:
         oa = Pg_hsnr(l, insee_com)
@@ -181,7 +180,7 @@ def load_highways_bbox_from_pg_osm(insee_com):
             code_fantoir = fantoir_droit
         else:
             continue
-        if len(name) < 2:
+        if not name or len(name) < 2:
             continue
         name_suffixe = append_suffixe(name,suffixe)
         adresses.register(name_suffixe)
@@ -193,7 +192,7 @@ def load_highways_bbox_from_pg_osm(insee_com):
 def load_highways_from_pg_osm(insee_com):
     data = get_data_from_pg('highway_suffixe_insee',insee_com)
     for name, fantoir_unique, fantoir_gauche, fantoir_droit, suffixe, *others in data:
-        if len(name) < 2:
+        if not name or len(name) < 2:
             continue
         name_suffixe = append_suffixe(name,suffixe)
         adresses.register(name_suffixe)
@@ -220,7 +219,7 @@ def load_highways_relations_bbox_from_pg_osm(code_insee):
             fantoir = tags['ref:FR:FANTOIR']
         else:
             continue
-        if len(name) < 2:
+        if not name or len(name) < 2:
             continue
         name_suffixe = append_suffixe(name,suffixe or '')
         adresses.register(name_suffixe)
@@ -232,7 +231,7 @@ def load_highways_relations_bbox_from_pg_osm(code_insee):
 def load_highways_relations_from_pg_osm(code_insee):
     data = get_data_from_pg('highway_relation_suffixe_insee', code_insee)
     for name, tags, suffixe, *others in data:
-        if len(name) < 2:
+        if not name or len(name) < 2:
             continue
         name_suffixe = append_suffixe(name,suffixe or '')
         adresses.register(name_suffixe)
@@ -249,7 +248,7 @@ def load_highways_relations_from_pg_osm(code_insee):
 def load_point_par_rue_from_pg_osm(code_insee):
     data = get_data_from_pg('point_par_rue_insee',code_insee)
     for lon, lat, name, *others in data:
-        if len(name) < 2:
+        if not name or len(name) < 2:
             continue
         adresses.register(name)
         cle = hp.normalize(name)
@@ -262,7 +261,7 @@ def load_point_par_rue_complement_from_pg_osm(insee_com):
     data = get_data_from_pg('point_par_rue_complement_insee',insee_com)
     for l in data:
         name = l[2]
-        if len(name) < 2:
+        if not name or len(name) < 2:
             continue
         fantoir = l[3]
         if fantoir and fantoir[0:5] != insee_com:
@@ -282,47 +281,6 @@ def load_type_highway_from_pg_osm(insee_com):
         cle = hp.normalize(name)
         if highway_type in constants.HIGHWAY_TYPES_INDEX:
             adresses.add_highway_index(cle,constants.HIGHWAY_TYPES_INDEX[highway_type])
-
-# def update_dept_cache(query_name,dept):
-#     etape_dept = 'cache_dept_'+query_name
-#     print(f"Mise à jour du cache {query_name.upper()}")
-#     batch_id = o.batch_start_log(source,etape_dept,dept)
-#     with open('sql/{:s}.sql'.format(query_name),'r') as fq:
-#         str_query = fq.read().replace(" = '__com__'"," LIKE  '{:s}'".format(hp.get_sql_like_dept_string(dept)))
-#         cur_osm_ro = pgcl.cursor()
-#         cur_osm_ro.execute(str_query)
-
-#         list_output = list()
-#         for lt in cur_osm_ro :
-#             list_values = list()
-#             for item in list(lt):
-#                 if item == None:
-#                     list_values.append('null')
-#                 elif  type(item) == str :
-#                     list_values.append("'{}'".format(item.replace("'","''").replace('"','')))
-#                 elif type(item) == list :
-#                     if (len(item)) > 0 :
-#                         list_values.append("hstore(ARRAY{})".format(str([s.replace("'","''").replace('"','') for s in item])))
-#                     else :
-#                         list_values.append('null')
-#                 else :
-#                     list_values.append(str(item))
-#             list_values.append(str(current_time))
-
-#             str_values = ','.join(list_values).replace('"',"'")
-#             list_output.append(str_values)
-#         cur_osm_ro.close()
-#         cur_cache_rw = pgcl.cursor()
-#         str_query = "DELETE FROM {} WHERE insee_com LIKE '{}';".format(query_name,hp.get_sql_like_dept_string(dept))
-#         cur_cache_rw.execute(str_query)
-#         if len(list_output) > 0 :
-#             str_query = "INSERT INTO {} VALUES ({});COMMIT;".format(query_name,'),('.join(list_output))
-#             strq = open('./query.txt','w')
-#             strq.write(str_query)
-#             strq.close()
-#             cur_cache_rw.execute(str_query)
-#         cur_cache_rw.close()
-#         o.batch_end_log(0,batch_id)
 
 def addr_2_db(code_insee, source, **kwargs):
     global batch_id
