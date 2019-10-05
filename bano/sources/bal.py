@@ -7,6 +7,7 @@ from email.utils import formatdate, parsedate_to_datetime
 from pathlib import Path
 
 import requests
+import psycopg2
 
 from ..constants import DEPARTEMENTS
 from .. import db
@@ -49,9 +50,12 @@ def import_to_pg(suffixe_fichier, departement, **kwargs):
     with gzip.open(fichier_source, mode='rt') as f:
         f.readline()  # skip CSV headers
         with  db.bano_cache.cursor() as cur_insert:
-            cur_insert.execute(f"DELETE FROM bal_{suffixe_fichier} WHERE commune_code LIKE '{departement+'%'}'")
-            cur_insert.copy_from(f, f"bal_{suffixe_fichier}", sep=';', null='')
-            db.bano_cache.commit()
+            try:
+                cur_insert.execute(f"DELETE FROM bal_{suffixe_fichier} WHERE commune_code LIKE '{departement+'%'}'")
+                cur_insert.copy_from(f, f"bal_{suffixe_fichier}", sep=';', null='')
+                db.bano_cache.commit()
+            except psycopg2.DataError as e:
+                db.bano_cache.reset()
     
     
 def get_destination(suffixe_fichier, departement):
