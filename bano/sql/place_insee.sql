@@ -1,4 +1,4 @@
-DELETE FROM place_insee WHERE insee_com = '__com__';
+--DELETE FROM place_insee WHERE insee_com = '__com__';
 WITH
 a AS
 (SELECT	ST_Transform(pt.way,4326) pt_geo,
@@ -15,7 +15,7 @@ a AS
         (pt.railway !='' AND pt."ref:FR:FANTOIR" != '') OR
         (pt.amenity !='' AND pt."ref:FR:FANTOIR" != '')    ) AND
 		pt.name != '')
-INSERT INTO place_insee
+--INSERT INTO place_insee
 SELECT 	ST_X(pt_geo),
 		ST_Y(pt_geo),
 		place,
@@ -23,7 +23,7 @@ SELECT 	ST_X(pt_geo),
 		fantoir,
 		'0', --ld_bati
 		tags,
-		insee_com,
-        round(extract(epoch from now()))
+		insee_com--,
+        -- round(extract(epoch from now()))
 FROM	a;
-COMMIT;
+--COMMIT;

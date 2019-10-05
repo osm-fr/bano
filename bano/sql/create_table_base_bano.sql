@@ -18,6 +18,7 @@ CREATE INDEX IF NOT EXISTS cumul_adresses_fantoir_source_idx ON :schema_cible.cu
 CREATE INDEX IF NOT EXISTS cumul_adresses_geo ON :schema_cible.cumul_adresses USING gist (geometrie);
 CREATE INDEX IF NOT EXISTS cumul_adresses_insee ON :schema_cible.cumul_adresses(insee_com) WITH (fillfactor=95);
 CREATE INDEX IF NOT EXISTS cumul_adresses_source ON :schema_cible.cumul_adresses(source) WITH (fillfactor=95);
+CREATE INDEX IF NOT EXISTS cumul_adresses_insee_source ON :schema_cible.cumul_adresses(insee_com,source) WITH (fillfactor=95);
 
 CREATE TABLE IF NOT EXISTS :schema_cible.cumul_voies
 (   geometrie       geometry ,
@@ -39,6 +40,7 @@ CREATE INDEX IF NOT EXISTS    cumul_voies_fantoir_source_idx ON :schema_cible.cu
 CREATE INDEX IF NOT EXISTS    cumul_voies_geo ON :schema_cible.cumul_voies USING gist (geometrie);
 CREATE INDEX IF NOT EXISTS    cumul_voies_insee ON :schema_cible.cumul_voies(insee_com) WITH (fillfactor=95);
 CREATE INDEX IF NOT EXISTS    cumul_voies_source ON :schema_cible.cumul_voies(source) WITH (fillfactor=95);
+CREATE INDEX IF NOT EXISTS    cumul_voies_insee_source ON :schema_cible.cumul_voies(insee_com,source) WITH (fillfactor=95);
 
 CREATE TABLE IF NOT EXISTS :schema_cible.cumul_places
 (   geometrie       geometry ,
@@ -49,7 +51,7 @@ CREATE TABLE IF NOT EXISTS :schema_cible.cumul_places
     ld_osm          character varying (30),
     fantoir         character varying (10),
     insee_com       character           (5),
-    cadastre_com    character varying (10),
+    -- cadastre_com    character varying (10),
     dept            character varying (3),
     code_postal     character varying (5),
     source          character varying (100),

@@ -13,6 +13,11 @@ def get_insee_name(insee_com):
         conn.execute(f"SELECT insee_com, nom_com FROM code_cadastre WHERE insee_com = '{insee_com}';")
         return conn.fetchall()
 
+def get_cadastre_format(insee_com):
+    with db.bano.cursor() as conn :
+        conn.execute(f"SELECT format_cadastre FROM code_cadastre WHERE insee_com = '{insee_com}';")
+        return conn.fetchone()[0]
+
 def age_etape_dept(etape,dept):
     cur = db.bano.cursor()
     str_query = 'SELECT timestamp_debut FROM batch WHERE etape = \'{:s}\' AND dept = \'{:s}\' UNION ALL SELECT 0 ORDER BY 1 DESC;'.format(etape,dept)

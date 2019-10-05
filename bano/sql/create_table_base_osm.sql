@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS :schema_cible.lieux_dits (
         nom        character varying(80),
         created date,
         updated date,
-        geometrie geometry(MultiPolygon,4326)
+        geometrie geometry(Polygon,4326)
 );
 CREATE INDEX IF NOT EXISTS lieux_dits_insee_com ON :schema_cible.lieux_dits(insee_com);
 CREATE INDEX IF NOT EXISTS gidx_lieux_dits      ON :schema_cible.lieux_dits USING gist (geometrie);
@@ -264,3 +264,11 @@ CREATE TABLE IF NOT EXISTS cadastre_2_place (
         timestamp_maj integer DEFAULT (date_part('epoch'::text, CURRENT_TIMESTAMP))::integer
 );
 CREATE INDEX IF NOT EXISTS idx_cadastre_2_place_insee_com ON cadastre_2_place(insee_com);
+
+CREATE TABLE IF NOT EXISTS expire_tiles (
+  z integer,
+  x integer,
+  y integer,
+  geometrie geometry(Polygon, 3857)
+);
+CREATE INDEX IF NOT EXISTS gidx_expire_tiles ON expire_tiles(geometrie);

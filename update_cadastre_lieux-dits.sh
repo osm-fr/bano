@@ -1,23 +1,31 @@
 #!/bin/bash
 source config
 
-cd $DATA_DIR/bano_cache
+cd $CADASTRE_CACHE_DIR
+echo "Mise à jour des lieux-dits" > ld.log
+date >> ld.log
 
-for dep in {01..19} 2A 2B {21..95} {971..974} 976
-# for dep in {01..03} 2A
-#for dep in  {24..95} {971..974} 976
+for DEPT in {01..19} 2A 2B {21..95} {971..974} 976
+# for DEPT in {01..03} 2A
 do
-	mkdir $dep
-	cd $dep
-	# full_dep=`pwd`
-#	wget https://cadastre.data.gouv.fr/data/etalab-cadastre/latest/shp/departements/$dep/cadastre-$dep-lieux_dits-shp.zip -O $CADASTRE_CACHE_DIR/cadastre-$dep-lieux_dits-shp.zip
-	unzip $CADASTRE_CACHE_DIR/cadastre-$dep-lieux_dits-shp.zip
-    # reconstruction du shapefile avec ogr2ogr car corrompu pour shp2pgsql
-    ogr2ogr -overwrite -f 'ESRI Shapefile' lieux_dits_ok.shp lieux_dits.shp
-    shp2pgsql -s 2154:4326 -g geometrie -W LATIN1 lieux_dits_ok.shp public.tmp_lieux_dits$dep | psql -d osm -U cadastre -q
-    psql -d osm -U cadastre -f $BANO_DIR/sql/replace_lieux_dits.sql -v schema_cible=$SCHEMA_CIBLE -v dept=$dep
-	zip -mT $CADASTRE_CACHE_DIR/cadastre-$dep-lieux_dits-shp.zip lieux_dits.*
-    rm lieux_dits_ok.*
-    sleep 1
-    cd ..
+    URL="https://cadastre.data.gouv.fr/data/etalab-cadastre/latest/geojson/departements/${DEPT}/cadastre-${DEPT}-lieux_dits.json.gz"
+	wget -NS ${URL} -o wget.log
+    HTTP200=`grep '200 OK' wget.log|wc -l`
+    if (( ${HTTP200} ))
+    then
+        echo "Téléchargement des lieux-dits pour le département ${DEPT} OK" >> ld.log
+        ZIPFILE=`basename ${URL}`
+        JSONFILE=`basename ${ZIPFILE} .gz`
+        # echo $URL
+        # echo $ZIPFILE
+        # echo $JSONFILE
+        gzip -dfk ${ZIPFILE}
+        mv ${JSONFILE} lieux_dits.json
+        # ls -al
+        psql -d osm -U cadastre -c "DELETE FROM lieux_dits WHERE insee_com LIKE '${DEPT}%';"
+        ogr2ogr  -append -nln lieux_dits -fieldmap 1,0,2,3 -f PostgreSQL PG:'user=cadastre dbname=osm' lieux_dits.json
+        rm lieux_dits.json
+    else
+        echo "Pas de source plus à jour pour ${DEPT}" >> ld.log
+    fi
 done

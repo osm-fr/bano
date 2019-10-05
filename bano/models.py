@@ -181,3 +181,115 @@ class Pg_hsnr:
     def set_fantoir(self, code_insee):
         if 'ref:FR:FANTOIR' in self.tags and len(self.tags['ref:FR:FANTOIR']) == 10 and self.tags['ref:FR:FANTOIR'][0:5] == code_insee:
             self.fantoir = self.tags['ref:FR:FANTOIR']
+
+class Fantoir:
+    def __init__(self,name,fantoir,bati):
+        self.name = name
+        self.name_norm = hp.normalize(name)
+        self.fantoir = fantoir
+        self.bati = bati
+class Cadastre:
+    def __init__(self,lon,lat,name):
+        self.lon = lon
+        self.lat = lat
+        self.name = name
+        self.name_norm = hp.normalize(name)
+class Osm:
+    def __init__(self,lon,lat,place,name,fantoir):
+        self.lon = lon
+        self.lat = lat
+        self.place = place
+        self.name = name
+        self.name_norm = hp.normalize(name)
+        self.fantoir = fantoir
+class Place:
+    def __init__(self,lon,lat,place,name_fantoir,name_cadastre,name_osm,fantoir,bati,code_insee):
+        self.has_fantoir = False
+        self.has_osm = False
+        self.has_cadastre = False
+        self.fantoir = Fantoir(name_fantoir,fantoir,bati)
+        self.osm = Osm(lon,lat,place,name_osm,fantoir)
+        self.cadastre = Cadastre(lon,lat,name_cadastre)
+        self.code_insee = str(code_insee)
+        self.code_dept = hp.get_code_dept_from_insee(self.code_insee)
+        if self.fantoir.name != '':
+            self.has_fantoir = True
+        if self.osm.name != '':
+            self.has_osm = True
+        if self.cadastre.name != '':
+            self.has_cadastre = True
+#        self.source = source
+        self.id = self.fantoir.fantoir or (self.cadastre.name_norm or self.osm.name_norm)
+    def update_fantoir(self,name,fantoir,bati):
+        self.fantoir = Fantoir(name,fantoir,bati)
+        self.has_fantoir = True
+    def update_osm(self,lon,lat,place,name,fantoir=''):
+        self.osm = Osm(lon,lat,place,name,fantoir)
+        self.has_osm = True
+    def update_cadastre(self,lon,lat,name):
+        self.cadastre = Cadastre(lon,lat,name)
+        self.has_cadastre = True
+    def as_string(self):
+        return "{:s}:{:s}\t{:s}\t{:6f}\t{:6f}\t{:s}\t{:s}\t{:6f}\t{:6f}\t{:s}".format(self.id,self.fantoir.name,self.fantoir.fantoir,self.osm.lon,self.osm.lat,self.osm.place,self.osm.name,self.cadastre.lon,self.cadastre.lat,self.cadastre.name)
+    def as_SQL_cadastre_row(self):
+# (geometrie,libelle_cadastre,libelle_osm,libelle_fantoir,fantoir,insee_com,dept,code_postal,source,ld_bati,ld_osm)
+        if self.has_cadastre:
+            if self.has_osm and self.has_fantoir:
+                return f"(ST_PointFromText('POINT({self.cadastre.lon} {self.cadastre.lat})',4326),'{hp.escape_quotes(hp.format_toponyme(self.cadastre.name))}','{hp.escape_quotes(self.osm.name)}','{self.fantoir.name}','{self.fantoir.fantoir}','{self.code_insee}','{self.code_dept}','','CADASTRE',{self.fantoir.bati},'')"
+            if self.has_fantoir:
+                return "(ST_PointFromText('POINT({:7f} {:7f})',4326),'{:s}',null,'{:s}','{:s}','{:s}','{:s}','','{:s}',{:s},'')".format(self.cadastre.lon,self.cadastre.lat,hp.format_toponyme(self.cadastre.name).replace('\'','\'\''),self.fantoir.name.replace('\'','\'\''),self.fantoir.fantoir,self.code_insee,self.code_dept,'CADASTRE',self.fantoir.bati)
+            if self.has_osm:
+                return "(ST_PointFromText('POINT({:7f} {:7f})',4326),'{:s}','{:s}',null,null,'{:s}','{:s}','','{:s}',null,'')".format(self.cadastre.lon,self.cadastre.lat,format_toponyme(self.cadastre.name).replace('\'','\'\''),self.osm.name.replace('\'','\'\''),self.code_insee,self.code_dept,'CADASTRE')
+            return "(ST_PointFromText('POINT({:7f} {:7f})',4326),'{:s}',null,null,null,'{:s}','{:s}','','{:s}',null,'')".format(self.cadastre.lon,self.cadastre.lat,hp.format_toponyme(self.cadastre.name).replace('\'','\'\''),self.code_insee,self.code_dept,'CADASTRE')
+    def as_SQL_osm_row(self):
+        if self.has_osm and self.has_fantoir:
+            return "(ST_PointFromText('POINT({:7f} {:7f})',4326),null,'{:s}','{:s}','{:s}','{:s}','{:s}','','{:s}',{:s},'{:s}')".format(self.osm.lon,self.osm.lat,self.osm.name.replace('\'','\'\''),self.fantoir.name.replace('\'','\'\''),self.fantoir.fantoir,self.code_insee,self.code_dept,'OSM',self.fantoir.bati,self.osm.place)
+        if self.has_osm:
+            return "(ST_PointFromText('POINT({:7f} {:7f})',4326),null,'{:s}',null,null,'{:s}','{:s}','','{:s}',null,'{:s}')".format(self.osm.lon,self.osm.lat,self.osm.name.replace('\'','\'\''),self.code_insee,self.code_dept,'OSM',self.osm.place)
+class Places:
+    def __init__(self):
+        self.p = {}
+
+    def add_place(self,new_p):
+        self.p[new_p.id]=new_p
+    def match_fantoir(self,fantoir):
+        for c in self.p:
+            if c.fantoir and c.fantoir.fantoir and c.fantoir.fantoir == fantoir:
+                return c
+        return 0
+    def match_name(self,name,target):
+        # print("name : {:s}\n".format(name))
+        res = []
+        name_norm = hp.normalize(name)
+        if target == 'FANTOIR':
+            for c in self.p:
+                if self.p[c].fantoir and self.p[c].fantoir.name and self.p[c].fantoir.name_norm == name_norm:
+                    res+=[c]
+        if target == 'CADASTRE':
+            for c in self.p:
+                if c.cadastre and c.cadastre.name and c.cadastre.name_norm == name_norm:
+                    res+=c
+        if target == 'OSM':
+            for c in self.p:
+                if c.osm and c.osm.name and c.osm.name_norm == name_norm:
+                    res+=c
+        return res
+    def _print(self):
+        for c in self.p:
+            print(self.p[c].osm.name)
+            print(self.p[c].as_string())
+    def _print_SQL_Cadastre(self):
+        for c in self.p:
+            print(self.p[c].as_SQL_cadastre_row())
+    def as_SQL_Cadastre_array(self):
+        a = []
+        for c in self.p:
+            if self.p[c].has_cadastre:
+                a.append(self.p[c].as_SQL_cadastre_row())
+        return a
+    def as_SQL_OSM_array(self):
+        a = []
+        for c in self.p:
+            if self.p[c].has_osm:
+                a.append(self.p[c].as_SQL_osm_row())
+        return a

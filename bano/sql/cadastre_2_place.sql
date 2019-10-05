@@ -1,4 +1,4 @@
-DELETE FROM cadastre_2_place WHERE insee_com = '__com__';
+--DELETE FROM cadastre_2_place WHERE insee_com = '__com__';
 WITH
 fantoir 
 AS
@@ -23,11 +23,11 @@ AS
 FROM lieux_dits l
 LEFT OUTER JOIN fantoir f
 USING (nom,insee_com))
-INSERT INTO cadastre_2_place
+--INSERT INTO cadastre_2_place
 SELECT ST_X(geometrie),
 		ST_Y(geometrie),
 		nom,
 		fantoir,
 		insee_com
 FROM	mix;
-COMMIT;
+--COMMIT;
