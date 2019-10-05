@@ -25,10 +25,19 @@ class Mapping:
             self.fantoir[cle] = c[0]
         cur_fantoir.close()
 
-    def load_addr_from_fantoir(self):
-        for k in self.fantoir:
-            adresses.add_fantoir(k,self.fantoir[k],'FANTOIR')
-
+    def load_lieux_dits(self,insee):
+        str_query = "SELECT code_insee||id_voie||cle_rivoli,\
+                            TRIM(BOTH FROM nature_voie||' '||libelle_voie),\
+                            ld_bati\
+                    FROM    fantoir_voie\
+                    WHERE    code_insee = '{:s}' AND\
+                            type_voie = '3' AND\
+                            COALESCE(caractere_annul,'') = '';".format(insee)
+        with db.bano_cache.cursor() as conn:
+            conn.execute(str_query)
+            for c in conn:
+                self.fantoir[c[0]] = {"nom":c[1], "ld_bati":c[2]}
+    
     def add_fantoir_name(self,fantoir,name,source):
         if not fantoir in self.code_fantoir_vers_noms:
             self.code_fantoir_vers_noms[fantoir] = {}
