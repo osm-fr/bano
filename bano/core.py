@@ -68,7 +68,7 @@ def get_last_base_update(query_name,insee_com):
     return resp
 
 def get_data_from_pg(query_name,insee_com):
-    # current_time = round(time.time())
+    # print(query_name)
     cur_cache = db.bano_cache.cursor()
     str_query = "DELETE FROM {} WHERE insee_com = '{}';".format(query_name,insee_com)
     with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'sql/{:s}.sql'.format(query_name)),'r') as fq:
@@ -77,6 +77,25 @@ def get_data_from_pg(query_name,insee_com):
 
     str_query+= "SELECT * FROM {} WHERE insee_com = '{}';".format(query_name,insee_com)
     cur_cache.execute(str_query)
+    # print(str_query)
+
+    res = []
+    for l in cur_cache :
+        res.append(list(l))
+    cur_cache.close()
+    return res
+
+def get_data_from_pg_direct(query_name,insee_com):
+    print(query_name,'direct')
+    cur_cache = db.bano_cache.cursor()
+    # str_query = "DELETE FROM {} WHERE insee_com = '{}';".format(query_name,insee_com)
+    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'sql/{:s}_nocache.sql'.format(query_name)),'r') as fq:
+        str_query = fq.read().replace('__com__',insee_com)
+    # cur_cache.execute(str_query)
+
+    # str_query+= "SELECT * FROM {} WHERE insee_com = '{}';".format(query_name,insee_com)
+    cur_cache.execute(str_query)
+    # print(str_query)
 
     res = []
     for l in cur_cache :
@@ -147,8 +166,7 @@ def load_bases_adresses_locales_hsnr(code_insee):
     cur.close()
 
 def load_hsnr_bbox_from_pg_osm(insee_com):
-    # data = get_data_from_pg_direct('hsnr_bbox_insee',insee_com)
-    data = get_data_from_pg('hsnr_bbox_insee',insee_com)
+    data = get_data_from_pg_direct('hsnr_bbox_insee',insee_com)
     for l in data:
         oa = Pg_hsnr(l, insee_com)
         n = Node({'id':oa.osm_id,'lon':oa.x,'lat':oa.y},{})
@@ -160,7 +178,7 @@ def load_hsnr_bbox_from_pg_osm(insee_com):
         adresses.add_adresse(Adresse(n,oa.numero,oa.voie,oa.fantoir,oa.code_postal), 'OSM')
 
 def load_hsnr_from_pg_osm(insee_com):
-    data = get_data_from_pg('hsnr_insee', insee_com)
+    data = get_data_from_pg_direct('hsnr_insee', insee_com)
     for l in data:
         oa = Pg_hsnr(l, insee_com)
         n = Node({'id':oa.osm_id,'lon':oa.x,'lat':oa.y},{})
@@ -170,7 +188,7 @@ def load_hsnr_from_pg_osm(insee_com):
         adresses.add_adresse(Adresse(n,oa.numero,oa.voie,oa.fantoir,oa.code_postal), 'OSM')
 
 def load_highways_bbox_from_pg_osm(insee_com):
-    data = get_data_from_pg('highway_suffixe_insee',insee_com)
+    data = get_data_from_pg_direct('highway_suffixe_insee',insee_com)
     for name, fantoir_unique, fantoir_gauche, fantoir_droit, suffixe, *others in data:
         if fantoir_unique and hp.is_valid_fantoir(fantoir_unique, insee_com):
             code_fantoir = fantoir_unique
@@ -190,7 +208,7 @@ def load_highways_bbox_from_pg_osm(insee_com):
         adresses.add_fantoir(cle,code_fantoir,'OSM')
 
 def load_highways_from_pg_osm(insee_com):
-    data = get_data_from_pg('highway_suffixe_insee',insee_com)
+    data = get_data_from_pg_direct('highway_suffixe_insee',insee_com)
     for name, fantoir_unique, fantoir_gauche, fantoir_droit, suffixe, *others in data:
         if not name or len(name) < 2:
             continue
@@ -212,8 +230,8 @@ def load_highways_from_pg_osm(insee_com):
             fantoir.mapping.add_fantoir_name(code_fantoir,name_suffixe,'OSM')
 
 def load_highways_relations_bbox_from_pg_osm(code_insee):
-    data = get_data_from_pg('highway_relation_suffixe_insee', code_insee) # manque la version bbox
-    for name, tags, suffixe, insee, timestamp_maj in data:
+    data = get_data_from_pg_direct('highway_relation_suffixe_insee', code_insee) # manque la version bbox
+    for name, tags, suffixe, insee, *others in data:
         fantoir = ''
         if 'ref:FR:FANTOIR' in tags and hp.is_valid_fantoir(tags['ref:FR:FANTOIR'], code_insee):
             fantoir = tags['ref:FR:FANTOIR']
@@ -229,7 +247,7 @@ def load_highways_relations_bbox_from_pg_osm(code_insee):
         adresses.add_voie(name_suffixe,'OSM',name)
 
 def load_highways_relations_from_pg_osm(code_insee):
-    data = get_data_from_pg('highway_relation_suffixe_insee', code_insee)
+    data = get_data_from_pg_direct('highway_relation_suffixe_insee', code_insee)
     for name, tags, suffixe, *others in data:
         if not name or len(name) < 2:
             continue
