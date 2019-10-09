@@ -68,16 +68,13 @@ def get_last_base_update(query_name,insee_com):
     return resp
 
 def get_data_from_pg(query_name,insee_com):
-    # print(query_name)
     cur_cache = db.bano_cache.cursor()
     str_query = "DELETE FROM {} WHERE insee_com = '{}';".format(query_name,insee_com)
     with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'sql/{:s}.sql'.format(query_name)),'r') as fq:
         str_query+=fq.read().replace('__com__',insee_com)
-    # cur_cache.execute(str_query)
 
     str_query+= "SELECT * FROM {} WHERE insee_com = '{}';".format(query_name,insee_com)
     cur_cache.execute(str_query)
-    # print(str_query)
 
     res = []
     for l in cur_cache :
@@ -86,21 +83,14 @@ def get_data_from_pg(query_name,insee_com):
     return res
 
 def get_data_from_pg_direct(query_name,insee_com):
-    print(query_name,'direct')
-    cur_cache = db.bano_cache.cursor()
-    # str_query = "DELETE FROM {} WHERE insee_com = '{}';".format(query_name,insee_com)
-    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'sql/{:s}_nocache.sql'.format(query_name)),'r') as fq:
-        str_query = fq.read().replace('__com__',insee_com)
-    # cur_cache.execute(str_query)
-
-    # str_query+= "SELECT * FROM {} WHERE insee_com = '{}';".format(query_name,insee_com)
-    cur_cache.execute(str_query)
-    # print(str_query)
-
     res = []
-    for l in cur_cache :
-        res.append(list(l))
-    cur_cache.close()
+    with db.bano_cache.cursor() as cur_cache:
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'sql/{:s}_nocache.sql'.format(query_name)),'r') as fq:
+            str_query = fq.read().replace('__com__',insee_com)
+            cur_cache.execute(str_query)
+    
+            for l in cur_cache :
+                res.append(list(l))
     return res
 
 def get_tags(xmlo):
@@ -119,32 +109,6 @@ def has_addreses_with_suffix(insee):
             res = True
     cur.close()
     return res
-
-def load_cadastre_hsnr(code_insee):
-    dict_node_relations = {}
-    destinations_principales_retenues = 'habitation commerce industrie tourisme'
-    str_query = "SELECT * FROM bal_cadastre WHERE commune_code = '{}';".format(code_insee)
-    cur = db.bano_cache.cursor()
-    cur.execute(str_query)
-    for cle_interop, ui_adresse, numero, suffixe, pseudo_adresse, name, voie_code, code_postal, libelle_acheminement, destination_principale, commune_code, commune_nom, source, lon, lat, *others in cur:
-        housenumber = numero+((' '+suffixe) if suffixe else '')
-        if not name or len(name) < 2:
-            continue
-        if not lon :
-            continue
-        if pseudo_adresse == 'true':
-            continue
-        if not re.search(destination_principale,destinations_principales_retenues):
-            continue
-        adresses.register(name)
-        
-        if not cle_interop in dict_node_relations:
-            dict_node_relations[cle_interop] = []
-            dict_node_relations[cle_interop].append(hp.normalize(name))
-        if hp.is_valid_housenumber(housenumber):
-            nd = Node({'id':cle_interop,'lon':lon,'lat':lat},{})
-            adresses.add_adresse(Adresse(nd,housenumber,name,'',code_postal), 'CADASTRE')
-    cur.close()
 
 def load_bases_adresses_locales_hsnr(code_insee):
     dict_node_relations = {}
@@ -206,6 +170,7 @@ def load_highways_bbox_from_pg_osm(insee_com):
         if adresses.has_already_fantoir(cle,'OSM'):
             continue
         adresses.add_fantoir(cle,code_fantoir,'OSM')
+        adresses.add_voie(name_suffixe,'OSM',name)
 
 def load_highways_from_pg_osm(insee_com):
     data = get_data_from_pg_direct('highway_suffixe_insee',insee_com)
@@ -228,6 +193,7 @@ def load_highways_from_pg_osm(insee_com):
         if code_fantoir != '':
             adresses.add_fantoir(cle,code_fantoir,'OSM')
             fantoir.mapping.add_fantoir_name(code_fantoir,name_suffixe,'OSM')
+        adresses.add_voie(name_suffixe,'OSM',name)
 
 def load_highways_relations_bbox_from_pg_osm(code_insee):
     data = get_data_from_pg_direct('highway_relation_suffixe_insee', code_insee) # manque la version bbox
@@ -262,21 +228,24 @@ def load_highways_relations_from_pg_osm(code_insee):
            code_fantoir = ''
         if code_fantoir != '':
             fantoir.mapping.add_fantoir_name(code_fantoir,name,'OSM')
+        adresses.add_voie(name_suffixe,'OSM',name)
 
 def load_point_par_rue_from_pg_osm(code_insee):
-    data = get_data_from_pg('point_par_rue_insee',code_insee)
+    data = get_data_from_pg_direct('point_par_rue_insee',code_insee)
     for lon, lat, name, *others in data:
         if not name or len(name) < 2:
             continue
         adresses.register(name)
         cle = hp.normalize(name)
         adresses[cle]['point_par_rue'] = [lon, lat]
+        if 'OSM' not in adresses.a[cle]['voies']:
+            adresses.add_voie(name,'OSM')
         if 'OSM' not in adresses[cle]['fantoirs']:
             if cle in fantoir.mapping.fantoir:
                 adresses.add_fantoir(cle,fantoir.mapping.fantoir[cle],'OSM')
 
 def load_point_par_rue_complement_from_pg_osm(insee_com):
-    data = get_data_from_pg('point_par_rue_complement_insee',insee_com)
+    data = get_data_from_pg_direct('point_par_rue_complement_insee',insee_com)
     for l in data:
         name = l[2]
         if not name or len(name) < 2:
@@ -301,8 +270,8 @@ def load_type_highway_from_pg_osm(insee_com):
             adresses.add_highway_index(cle,constants.HIGHWAY_TYPES_INDEX[highway_type])
 
 def addr_2_db(code_insee, source, **kwargs):
-    global batch_id
-    global code_cadastre,code_dept
+    # global batch_id
+    global code_dept
     global nodes,ways,adresses
     global schema_cible
 
@@ -322,7 +291,7 @@ def addr_2_db(code_insee, source, **kwargs):
     if source == 'BAL':
         load_bases_adresses_locales_hsnr(code_insee)
     if source == 'CADASTRE':
-        load_cadastre_hsnr(code_insee)
+        adresses.load_cadastre_hsnr()
     if source == 'OSM':
         load_hsnr_from_pg_osm(code_insee)
         load_hsnr_bbox_from_pg_osm(code_insee)
@@ -337,7 +306,6 @@ def addr_2_db(code_insee, source, **kwargs):
         load_point_par_rue_complement_from_pg_osm(code_insee)
     nb_rec = adresses.save(source, code_dept)
     batch_end_log(nb_rec,batch_id)
-    fin_total = time.time()
 
 def process(source, code_insee, depts, France, **kwargs):
     liste_codes_insee = []
