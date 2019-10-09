@@ -51,7 +51,6 @@ def load_osm(code_insee):
     for lon, lat, place, name, fantoir, ld_bati, tags, *others in data:
         targets = places.match_name(name,'FANTOIR')
         if targets:
-            # if len(targets)>1: print '**************\n'+str(targets)
             for t in targets:
                 places.p[t].update_osm(lon, lat, place, name, fantoir)
         else:
@@ -61,8 +60,6 @@ def load_osm(code_insee):
 def load_to_db(places, code_insee):
     with db.bano.cursor() as conn:
         conn.execute(f"DELETE FROM cumul_places WHERE insee_com = '{code_insee}'")
-
-        a_values_place = []
 
         sload = "INSERT INTO cumul_places (geometrie,libelle_cadastre,libelle_osm,libelle_fantoir,fantoir,insee_com,dept,code_postal,source,ld_bati,ld_osm) VALUES"
         a_values = places.as_SQL_Cadastre_array()
@@ -77,11 +74,8 @@ def load_to_db(places, code_insee):
 
 def place_2_db(code_insee):
 
-    global pgc,fantoir,code_dept,dicts,places
+    global fantoir,places
     
-    dicts = {}
-
-    code_dept = hp.get_code_dept_from_insee(code_insee)
     format_cadastre = dbhp.get_cadastre_format(code_insee)
 
     places = Places()

@@ -1,4 +1,5 @@
 import re
+import time
 
 from . import db
 from . import helpers as hp
@@ -79,57 +80,44 @@ class Adresses:
 
     def load_cadastre_hsnr(self):
         dict_node_relations = {}
-        destinations_principales_retenues = 'habitation commerce industrie tourisme'
-        str_query = "SELECT * FROM bal_cadastre WHERE commune_code = '{}';".format(self.code_insee)
-        cur = db.bano_cache.cursor()
-        cur.execute(str_query)
-        for cle_interop, ui_adresse, numero, suffixe, pseudo_adresse, name, voie_code, code_postal, libelle_acheminement, destination_principale, commune_code, commune_nom, source, lon, lat, *others in cur:
-            housenumber = numero+((' '+suffixe) if suffixe else '')
-            if not name or len(name) < 2:
-                continue
-            if not lon :
-                continue
-            if pseudo_adresse == 'true':
-                continue
-            if not re.search(destination_principale,destinations_principales_retenues):
-                continue
-            self.register(name)
-            
-            if not cle_interop in dict_node_relations:
-                dict_node_relations[cle_interop] = []
-                dict_node_relations[cle_interop].append(hp.normalize(name))
-            if hp.is_valid_housenumber(housenumber):
-                nd = Node({'id':cle_interop,'lon':lon,'lat':lat},{})
-                self.add_adresse(Adresse(nd,housenumber,name,'',code_postal), 'CADASTRE')
-        cur.close()
+        str_query = f"SELECT * FROM bal_cadastre WHERE commune_code = '{self.code_insee}' AND destination_principale in ('habitation','commerce','industrie','tourisme');"
+        with db.bano_cache.cursor() as cur:
+            cur.execute(str_query)
+            for cle_interop, ui_adresse, numero, suffixe, pseudo_adresse, name, voie_code, code_postal, libelle_acheminement, destination_principale, commune_code, commune_nom, source, lon, lat, *others in cur:
+                housenumber = numero+((' '+suffixe) if suffixe else '')
+                if not name or len(name) < 2 or not lon or pseudo_adresse == 'true':
+                    continue
+                self.register(name)
+                
+                if not cle_interop in dict_node_relations:
+                    dict_node_relations[cle_interop] = []
+                    dict_node_relations[cle_interop].append(hp.normalize(name))
+                if hp.is_valid_housenumber(housenumber):
+                    nd = Node({'id':cle_interop,'lon':lon,'lat':lat},{})
+                    self.add_adresse(Adresse(nd,housenumber,name,'',code_postal), 'CADASTRE')
 
     def save(self, source, code_dept):
         cur_insert = db.bano.cursor()
         for a in ['cumul_adresses','cumul_voies']:
+            debut = time.time()
             sload = "DELETE FROM {:s} WHERE insee_com = '{:s}' AND source = '{:s}';\n".format(a, self.code_insee, source)
             cur_insert.execute(sload)
+            fin = time.time()
+            print (f"Duree DELETE  {a} - {source}                    : {(fin - debut):3.2f}")
         nb_rec = 0
         a_values_voie = []
 
+        debut = time.time()
+        sload = 'INSERT INTO cumul_adresses (geometrie,numero,voie_cadastre,voie_bal,voie_osm,voie_fantoir,fantoir,insee_com,dept,code_postal,source) VALUES'
+        a_values = []
         for v in self:
-            sload = 'INSERT INTO cumul_adresses (geometrie,numero,voie_cadastre,voie_bal,voie_osm,voie_fantoir,fantoir,insee_com,dept,code_postal,source) VALUES'
-            a_values = []
-            street_name_cadastre = ''
-            street_name_bal = ''
-            street_name_osm = ''
-            street_name_fantoir = ''
             code_postal = ''
             cle_fantoir = self.get_best_fantoir(v)
-            if 'OSM' in self[v]['voies']:
-                street_name_osm =  self[v]['voies']['OSM']
-            else :
-                street_name_osm = fantoir.mapping.get_fantoir_name(cle_fantoir,'OSM')
-            if 'FANTOIR' in self[v]['voies']:
-                street_name_fantoir =  self[v]['voies']['FANTOIR']
-            if 'CADASTRE' in self[v]['voies']:
-                street_name_cadastre =  self[v]['voies']['CADASTRE']
-            if 'BAL' in self[v]['voies']:
-                street_name_bal =  self[v]['voies']['BAL']
+            street_name_osm = self[v]['voies'].get('OSM') or fantoir.mapping.get_fantoir_name(cle_fantoir,'OSM') or ''
+            street_name_fantoir =  self[v]['voies'].get('FANTOIR') or ''
+            street_name_cadastre =  self[v]['voies'].get('CADASTRE') or ''
+            street_name_bal =  self[v]['voies'].get('BAL') or ''
+
             if len(self[v]['point_par_rue'])>1 and source == 'OSM':
                 a_values_voie.append(("(ST_PointFromText('POINT({:6f} {:6f})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}',{:d})".format(self[v]['point_par_rue'][0],self[v]['point_par_rue'][1],street_name_cadastre.replace("'","''"),street_name_bal.replace("'","''"),street_name_osm.replace("'","''"), street_name_fantoir.replace("'","''"), cle_fantoir, self.code_insee,code_dept,'',source,self[v]['highway_index'])).replace(",'',",",null,"))
 
@@ -137,13 +125,15 @@ class Adresses:
                 numadresse = self[v]['numeros'][num]
                 a_values.append("(ST_PointFromText('POINT({:6f} {:6f})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}')".format(numadresse.node.attribs['lon'],numadresse.node.attribs['lat'],numadresse.numero.replace("'",""),street_name_cadastre.replace("'","''"),street_name_bal.replace("'","''"),street_name_osm.replace("'","''"),street_name_fantoir.replace("'","''"),cle_fantoir,self.code_insee,code_dept,numadresse.code_postal,source).replace(",''",",null").replace(",''",",null"))
                 nb_rec +=1
-            if len(a_values)>0:
-                sload = sload+','.join(a_values)+';COMMIT;'
-                cur_insert.execute(sload)
+        if len(a_values)>0:
+            cur_insert.execute(sload+','.join(a_values)+';COMMIT;')
+        print (f"Duree INSERT ADRESSES - {source}                    : {(time.time() - debut):3.2f}")
         sload_voie = 'INSERT INTO cumul_voies (geometrie,voie_cadastre,voie_bal,voie_osm,voie_fantoir,fantoir,insee_com,dept,code_postal,source,voie_index) VALUES'
         if len(a_values_voie) > 0:
             sload_voie = sload_voie+','.join(a_values_voie)+';COMMIT;'
+            debut = time.time()
             cur_insert.execute(sload_voie)
+            print (f"Duree INSERT VOIES    - {source}                    : {(time.time() - debut):3.2f}")
         cur_insert.close()
         return(nb_rec)
 
@@ -232,11 +222,11 @@ class Place:
     def as_string(self):
         return "{:s}:{:s}\t{:s}\t{:6f}\t{:6f}\t{:s}\t{:s}\t{:6f}\t{:6f}\t{:s}".format(self.id,self.fantoir.name,self.fantoir.fantoir,self.osm.lon,self.osm.lat,self.osm.place,self.osm.name,self.cadastre.lon,self.cadastre.lat,self.cadastre.name)
     def as_SQL_cadastre_row(self):
-# (geometrie,libelle_cadastre,libelle_osm,libelle_fantoir,fantoir,insee_com,dept,code_postal,source,ld_bati,ld_osm)
         if self.has_cadastre:
             if self.has_osm and self.has_fantoir:
-                return f"(ST_PointFromText('POINT({self.cadastre.lon} {self.cadastre.lat})',4326),'{hp.escape_quotes(hp.format_toponyme(self.cadastre.name))}','{hp.escape_quotes(self.osm.name)}','{self.fantoir.name}','{self.fantoir.fantoir}','{self.code_insee}','{self.code_dept}','','CADASTRE',{self.fantoir.bati},'')"
+                return f"(ST_PointFromText('POINT({self.cadastre.lon} {self.cadastre.lat})',4326),'{hp.escape_quotes(hp.format_toponyme(self.cadastre.name))}','{hp.escape_quotes(self.osm.name)}','{hp.escape_quotes(self.fantoir.name)}','{self.fantoir.fantoir}','{self.code_insee}','{self.code_dept}','','CADASTRE',{self.fantoir.bati},'')"
             if self.has_fantoir:
+                print('has_fantoir')
                 return "(ST_PointFromText('POINT({:7f} {:7f})',4326),'{:s}',null,'{:s}','{:s}','{:s}','{:s}','','{:s}',{:s},'')".format(self.cadastre.lon,self.cadastre.lat,hp.format_toponyme(self.cadastre.name).replace('\'','\'\''),self.fantoir.name.replace('\'','\'\''),self.fantoir.fantoir,self.code_insee,self.code_dept,'CADASTRE',self.fantoir.bati)
             if self.has_osm:
                 return "(ST_PointFromText('POINT({:7f} {:7f})',4326),'{:s}','{:s}',null,null,'{:s}','{:s}','','{:s}',null,'')".format(self.cadastre.lon,self.cadastre.lat,format_toponyme(self.cadastre.name).replace('\'','\'\''),self.osm.name.replace('\'','\'\''),self.code_insee,self.code_dept,'CADASTRE')
@@ -258,7 +248,6 @@ class Places:
                 return c
         return 0
     def match_name(self,name,target):
-        # print("name : {:s}\n".format(name))
         res = []
         name_norm = hp.normalize(name)
         if target == 'FANTOIR':

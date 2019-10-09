@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS :schema_cible.bal_cadastre (
     position text,
     date_der_maj date);
 CREATE INDEX IF NOT EXISTS idx_bal_cadastre_commune_code ON :schema_cible.bal_cadastre(commune_code);
+CREATE INDEX IF NOT EXISTS idx_bal_cadastre_commune_codedestination_principale ON :schema_cible.bal_cadastre(commune_code,destination_principale);
 
 CREATE TABLE IF NOT EXISTS :schema_cible.bal_locales (
     cle_interop text,
@@ -60,7 +61,7 @@ CREATE INDEX IF NOT EXISTS idx_bal_open_data_commune_code ON :schema_cible.bal_l
 
 CREATE TABLE IF NOT EXISTS :schema_cible.lieux_dits (
         insee_com       character(5),
-        nom        character varying(80),
+        nom        text,
         created date,
         updated date,
         geometrie geometry(Polygon,4326)
@@ -256,13 +257,12 @@ CREATE TABLE IF NOT EXISTS place_insee (
 CREATE INDEX IF NOT EXISTS idx_place_insee_insee_com ON place_insee(insee_com);
 
 CREATE TABLE IF NOT EXISTS cadastre_2_place (
-        long          float,
-        lat           float,
+        geometrie geometry(Point, 4326),
         nom           text,
         fantoir       text,
-        insee_com     character(5),
-        timestamp_maj integer DEFAULT (date_part('epoch'::text, CURRENT_TIMESTAMP))::integer
+        insee_com     character(5)
 );
+CREATE INDEX IF NOT EXISTS gidx_cadastre_2_place ON cadastre_2_place USING GIST(geometrie);
 CREATE INDEX IF NOT EXISTS idx_cadastre_2_place_insee_com ON cadastre_2_place(insee_com);
 
 CREATE TABLE IF NOT EXISTS expire_tiles (

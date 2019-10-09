@@ -9,6 +9,12 @@ def find_cp_in_tags(tags):
 def escape_quotes(s):
     return s.replace('\'','\'\'')
 
+def remove_quotes(s):
+    return s.replace('\'','')
+
+def replace_single_quotes_with_double(s):
+    return s.replace('\'','"')
+
 def format_toponyme(s):
     a_s = s.replace('\'',' ').split(' ')
     

@@ -5,7 +5,7 @@ cd /data/project/bano
 source config
 cat deplist.txt | parallel -j 4 export LANG=fr_FR.UTF-8\; bano download_bal CADASTRE {1}
 cat deplist.txt | parallel -j 4 export LANG=fr_FR.UTF-8\; bano download_bal BAL {1}
-./update_cadastre_lieux-dits.sh
+cat deplist.txt | parallel -j 4 export LANG=fr_FR.UTF-8\; bano download_cadastre lieux_dits {1}
 bano update_code_cadastre
 cat deplist.txt | parallel -j 4 export LANG=fr_FR.UTF-8\; bano process_commune CADASTRE --depts {1}
 cat deplist.txt | parallel -j 4 export LANG=fr_FR.UTF-8\; bano process_commune OSM --depts {1}

@@ -33,6 +33,7 @@ class Mapping:
                     WHERE    code_insee = '{:s}' AND\
                             type_voie = '3' AND\
                             COALESCE(caractere_annul,'') = '';".format(insee)
+        self.fantoir = {}
         with db.bano_cache.cursor() as conn:
             conn.execute(str_query)
             for c in conn:

@@ -3,7 +3,7 @@ import sys
 
 from .constants import DEPARTEMENTS
 from . import core, core_place, pre_process_suffixe
-from .sources import bal, cadastre_gouv
+from .sources import bal, cadastre_gouv, cadastre_json
 
 
 def main():
@@ -30,6 +30,11 @@ def main():
     subparser.add_argument('departements', type=str, help='Départements à traiter', nargs='*', default=DEPARTEMENTS)
     subparser.set_defaults(func=bal.process)
     
+    subparser = subparsers.add_parser('download_cadastre', help='b help', description="Met à jour les fichiers du cadastre hors adresses au format JSON")
+    subparser.add_argument('prefixe', choices=['lieux_dits'], type=str, help='Source des données à traiter')
+    subparser.add_argument('departements', type=str, help='Départements à traiter', nargs='*', default=DEPARTEMENTS)
+    subparser.set_defaults(func=cadastre_json.process)
+
     subparser = subparsers.add_parser('update_code_cadastre', help='b help', description="Met à jour la liste des communes d'après cadastre.gouv.fr")
     subparser.set_defaults(func=cadastre_gouv.process)
     
@@ -45,6 +50,6 @@ def main():
         args.func(**vars(args))
     except ValueError as err:
         sys.exit(str(err))
-    # except TypeError as err:
-    #     import ipdb; ipdb.set_trace()
+    except TypeError as err:
+        import ipdb; ipdb.set_trace()
 
