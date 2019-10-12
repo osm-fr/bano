@@ -159,7 +159,7 @@ class Pg_hsnr:
         self.x, self.y, self.provenance, self.osm_id, self.numero, self.voie, self.tags, *others = d
         self.tags = self.tags or {} 
         self.fantoir = ''
-        if self.provenance == '3' or self.provenance == '4':
+        if self.provenance == 3 or self.provenance == 4:
             self.set_street_name()
         self.set_fantoir(code_insee)
         self.code_postal = hp.find_cp_in_tags(self.tags)
@@ -208,7 +208,6 @@ class Place:
             self.has_osm = True
         if self.cadastre.name != '':
             self.has_cadastre = True
-#        self.source = source
         self.id = self.fantoir.fantoir or (self.cadastre.name_norm or self.osm.name_norm)
     def update_fantoir(self,name,fantoir,bati):
         self.fantoir = Fantoir(name,fantoir,bati)
