@@ -34,13 +34,6 @@ def batch_end_log(nb,batch_id):
 	whereclause = 'id_batch = {:d}'.format(batch_id)
 	str_query = 'UPDATE batch SET nombre_adresses = {:d},date_fin = \'{:s}\' WHERE {:s};COMMIT;'.format(nb,th,whereclause)
 	cur.execute(str_query)
-def get_cadastre_format(insee):
-    str_query = 'SELECT format_cadastre FROM code_cadastre WHERE insee_com = \'{:s}\';'.format(insee)
-    cur = db.bano.cursor()
-    cur.execute(str_query)
-    for c in cur:
-        code_cadastre = c[0]
-    return code_cadastre
 def get_cadastre_etape_timestamp_debut(code_cadastre,etape,source):
     str_query = "SELECT timestamp_debut FROM batch WHERE cadastre_com = '{:s}' AND etape = '{:s}' AND source = '{:s}';".format(code_cadastre,etape,source)
     cur = db.bano.cursor()
