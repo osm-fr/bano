@@ -65,20 +65,19 @@ def load_to_db(places, code_insee):
         a_values = places.as_SQL_Cadastre_array()
         nb_rec = len(a_values)
         if nb_rec>0:
-            conn.execute(sload+','.join(a_values)+';COMMIT;')
+            conn.execute(sload+','.join(a_values))
         a_values = places.as_SQL_OSM_array()
         if len(a_values)>0:
-            conn.execute(sload+','.join(a_values)+';COMMIT;')
+            conn.execute(sload+','.join(a_values))
         nb_rec+=len(a_values)
     return(nb_rec)
 
 def place_2_db(code_insee):
-
     global fantoir,places
-    
     format_cadastre = dbhp.get_cadastre_format(code_insee)
-
     places = Places()
+
+    fantoir.mapping.reset()
     fantoir.mapping.load_lieux_dits(code_insee)
     load_fantoir(fantoir.mapping.fantoir)
 

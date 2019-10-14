@@ -7,6 +7,11 @@ class Mapping:
         self.code_fantoir_vers_nom_fantoir = {}
         self.code_fantoir_vers_noms = {}
 
+    def reset(self):
+        self.fantoir = {}
+        self.code_fantoir_vers_nom_fantoir = {}
+        self.code_fantoir_vers_noms = {}
+
     def load(self,insee):
         str_query = ("""SELECT *
                         FROM    (SELECT code_insee||id_voie||cle_rivoli,
@@ -16,14 +21,13 @@ class Mapping:
                                 WHERE    code_insee = '%s' AND
                                         caractere_annul NOT IN ('O','Q')) a
                         WHERE rang = 1;""" % insee)
-        cur_fantoir = db.bano_cache.cursor()
-        cur_fantoir.execute(str_query)
-        for c in cur_fantoir:
-            self.code_fantoir_vers_nom_fantoir[c[0]] = c[1]
-            cle = ' '.join(c[1].replace('-',' ').split())
-            cle = normalize(cle)
-            self.fantoir[cle] = c[0]
-        cur_fantoir.close()
+        with db.bano_cache.cursor() as cur_fantoir:
+            cur_fantoir.execute(str_query)
+            for c in cur_fantoir:
+                self.code_fantoir_vers_nom_fantoir[c[0]] = c[1]
+                cle = ' '.join(c[1].replace('-',' ').split())
+                cle = normalize(cle)
+                self.fantoir[cle] = c[0]
 
     def load_lieux_dits(self,insee):
         str_query = "SELECT code_insee||id_voie||cle_rivoli,\
@@ -33,7 +37,6 @@ class Mapping:
                     WHERE    code_insee = '{:s}' AND\
                             type_voie = '3' AND\
                             COALESCE(caractere_annul,'') = '';".format(insee)
-        self.fantoir = {}
         with db.bano_cache.cursor() as conn:
             conn.execute(str_query)
             for c in conn:

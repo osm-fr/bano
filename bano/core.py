@@ -133,23 +133,19 @@ def load_hsnr_bbox_from_pg_osm(insee_com):
     data = get_data_from_pg_direct('hsnr_bbox_insee',insee_com)
     for l in data:
         oa = Pg_hsnr(l, insee_com)
-        n = Node({'id':oa.osm_id,'lon':oa.x,'lat':oa.y},{})
-        if oa.voie == None:
-            continue
-        if oa.fantoir == '':
+        if oa.fantoir == '' or not oa.voie :
             continue
         adresses.register(oa.voie)
-        adresses.add_adresse(Adresse(n,oa.numero,oa.voie,oa.fantoir,oa.code_postal), 'OSM')
+        adresses.add_adresse(Adresse(Node({'id':oa.osm_id,'lon':oa.x,'lat':oa.y},{}),oa.numero,oa.voie,oa.fantoir,oa.code_postal), 'OSM')
 
 def load_hsnr_from_pg_osm(insee_com):
     data = get_data_from_pg_direct('hsnr_insee', insee_com)
     for l in data:
         oa = Pg_hsnr(l, insee_com)
-        n = Node({'id':oa.osm_id,'lon':oa.x,'lat':oa.y},{})
-        if oa.voie == None:
+        if not oa.voie :
             continue
         adresses.register(oa.voie)
-        adresses.add_adresse(Adresse(n,oa.numero,oa.voie,oa.fantoir,oa.code_postal), 'OSM')
+        adresses.add_adresse(Adresse(Node({'id':oa.osm_id,'lon':oa.x,'lat':oa.y},{}),oa.numero,oa.voie,oa.fantoir,oa.code_postal), 'OSM')
 
 def load_highways_bbox_from_pg_osm(insee_com):
     data = get_data_from_pg_direct('highway_suffixe_insee',insee_com)
@@ -282,6 +278,7 @@ def addr_2_db(code_insee, source, **kwargs):
     
     adresses = Adresses(code_insee)
 
+    fantoir.mapping.reset()
     fantoir.mapping.load(code_insee)
 
     code_dept = hp.get_code_dept_from_insee(code_insee)
