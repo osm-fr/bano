@@ -225,11 +225,11 @@ class Place:
             if self.has_osm and self.has_fantoir:
                 return f"(ST_PointFromText('POINT({self.cadastre.lon} {self.cadastre.lat})',4326),'{hp.escape_quotes(hp.format_toponyme(self.cadastre.name))}','{hp.escape_quotes(self.osm.name)}','{hp.escape_quotes(self.fantoir.name)}','{self.fantoir.fantoir}','{self.code_insee}','{self.code_dept}','','CADASTRE',{self.fantoir.bati},'')"
             if self.has_fantoir:
-                print('has_fantoir')
-                return "(ST_PointFromText('POINT({:7f} {:7f})',4326),'{:s}',null,'{:s}','{:s}','{:s}','{:s}','','{:s}',{:s},'')".format(self.cadastre.lon,self.cadastre.lat,hp.format_toponyme(self.cadastre.name).replace('\'','\'\''),self.fantoir.name.replace('\'','\'\''),self.fantoir.fantoir,self.code_insee,self.code_dept,'CADASTRE',self.fantoir.bati)
+                # print('has_fantoir')
+                return f"(ST_PointFromText('POINT({self.cadastre.lon} {self.cadastre.lat})',4326),'{hp.escape_quotes(hp.format_toponyme(self.cadastre.name))}',null,'{hp.escape_quotes(self.fantoir.name)}','{self.fantoir.fantoir}','{self.code_insee}','{self.code_dept}','','CADASTRE',{self.fantoir.bati},'')"
             if self.has_osm:
-                return "(ST_PointFromText('POINT({:7f} {:7f})',4326),'{:s}','{:s}',null,null,'{:s}','{:s}','','{:s}',null,'')".format(self.cadastre.lon,self.cadastre.lat,format_toponyme(self.cadastre.name).replace('\'','\'\''),self.osm.name.replace('\'','\'\''),self.code_insee,self.code_dept,'CADASTRE')
-            return "(ST_PointFromText('POINT({:7f} {:7f})',4326),'{:s}',null,null,null,'{:s}','{:s}','','{:s}',null,'')".format(self.cadastre.lon,self.cadastre.lat,hp.format_toponyme(self.cadastre.name).replace('\'','\'\''),self.code_insee,self.code_dept,'CADASTRE')
+                return f"(ST_PointFromText('POINT({self.cadastre.lon} {self.cadastre.lat})',4326),'{hp.escape_quotes(hp.format_toponyme(self.cadastre.name))}','{hp.escape_quotes(self.osm.name)}',null,null,'{self.code_insee}','{self.code_dept}','','CADASTRE',null,'')" 
+            return f"(ST_PointFromText('POINT({self.cadastre.lon} {self.cadastre.lat})',4326),'{hp.escape_quotes(hp.format_toponyme(self.cadastre.name))}',null,null,null,'{self.code_insee}','{self.code_dept}','','CADASTRE',null,'')"     
     def as_SQL_osm_row(self):
         if self.has_osm and self.has_fantoir:
             return "(ST_PointFromText('POINT({:7f} {:7f})',4326),null,'{:s}','{:s}','{:s}','{:s}','{:s}','','{:s}',{:s},'{:s}')".format(self.osm.lon,self.osm.lat,self.osm.name.replace('\'','\'\''),self.fantoir.name.replace('\'','\'\''),self.fantoir.fantoir,self.code_insee,self.code_dept,'OSM',self.fantoir.bati,self.osm.place)
