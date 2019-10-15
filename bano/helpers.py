@@ -81,7 +81,9 @@ def get_part_debut(s,nb_parts):
 
 
 def is_valid_housenumber(hsnr):
-    return len(hsnr) <= 11
+    if hsnr:
+        return len(hsnr) <= 11
+    return False
 
 def is_valid_dept(dept):
     return dept in constants.DEPARTEMENTS
