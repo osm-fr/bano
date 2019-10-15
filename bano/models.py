@@ -53,7 +53,7 @@ class Adresses:
             self.add_voie(ad.voie,source)
             self[cle]['numeros'][ad.numero] = ad
             if ad.fantoir != '':
-                self[cle]['fantoirs']['OSM'] = ad.fantoir
+                self[cle]['fantoirs'][source] = ad.fantoir
 
     def get_cle_by_fantoir(self,fantoir):
         cle = ''
@@ -99,15 +99,12 @@ class Adresses:
     def save(self, source, code_dept):
         cur_insert = db.bano.cursor()
         for a in ['cumul_adresses','cumul_voies']:
-            debut = time.time()
             sload = "DELETE FROM {:s} WHERE insee_com = '{:s}' AND source = '{:s}';\n".format(a, self.code_insee, source)
             cur_insert.execute(sload)
             fin = time.time()
-            print (f"Duree DELETE  {a} - {source}                    : {(fin - debut):3.2f}")
         nb_rec = 0
         a_values_voie = []
 
-        debut = time.time()
         sload = 'INSERT INTO cumul_adresses (geometrie,numero,voie_cadastre,voie_bal,voie_osm,voie_fantoir,fantoir,insee_com,dept,code_postal,source) VALUES'
         a_values = []
         for v in self:
@@ -127,13 +124,10 @@ class Adresses:
                 nb_rec +=1
         if len(a_values)>0:
             cur_insert.execute(sload+','.join(a_values)+';COMMIT;')
-        print (f"Duree INSERT ADRESSES - {source}                    : {(time.time() - debut):3.2f}")
         sload_voie = 'INSERT INTO cumul_voies (geometrie,voie_cadastre,voie_bal,voie_osm,voie_fantoir,fantoir,insee_com,dept,code_postal,source,voie_index) VALUES'
         if len(a_values_voie) > 0:
             sload_voie = sload_voie+','.join(a_values_voie)+';COMMIT;'
-            debut = time.time()
             cur_insert.execute(sload_voie)
-            print (f"Duree INSERT VOIES    - {source}                    : {(time.time() - debut):3.2f}")
         cur_insert.close()
         return(nb_rec)
 
