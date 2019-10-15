@@ -12,6 +12,9 @@ def escape_quotes(s):
 def remove_quotes(s):
     return s.replace('\'','')
 
+def remove_quotes_on_null(s):
+    return s.replace("'null'","null")
+    
 def replace_single_quotes_with_double(s):
     return s.replace('\'','"')
 

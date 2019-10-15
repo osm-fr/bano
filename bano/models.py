@@ -97,38 +97,34 @@ class Adresses:
                     self.add_adresse(Adresse(nd,housenumber,name,'',code_postal), 'CADASTRE')
 
     def save(self, source, code_dept):
-        cur_insert = db.bano.cursor()
-        for a in ['cumul_adresses','cumul_voies']:
-            sload = "DELETE FROM {:s} WHERE insee_com = '{:s}' AND source = '{:s}';\n".format(a, self.code_insee, source)
-            cur_insert.execute(sload)
-            fin = time.time()
-        nb_rec = 0
-        a_values_voie = []
+        with db.bano.cursor() as cur_insert :
+            for a in ['cumul_adresses','cumul_voies']:
+                cur_insert.execute(f"DELETE FROM {a} WHERE insee_com = '{self.code_insee}' AND source = '{source}';")
+            nb_rec = 0
+            a_values = []
+            a_values_voie = []
+            sload = 'INSERT INTO cumul_adresses (geometrie,numero,voie_cadastre,voie_bal,voie_osm,voie_fantoir,fantoir,insee_com,dept,code_postal,source) VALUES'
+            for v in self:
+                code_postal = ''
+                cle_fantoir = self.get_best_fantoir(v)
+                street_name_osm = self[v]['voies'].get('OSM') or fantoir.mapping.get_fantoir_name(cle_fantoir,'OSM') or ''
+                street_name_fantoir =  self[v]['voies'].get('FANTOIR') or ''
+                street_name_cadastre =  self[v]['voies'].get('CADASTRE') or ''
+                street_name_bal =  self[v]['voies'].get('BAL') or ''
 
-        sload = 'INSERT INTO cumul_adresses (geometrie,numero,voie_cadastre,voie_bal,voie_osm,voie_fantoir,fantoir,insee_com,dept,code_postal,source) VALUES'
-        a_values = []
-        for v in self:
-            code_postal = ''
-            cle_fantoir = self.get_best_fantoir(v)
-            street_name_osm = self[v]['voies'].get('OSM') or fantoir.mapping.get_fantoir_name(cle_fantoir,'OSM') or ''
-            street_name_fantoir =  self[v]['voies'].get('FANTOIR') or ''
-            street_name_cadastre =  self[v]['voies'].get('CADASTRE') or ''
-            street_name_bal =  self[v]['voies'].get('BAL') or ''
+                if len(self[v]['point_par_rue'])>1 and source == 'OSM':
+                    a_values_voie.append(("(ST_PointFromText('POINT({:6f} {:6f})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}',{:d})".format(self[v]['point_par_rue'][0],self[v]['point_par_rue'][1],street_name_cadastre.replace("'","''"),street_name_bal.replace("'","''"),street_name_osm.replace("'","''"), street_name_fantoir.replace("'","''"), cle_fantoir, self.code_insee,code_dept,'',source,self[v]['highway_index'])).replace(",'',",",null,"))
 
-            if len(self[v]['point_par_rue'])>1 and source == 'OSM':
-                a_values_voie.append(("(ST_PointFromText('POINT({:6f} {:6f})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}',{:d})".format(self[v]['point_par_rue'][0],self[v]['point_par_rue'][1],street_name_cadastre.replace("'","''"),street_name_bal.replace("'","''"),street_name_osm.replace("'","''"), street_name_fantoir.replace("'","''"), cle_fantoir, self.code_insee,code_dept,'',source,self[v]['highway_index'])).replace(",'',",",null,"))
-
-            for num in self[v]['numeros']:
-                numadresse = self[v]['numeros'][num]
-                a_values.append("(ST_PointFromText('POINT({:6f} {:6f})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}')".format(numadresse.node.attribs['lon'],numadresse.node.attribs['lat'],numadresse.numero.replace("'",""),street_name_cadastre.replace("'","''"),street_name_bal.replace("'","''"),street_name_osm.replace("'","''"),street_name_fantoir.replace("'","''"),cle_fantoir,self.code_insee,code_dept,numadresse.code_postal,source).replace(",''",",null").replace(",''",",null"))
-                nb_rec +=1
-        if len(a_values)>0:
-            cur_insert.execute(sload+','.join(a_values)+';COMMIT;')
-        sload_voie = 'INSERT INTO cumul_voies (geometrie,voie_cadastre,voie_bal,voie_osm,voie_fantoir,fantoir,insee_com,dept,code_postal,source,voie_index) VALUES'
-        if len(a_values_voie) > 0:
-            sload_voie = sload_voie+','.join(a_values_voie)+';COMMIT;'
-            cur_insert.execute(sload_voie)
-        cur_insert.close()
+                for num in self[v]['numeros']:
+                    numadresse = self[v]['numeros'][num]
+                    a_values.append("(ST_PointFromText('POINT({:6f} {:6f})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}')".format(numadresse.node.attribs['lon'],numadresse.node.attribs['lat'],numadresse.numero.replace("'",""),street_name_cadastre.replace("'","''"),street_name_bal.replace("'","''"),street_name_osm.replace("'","''"),street_name_fantoir.replace("'","''"),cle_fantoir,self.code_insee,code_dept,numadresse.code_postal,source).replace(",''",",null").replace(",''",",null"))
+                    nb_rec +=1
+            if len(a_values)>0:
+                cur_insert.execute(sload+','.join(a_values)+';COMMIT;')
+            sload_voie = 'INSERT INTO cumul_voies (geometrie,voie_cadastre,voie_bal,voie_osm,voie_fantoir,fantoir,insee_com,dept,code_postal,source,voie_index) VALUES'
+            if len(a_values_voie) > 0:
+                sload_voie = sload_voie+','.join(a_values_voie)+';COMMIT;'
+                cur_insert.execute(sload_voie)
         return(nb_rec)
 
 
@@ -216,19 +212,10 @@ class Place:
         return "{:s}:{:s}\t{:s}\t{:6f}\t{:6f}\t{:s}\t{:s}\t{:6f}\t{:6f}\t{:s}".format(self.id,self.fantoir.name,self.fantoir.fantoir,self.osm.lon,self.osm.lat,self.osm.place,self.osm.name,self.cadastre.lon,self.cadastre.lat,self.cadastre.name)
     def as_SQL_cadastre_row(self):
         if self.has_cadastre:
-            if self.has_osm and self.has_fantoir:
-                return f"(ST_PointFromText('POINT({self.cadastre.lon} {self.cadastre.lat})',4326),'{hp.escape_quotes(hp.format_toponyme(self.cadastre.name))}','{hp.escape_quotes(self.osm.name)}','{hp.escape_quotes(self.fantoir.name)}','{self.fantoir.fantoir}','{self.code_insee}','{self.code_dept}','','CADASTRE',{self.fantoir.bati},'')"
-            if self.has_fantoir:
-                # print('has_fantoir')
-                return f"(ST_PointFromText('POINT({self.cadastre.lon} {self.cadastre.lat})',4326),'{hp.escape_quotes(hp.format_toponyme(self.cadastre.name))}',null,'{hp.escape_quotes(self.fantoir.name)}','{self.fantoir.fantoir}','{self.code_insee}','{self.code_dept}','','CADASTRE',{self.fantoir.bati},'')"
-            if self.has_osm:
-                return f"(ST_PointFromText('POINT({self.cadastre.lon} {self.cadastre.lat})',4326),'{hp.escape_quotes(hp.format_toponyme(self.cadastre.name))}','{hp.escape_quotes(self.osm.name)}',null,null,'{self.code_insee}','{self.code_dept}','','CADASTRE',null,'')" 
-            return f"(ST_PointFromText('POINT({self.cadastre.lon} {self.cadastre.lat})',4326),'{hp.escape_quotes(hp.format_toponyme(self.cadastre.name))}',null,null,null,'{self.code_insee}','{self.code_dept}','','CADASTRE',null,'')"     
+            return hp.remove_quotes_on_null(f"(ST_PointFromText('POINT({self.cadastre.lon} {self.cadastre.lat})',4326),'{hp.escape_quotes(hp.format_toponyme(self.cadastre.name)) or 'null'}','{hp.escape_quotes(self.osm.name) or 'null'}','{hp.escape_quotes(self.fantoir.name) or 'null'}','{self.fantoir.fantoir or 'null'}','{self.code_insee}','{self.code_dept}','null','CADASTRE',{self.fantoir.bati or 'null'},'')")
     def as_SQL_osm_row(self):
-        if self.has_osm and self.has_fantoir:
-            return "(ST_PointFromText('POINT({:7f} {:7f})',4326),null,'{:s}','{:s}','{:s}','{:s}','{:s}','','{:s}',{:s},'{:s}')".format(self.osm.lon,self.osm.lat,self.osm.name.replace('\'','\'\''),self.fantoir.name.replace('\'','\'\''),self.fantoir.fantoir,self.code_insee,self.code_dept,'OSM',self.fantoir.bati,self.osm.place)
-        if self.has_osm:
-            return "(ST_PointFromText('POINT({:7f} {:7f})',4326),null,'{:s}',null,null,'{:s}','{:s}','','{:s}',null,'{:s}')".format(self.osm.lon,self.osm.lat,self.osm.name.replace('\'','\'\''),self.code_insee,self.code_dept,'OSM',self.osm.place)
+        return hp.remove_quotes_on_null(f"(ST_PointFromText('POINT({self.osm.lon} {self.osm.lat})',4326),null,'{hp.escape_quotes(self.osm.name) or 'null'}','{hp.escape_quotes(self.fantoir.name) or 'null'}','{self.fantoir.fantoir or 'null'}','{self.code_insee}','{self.code_dept}',null,'OSM',{self.fantoir.bati or 'null'},'{self.osm.place}')")
+
 class Places:
     def __init__(self):
         self.p = {}
