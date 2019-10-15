@@ -112,22 +112,17 @@ def has_addreses_with_suffix(insee):
 
 def load_bases_adresses_locales_hsnr(code_insee):
     dict_node_relations = {}
-    str_query = "SELECT cle_interop,TRIM (BOTH FROM (numero||' '||suffixe)), voie_nom, long, lat FROM bal_locales WHERE commune_code = '{}';".format(code_insee)
-    cur = db.bano_cache.cursor()
-    cur.execute(str_query)
-    for cle_interop, housenumber, name, lon, lat in cur:
-        if not name or len(name) < 2:
-            continue
-        if not lon :
-            continue
-        adresses.register(name)
-        if not cle_interop in dict_node_relations:
-            dict_node_relations[cle_interop] = []
-            dict_node_relations[cle_interop].append(hp.normalize(name))
-        if hp.is_valid_housenumber(housenumber):
-            nd = Node({'id':cle_interop,'lon':lon,'lat':lat},{})
-            adresses.add_adresse(Adresse(nd,housenumber,name,'',''), 'BAL')
-    cur.close()
+    with db.bano_cache.cursor() as cur:
+        cur.execute(f"SELECT cle_interop,TRIM (BOTH FROM (numero||' '||COALESCE(suffixe,''))), voie_nom, long, lat FROM bal_locales WHERE commune_code = '{code_insee}';")
+        for cle_interop, housenumber, name, lon, lat in cur:
+            if not name or len(name) < 2 or not lon:
+                continue
+            adresses.register(name)
+            if not cle_interop in dict_node_relations:
+                dict_node_relations[cle_interop] = []
+                dict_node_relations[cle_interop].append(hp.normalize(name))
+            if hp.is_valid_housenumber(housenumber):
+                adresses.add_adresse(Adresse(Node({'id':cle_interop,'lon':lon,'lat':lat},{}),housenumber,name,'',''), 'BAL')
 
 def load_hsnr_bbox_from_pg_osm(insee_com):
     data = get_data_from_pg_direct('hsnr_bbox_insee',insee_com)
