@@ -9,3 +9,4 @@ wget https://data.economie.gouv.fr/api/datasets/1.0/fichier-fantoir-des-voies-et
 unzip fantoir.zip
 mv FANTOIR* fantoir.txt
 psql -d osm -U cadastre -f $BANO_DIR/sql/load_fantoir.sql
+psql -d cadastre -U cadastre -f $BANO_DIR/sql/load_fantoir.sql
