@@ -3,6 +3,7 @@ import sys
 
 from .constants import DEPARTEMENTS
 from . import core, core_place, pre_process_suffixe
+from . import pre_process_osm_tiles
 from .sources import bal, cadastre_gouv, cadastre_json
 
 
@@ -39,12 +40,13 @@ def main():
     subparser.set_defaults(func=cadastre_gouv.process)
     
     subparser = subparsers.add_parser('pre_process_suffixe', help='b help', description="Détermine les zones où les noms dans le Cadastre sont suffixés")
-    # subparser.add_argument('code_insee', type=str, help='Code INSEE de la commune à traiter')
     subparser.add_argument('departements', type=str, help='Départements à traiter', nargs='*', default=DEPARTEMENTS)
     subparser.set_defaults(func=pre_process_suffixe.process)
 
+    subparser = subparsers.add_parser('pre_process_osm_tiles', help='b help', description="Détermine les communes mises à jour grace aux tuiles impactées")
+    subparser.set_defaults(func=pre_process_osm_tiles.process)
+
     args = parser.parse_args()
-    print(args)
 
     try:
         args.func(**vars(args))

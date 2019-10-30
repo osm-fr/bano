@@ -17,7 +17,6 @@ from . import db_helpers as dbhp
 from .sources import fantoir
 from .models import Fantoir, Cadastre, Osm, Place, Places
 
-# batch_start_log,,get_cadastre_etape_timestamp_debut
 from .outils_de_gestion import batch_start_log, batch_end_log
 
 def get_data_from_pg(query_name,insee_com):

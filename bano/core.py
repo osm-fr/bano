@@ -43,16 +43,6 @@ def append_suffixe(name,suffixe):
             res = name+' '+suffixe
     return res
 
-def get_code_cadastre_from_insee(insee):
-    str_query = 'SELECT cadastre_com FROM code_cadastre WHERE insee_com = \'{:s}\';'.format(insee)
-    code_cadastre = []
-    cur = db.bano.cursor()
-    cur.execute(str_query)
-    for c in cur:
-        code_cadastre = c[0]
-    cur.close()
-    return code_cadastre
-
 def get_last_base_update(query_name,insee_com):
     resp = 0
     str_query = "SELECT timestamp_maj FROM {} WHERE insee_com = '{}' LIMIT 1;".format(query_name,insee_com)

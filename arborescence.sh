@@ -6,3 +6,4 @@ mkdir $DATA_DIR
 mkdir $BANO_CACHE_DIR
 mkdir $CADASTRE_CACHE_DIR
 mkdir $BAL_CACHE_DIR
+mkdir $EXPIRE_TILES_DIR

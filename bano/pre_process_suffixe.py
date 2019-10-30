@@ -6,7 +6,7 @@ import sys
 import time
 import os,os.path
 
-from .core import load_cadastre_hsnr
+# from .core import load_cadastre_hsnr
 from .outils_de_gestion import batch_start_log
 from .outils_de_gestion import batch_end_log
 

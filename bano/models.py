@@ -262,3 +262,46 @@ class Places:
             if self.p[c].has_osm:
                 a.append(self.p[c].as_SQL_osm_row())
         return a
+
+
+class Tile:
+    def __init__(self,z,x,y):
+        self.x = x
+        self.y = y
+        self.z = z
+        self.xmin = -20037508.34 + (40075016.68/(2 ** self.z)) *  self.x
+        self.xmax = -20037508.34 + (40075016.68/(2 ** self.z)) * (self.x + 1)
+        self.ymin = 20037508.34 - (40075016.68/(2 ** self.z)) * (self.y + 1)
+        self.ymax = 20037508.34 - (40075016.68/(2 ** self.z)) *  self.y
+
+class Tiles:
+    def __init__(self):
+        self.t = {}
+
+    def add_tile(self,z,x,y):
+        self.t[f"{z}/{x}/{y}"] = Tile(z,x,y)
+
+    def add_tiles_from_file(self,tilefile):
+        with open(tilefile,'r') as f:
+            for ligne in f.readlines():
+                self.add_tile(int(ligne.split('/')[0]),int(ligne.split('/')[1]),int(ligne.split('/')[2]))
+
+    def as_list_of_SQL_values(self):
+        return [f"({self.t[tile].z},{self.t[tile].x},{self.t[tile].y},ST_SetSRID(ST_MakeBox2D(ST_Point({self.t[tile].xmin},{self.t[tile].ymin}),ST_Point({self.t[tile].xmax},{self.t[tile].ymax})),3857))" for tile in self.t]
+
+    def convert_to_insee_list(self):
+        str_query = (f"""TRUNCATE TABLE expire_tiles;
+                         INSERT INTO expire_tiles VALUES {','.join(self.as_list_of_SQL_values())};
+                         SELECT DISTINCT p.\"ref:INSEE\"
+                         FROM planet_osm_polygon p
+                         JOIN expire_tiles e
+                         ON ST_intersects(p.way, e.geometrie)
+                         WHERE p.way && e.geometrie AND
+                         p.admin_level = 8 AND
+                         p.boundary = 'administrative'
+                         ORDER BY 1;""")
+        # print(str_query)
+        with db.bano_cache.cursor() as cur:
+            cur.execute(str_query)
+            return [f[0]for f in cur]
+
