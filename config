@@ -2,9 +2,11 @@
 
 export BANO_DIR=/data/project/bano
 export LOG_DIR=$BANO_DIR/log
-export DATA_DIR=$HOME/bano_data
+export DATA_DIR=/data/project/bano_data
 export BANO_CACHE_DIR=$DATA_DIR/bano_cache
 export CADASTRE_CACHE_DIR=$DATA_DIR/cadastre_cache
 export BAL_CACHE_DIR=$DATA_DIR/bal_cache
+export EXPIRE_TILES_DIR=$DATA_DIR/expire_tiles
+export CSV_DIR=$DATA_DIR/csv_insee
 export SCHEMA_CIBLE=public
 export LANG=fr_FR.UTF-8
