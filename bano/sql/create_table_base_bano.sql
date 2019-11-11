@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS :schema_cible.fantoir_voie (
                             code_com        character(3),
                             code_insee      character(5),
                             id_voie         character(4),
+                            fantoir         character(9),
                             cle_rivoli      character(1),
                             nature_voie     character varying(4),
                             libelle_voie    character varying(26),
@@ -22,6 +23,7 @@ CREATE TABLE IF NOT EXISTS :schema_cible.fantoir_voie (
                             dernier_mot     character varying(8));
 CREATE INDEX IF NOT EXISTS idx_fantoir_voie_dept  ON      :schema_cible.fantoir_voie(code_dept);
 CREATE INDEX IF NOT EXISTS idx_fantoir_code_insee ON      :schema_cible.fantoir_voie(code_insee);
+CREATE INDEX IF NOT EXISTS idx_fantoir_fantoir ON      :schema_cible.fantoir_voie(fantoir);
 
 CREATE TABLE IF NOT EXISTS :schema_cible.cumul_adresses (
     geometrie       geometry ,

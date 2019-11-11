@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS :schema_cible.fantoir_voie (
                             code_com        character(3),
                             code_insee      character(5),
                             id_voie         character(4),
+                            fantoir         character(9),
                             cle_rivoli      character(1),
                             nature_voie     character varying(4),
                             libelle_voie    character varying(26),
