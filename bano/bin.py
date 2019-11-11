@@ -3,7 +3,7 @@ import sys
 
 from .constants import DEPARTEMENTS
 from . import core, core_place, pre_process_suffixe
-from . import pre_process_osm_tiles
+from . import update_manager
 from .sources import bal, cadastre_gouv, cadastre_json
 
 
@@ -43,8 +43,8 @@ def main():
     subparser.add_argument('departements', type=str, help='Départements à traiter', nargs='*', default=DEPARTEMENTS)
     subparser.set_defaults(func=pre_process_suffixe.process)
 
-    subparser = subparsers.add_parser('pre_process_osm_tiles', help='b help', description="Détermine les communes mises à jour grace aux tuiles impactées")
-    subparser.set_defaults(func=pre_process_osm_tiles.process)
+    subparser = subparsers.add_parser('update_insee_lists', help='b help', description="Détermine les communes mises à jour grace aux tuiles impactées")
+    subparser.set_defaults(func=update_manager.update_insee_lists)
 
     args = parser.parse_args()
 

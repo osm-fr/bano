@@ -12,7 +12,7 @@ import psycopg2
 from ..constants import DEPARTEMENTS
 from .. import db
 from .. import outils_de_gestion as m
-from . import update_manager as um
+from .. import update_manager as um
 
 def process(source, departements, **kwargs):
     departements = set(departements)
@@ -29,8 +29,6 @@ def process(source, departements, **kwargs):
         status = download(suffixe_fichier, dept,source)
         if status:
             import_to_pg(suffixe_fichier, dept,source)
-    um.compile_insee_list(suffixe_fichier,um.get_directory_pathname())
-    
 
 def download(suffixe_fichier, departement,source):
     destination = get_destination(suffixe_fichier, departement)
@@ -61,12 +59,11 @@ def import_to_pg(suffixe_fichier, departement, source, **kwargs):
                 cur_insert.execute(f"DELETE FROM bal_{suffixe_fichier} WHERE commune_code LIKE '{departement+'%'}'")
                 cur_insert.copy_from(f, f"bal_{suffixe_fichier}", sep=';', null='')
                 db.bano_cache.commit()
-                um.save_insee_list(um.get_directory_pathname(),suffixe_fichier,departement)
+                um.save_bal_insee_list(um.get_directory_pathname(),suffixe_fichier,departement)
             except psycopg2.DataError as e:
                 db.bano_cache.reset()
     m.batch_end_log(-1,batch_id)
 
-    
     
 def get_destination(suffixe_fichier, departement):
     try:

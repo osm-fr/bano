@@ -292,15 +292,28 @@ class Tiles:
     def convert_to_insee_list(self):
         str_query = (f"""TRUNCATE TABLE expire_tiles;
                          INSERT INTO expire_tiles VALUES {','.join(self.as_list_of_SQL_values())};
-                         SELECT DISTINCT p.\"ref:INSEE\"
+                         COMMIT;
+                         SELECT p."ref:INSEE"
                          FROM planet_osm_polygon p
                          JOIN expire_tiles e
                          ON ST_intersects(p.way, e.geometrie)
                          WHERE p.way && e.geometrie AND
                          p.admin_level = 8 AND
-                         p.boundary = 'administrative'
+                         p.boundary = 'administrative' AND
+                         p."ref:INSEE" NOT IN ('13055','69123','75056') AND
+                         COALESCE(p."ref:INSEE",'') != ''
+                         UNION
+                         SELECT p."ref:INSEE"
+                         FROM planet_osm_polygon p
+                         JOIN expire_tiles e
+                         ON ST_intersects(p.way, e.geometrie)
+                         WHERE p.way && e.geometrie AND
+                         p.admin_level = 9 AND
+                         p.boundary = 'administrative' AND
+                         (p."ref:INSEE" LIKE '132__' OR
+                          p."ref:INSEE" LIKE '6938_' OR
+                          p."ref:INSEE" LIKE '751__') 
                          ORDER BY 1;""")
-        # print(str_query)
         with db.bano_cache.cursor() as cur:
             cur.execute(str_query)
             return [f[0]for f in cur]
