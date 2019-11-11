@@ -51,9 +51,9 @@ def load_osm(code_insee):
         targets = places.match_name(name,'FANTOIR')
         if targets:
             for t in targets:
-                places.p[t].update_osm(lon, lat, place, name, fantoir)
+                places.p[t].update_osm(lon, lat, place, name, fantoir if hp.is_valid_fantoir(fantoir,code_insee) else '')
         else:
-            places.add_place(Place(lon, lat, place,'','',name,fantoir,-1, code_insee))
+            places.add_place(Place(lon, lat, place,'','',name, fantoir if hp.is_valid_fantoir(fantoir,code_insee) else '',-1, code_insee))
 
 
 def load_to_db(places, code_insee):
