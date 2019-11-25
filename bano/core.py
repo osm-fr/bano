@@ -203,7 +203,7 @@ def load_highways_relations_from_pg_osm(code_insee):
         cle = hp.normalize(name_suffixe)
         if adresses.has_already_fantoir(cle,'OSM'):
             continue
-        if hp.is_valid_fantoir(tags.get('ref:FR:FANTOIR'), code_insee):
+        if tags.get('ref:FR:FANTOIR') and hp.is_valid_fantoir(tags.get('ref:FR:FANTOIR'), code_insee):
             code_fantoir = tags.get('ref:FR:FANTOIR')
         else:
            code_fantoir = ''
