@@ -72,6 +72,7 @@ tables:
     columns:
       - {name: 'rel_id', type: id}
       - {name: 'osm_id', type: member_id}
+      - {name: 'way', type: geometry}
       - {name: 'tags', type: hstore_tags}
       - {name: 'osm_type', type: member_type}
       - {name: 'member_role', type: member_role}
