@@ -287,13 +287,18 @@ class Tiles:
                 self.add_tile(int(ligne.split('/')[0]),int(ligne.split('/')[1]),int(ligne.split('/')[2]))
 
     def as_list_of_SQL_values(self):
-        return [f"({self.t[tile].z},{self.t[tile].x},{self.t[tile].y},ST_SetSRID(ST_MakeBox2D(ST_Point({self.t[tile].xmin},{self.t[tile].ymin}),ST_Point({self.t[tile].xmax},{self.t[tile].ymax})),3857))" for tile in self.t]
+        return [f"({self.t[tile].z},{self.t[tile].x},{self.t[tile].y},ST_SetSRID(ST_MakeBox2D(ST_Point({int(self.t[tile].xmin)},{int(self.t[tile].ymin)}),ST_Point({int(self.t[tile].xmax)},{int(self.t[tile].ymax)})),3857))" for tile in self.t]
 
     def convert_to_insee_list(self):
-        str_query = (f"""TRUNCATE TABLE expire_tiles;
-                         INSERT INTO expire_tiles VALUES {','.join(self.as_list_of_SQL_values())};
-                         COMMIT;
-                         SELECT p."ref:INSEE"
+        with db.bano_cache.cursor() as cur:
+            cur.execute("TRUNCATE TABLE expire_tiles;COMMIT;")
+            SQL_values = self.as_list_of_SQL_values()
+            while len(SQL_values) > 10000:
+                cur.execute(f"""INSERT INTO expire_tiles VALUES {','.join(SQL_values[0:10000])};COMMIT; """)
+                SQL_values = SQL_values[10000:]
+            if SQL_values:
+                cur.execute(f"""INSERT INTO expire_tiles VALUES {','.join(SQL_values)};COMMIT; """)
+            cur.execute("""SELECT p."ref:INSEE"
                          FROM planet_osm_polygon p
                          JOIN expire_tiles e
                          ON ST_intersects(p.way, e.geometrie)
@@ -314,7 +319,5 @@ class Tiles:
                           p."ref:INSEE" LIKE '6938_' OR
                           p."ref:INSEE" LIKE '751__') 
                          ORDER BY 1;""")
-        with db.bano_cache.cursor() as cur:
-            cur.execute(str_query)
             return [f[0]for f in cur]
 
