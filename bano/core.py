@@ -116,21 +116,23 @@ def load_bases_adresses_locales_hsnr(code_insee):
 
 def load_hsnr_bbox_from_pg_osm(insee_com):
     data = get_data_from_pg_direct('hsnr_bbox_insee',insee_com)
-    for l in data:
-        oa = Pg_hsnr(l, insee_com)
-        if oa.fantoir == '' or not oa.voie :
-            continue
-        adresses.register(oa.voie)
-        adresses.add_adresse(Adresse(Node({'id':oa.osm_id,'lon':oa.x,'lat':oa.y},{}),oa.numero,oa.voie,oa.fantoir,oa.code_postal), 'OSM')
+    for x, y, provenance, osm_id, numero, voie, tags, *others in data:
+        for num in numero.translate(str.maketrans(',à;-/','$$$$$')).split('$'):
+            oa = Pg_hsnr([x, y, provenance, osm_id, num.rstrip().lstrip(), voie, tags], insee_com)
+            if oa.fantoir == '' or not oa.voie :
+                continue
+            adresses.register(oa.voie)
+            adresses.add_adresse(Adresse(Node({'id':oa.osm_id,'lon':oa.x,'lat':oa.y},{}),oa.numero,oa.voie,oa.fantoir,oa.code_postal), 'OSM')
 
 def load_hsnr_from_pg_osm(insee_com):
     data = get_data_from_pg_direct('hsnr_insee', insee_com)
-    for l in data:
-        oa = Pg_hsnr(l, insee_com)
-        if not oa.voie :
-            continue
-        adresses.register(oa.voie)
-        adresses.add_adresse(Adresse(Node({'id':oa.osm_id,'lon':oa.x,'lat':oa.y},{}),oa.numero,oa.voie,oa.fantoir,oa.code_postal), 'OSM')
+    for x, y, provenance, osm_id, numero, voie, tags, *others in data:
+        for num in numero.translate(str.maketrans(',à;-/','$$$$$')).split('$'):
+            oa = Pg_hsnr([x, y, provenance, osm_id, num.rstrip().lstrip(), voie, tags], insee_com)
+            if not oa.voie :
+                continue
+            adresses.register(oa.voie)
+            adresses.add_adresse(Adresse(Node({'id':oa.osm_id,'lon':oa.x,'lat':oa.y},{}),oa.numero,oa.voie,oa.fantoir,oa.code_postal), 'OSM')
 
 def load_highways_bbox_from_pg_osm(insee_com):
     data = get_data_from_pg_direct('highway_suffixe_insee',insee_com)
