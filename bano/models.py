@@ -84,7 +84,7 @@ class Adresses:
         with db.bano_cache.cursor() as cur:
             cur.execute(str_query)
             for cle_interop, ui_adresse, numero, suffixe, pseudo_adresse, name, voie_code, code_postal, libelle_acheminement, destination_principale, commune_code, commune_nom, source, lon, lat, *others in cur:
-                housenumber = numero+((' '+suffixe) if suffixe else '')
+                housenumber = numero+((' '+suffixe) if suffixe and suffixe.isalnum() else '')
                 if not name or len(name) < 2 or not lon or pseudo_adresse == 'true':
                     continue
                 self.register(name)
