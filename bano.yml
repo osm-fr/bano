@@ -80,3 +80,19 @@ tables:
       - {key: 'ref:FR:FANTOIR', name: 'ref:FR:FANTOIR', type: string}
       - {key: 'name', name: 'name', type: string}
       - {key: 'type', name: 'type', type: string}
+  planet_osm_postal_code:
+    type: polygon
+    filters:
+    mapping:
+      postal_code: [__any__]
+      'addr:postcode': [__any__]
+    columns:
+      - {name: 'osm_id', type: id}
+      - {name: 'way', type: geometry}
+      - {name: 'tags', type: hstore_tags}
+      - {key: 'name', name: 'name', type: string}
+      - {key: boundary, name: boundary, type: string}
+      - {key: admin_level, name: admin_level, type: integer}
+      - {key: 'addr:postcode', name: 'addr:postcode', type: string}
+      - {key: 'ref:INSEE', name: 'ref:INSEE', type: string}
+      - {key: 'postal_code', name: 'postal_code', type: string}
