@@ -96,3 +96,18 @@ tables:
       - {key: 'addr:postcode', name: 'addr:postcode', type: string}
       - {key: 'ref:INSEE', name: 'ref:INSEE', type: string}
       - {key: 'postal_code', name: 'postal_code', type: string}
+  planet_osm_communes_statut:
+    type: relation_member
+    mapping:
+      boundary: ['administrative']
+    columns:
+      - {name: 'rel_id', type: id}
+      - {name: 'osm_id', type: member_id}
+      - {name: 'tags', type: hstore_tags}
+      - {name: 'osm_type', type: member_type}
+      - {name: 'member_role', type: member_role}
+      - {key: 'ref:INSEE', name: 'ref:INSEE', type: string}
+      - {key: 'name', name: 'name', type: string}
+      - {key: 'admin_level', name: 'admin_level', type: integer}
+      - {key: 'population', name: 'population_member', from_member: true, type: integer}
+      - {key: 'population', name: 'population_rel', from_member: false, type: integer}
