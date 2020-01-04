@@ -99,7 +99,7 @@ tables:
   planet_osm_communes_statut:
     type: relation_member
     mapping:
-      boundary: ['administrative']
+      boundary: [administrative, political]
     columns:
       - {name: 'rel_id', type: id}
       - {name: 'osm_id', type: member_id}
@@ -108,6 +108,8 @@ tables:
       - {name: 'member_role', type: member_role}
       - {key: 'ref:INSEE', name: 'ref:INSEE', type: string}
       - {key: 'name', name: 'name', type: string}
+      - {key: 'boundary', name: 'boundary', from_member: false, type: string}
+      - {key: 'political_division', name: 'political_division', from_member: false, type: string}
       - {key: 'admin_level', name: 'admin_level', type: integer}
       - {key: 'population', name: 'population_member', from_member: true, type: integer}
       - {key: 'population', name: 'population_rel', from_member: false, type: integer}
