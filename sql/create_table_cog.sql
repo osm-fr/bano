@@ -25,6 +25,17 @@ CREATE TABLE IF NOT EXISTS cog_canton (
         typect character(1));
 CREATE INDEX IF NOT EXISTS idx_cog_canton_can ON cog_canton(can);
 
+CREATE TABLE IF NOT EXISTS cog_arrondissement (
+        arr character(4),
+        dep character varying(3),
+        reg character(2),
+        cheflieu character(5),
+        tncc character(1),
+        ncc text,
+        nccenr text,
+        libelle text);
+CREATE INDEX IF NOT EXISTS idx_cog_arrondissement_arr ON cog_arrondissement(arr);
+
 CREATE TABLE IF NOT EXISTS cog_departement (
         dep character varying(3),
         reg character(2),
