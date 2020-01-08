@@ -8,6 +8,7 @@ echo debut >> $SCRIPT_DIR/cron.log
  
 osmosis --rri workingDirectory=/data/download --wxc /data/download/changes.osc.gz
 imposm diff -mapping $SCRIPT_DIR/bano.yml -cachedir /data/bano_imposm_cache -dbschema-production public -diffdir /data/bano_imposm_diff -connection 'postgis://cadastre@localhost/osm'?prefix=NONE -expiretiles-dir $EXPIRE_TILES_DIR -expiretiles-zoom 16 /data/download/changes.osc.gz
+$SCRIPT_DIR/update_table_infos_communes.sh
 
 echo `date` >> $SCRIPT_DIR/cron.log
 echo fin >> $SCRIPT_DIR/cron.log

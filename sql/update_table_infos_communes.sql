@@ -21,6 +21,7 @@ GROUP BY 1),
 pop
 AS
 (SELECT osm_id,
+        name,
         "ref:INSEE" insee_com,
         COALESCE(population_rel,population_member,0) AS population
 FROM planet_osm_communes_statut
@@ -34,7 +35,9 @@ AS
         ROUND(ST_Y(ST_Transform(way,4326))::numeric,6) lat
 FROM planet_osm_point pp
 WHERE   place != '')
-SELECT adm_weight.*,
+SELECT adm_weight.insee_com,
+       pop.name,
+       adm_weight.adm_weight,
        pop.population,
        ROUND((pop.population::numeric/1000),1) AS population_milliers,
        CASE 

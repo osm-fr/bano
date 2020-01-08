@@ -18,7 +18,6 @@ cat insee_locales.csv  | parallel -j 4 export LANG=fr_FR.UTF-8\; bano process_co
 cat deplist.txt        | parallel -j 4 export LANG=fr_FR.UTF-8\; bano process_commune_lieux-dits    --depts {1}
 
 # Mise à jour quotidienne dans la base cadastre des couches des polygones postaux d'OSM et des statuts admin de communes en vue des exports
-./update_table_infos_communes.sh
 ./copy_table_from_osm_to_cadastre.sh planet_osm_postal_code
 ./copy_table_from_osm_to_cadastre.sh infos_communes
 
