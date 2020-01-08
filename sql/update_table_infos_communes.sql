@@ -35,7 +35,8 @@ AS
         ROUND(ST_Y(ST_Transform(way,4326))::numeric,6) lat
 FROM planet_osm_point pp
 WHERE   place != '')
-SELECT adm_weight.insee_com,
+SELECT cc.dep,
+       adm_weight.insee_com,
        pop.name,
        adm_weight.adm_weight,
        pop.population,
@@ -48,6 +49,8 @@ SELECT adm_weight.insee_com,
        pp.lon,
        pp.lat
 FROM adm_weight
+JOIN cog_commune cc
+ON cc.com = insee_com
 LEFT OUTER JOIN pop
 USING (insee_com)
 JOIN  pp
