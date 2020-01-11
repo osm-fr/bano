@@ -46,6 +46,7 @@ tables:
     mapping:
       boundary: ['administrative']
       amenity: [__any__]
+      highway: [__any__]
       addr:housenumber: [__any__]
       ref:FR:FANTOIR: [__any__]
     columns:
