@@ -1,5 +1,16 @@
-DROP TABLE IF EXISTS infos_communes CASCADE;
-CREATE TABLE infos_communes
+CREATE TABLE IF NOT EXISTS infos_communes (
+  dep character varying(3),
+  insee_com character(5),
+  name text,
+  adm_weight integer,
+  population integer,
+  population_milliers numeric,
+  type text,
+  lon numeric,
+  lat numeric
+);
+
+CREATE TEMP TABLE tmp_infos_communes
 AS
 WITH
 statut
@@ -23,7 +34,8 @@ AS
 (SELECT osm_id,
         name,
         "ref:INSEE" insee_com,
-        COALESCE(population_rel,population_member,0) AS population
+        COALESCE(population_rel,population_member,0) AS population,
+        RANK() OVER(PARTITION BY "ref:INSEE" ORDER BY admin_level) rang
 FROM planet_osm_communes_statut
 WHERE admin_level in (8,9) AND
       boundary = 'administrative' AND
@@ -55,3 +67,9 @@ LEFT OUTER JOIN pop
 USING (insee_com)
 JOIN  pp
 USING (osm_id)
+WHERE pop.rang = 1;
+
+TRUNCATE TABLE infos_communes;
+INSERT INTO infos_communes
+SELECT *
+FROM tmp_infos_communes;
