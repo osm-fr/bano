@@ -28,5 +28,6 @@ FROM	(SELECT	pl.way,
 				ST_Intersects(pl.way, p.way)
 		WHERE	p."ref:INSEE" = '__com__'	AND
 				(	pl.highway||pl."ref:FR:FANTOIR" != ''	OR
-					pl.landuse = 'residential')	AND
+					pl.landuse = 'residential' OR
+					pl.amenity = 'school')	AND
 				pl.name != '')a;

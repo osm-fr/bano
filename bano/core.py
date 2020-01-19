@@ -233,16 +233,21 @@ def load_point_par_rue_complement_from_pg_osm(insee_com):
         name = l[2]
         if not name or len(name) < 2:
             continue
-        fantoir = l[3]
-        if fantoir and fantoir[0:5] != insee_com:
+        code_fantoir = l[3]
+        if code_fantoir and code_fantoir[0:5] != insee_com:
             continue
-        if fantoir and len(fantoir) != 10:
+        if code_fantoir and len(code_fantoir) != 10:
             continue
         adresses.register(name)
         cle = hp.normalize(name)
         adresses[cle]['point_par_rue'] = l[0:2]
-        if fantoir:
-            adresses.add_fantoir(cle,fantoir,'OSM')
+        if code_fantoir:
+            adresses.add_fantoir(cle,code_fantoir,'OSM')
+        if 'OSM' not in adresses.a[cle]['voies']:
+            adresses.add_voie(name,'OSM')
+        if 'OSM' not in adresses[cle]['fantoirs']:
+            if cle in fantoir.mapping.fantoir:
+                adresses.add_fantoir(cle,fantoir.mapping.fantoir[cle],'OSM')
 
 def load_type_highway_from_pg_osm(insee_com):
     data = get_data_from_pg('type_highway_insee',insee_com)
