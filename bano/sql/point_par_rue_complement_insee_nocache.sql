@@ -29,5 +29,6 @@ FROM	(SELECT	pl.way,
 		WHERE	p."ref:INSEE" = '__com__'	AND
 				(	pl.highway||pl."ref:FR:FANTOIR" != ''	OR
 					pl.landuse = 'residential' OR
+					pl.place = 'square' OR
 					pl.amenity = 'school')	AND
 				pl.name != '')a;
