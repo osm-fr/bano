@@ -40,6 +40,7 @@ tables:
       - {key: 'ref:FR:FANTOIR:right', name: 'ref:FR:FANTOIR:right', type: string}
       - {key: 'highway', name: 'highway', type: string}
       - {key: 'waterway', name: 'waterway', type: string}
+      - {key: 'ref', name: 'ref', type: string}
   planet_osm_polygon:
     type: polygon
     filters:
@@ -47,6 +48,7 @@ tables:
       boundary: ['administrative']
       amenity: [__any__]
       highway: [__any__]
+      place: [__any__]
       addr:housenumber: [__any__]
       ref:FR:FANTOIR: [__any__]
     columns:
@@ -63,6 +65,7 @@ tables:
       - {key: 'ref:FR:FANTOIR:left', name: 'ref:FR:FANTOIR:left', type: string}
       - {key: 'ref:FR:FANTOIR:right', name: 'ref:FR:FANTOIR:right', type: string}
       - {key: 'highway', name: 'highway', type: string}
+      - {key: 'place', name: 'place', type: string}
       - {key: 'amenity', name: 'amenity', type: string}
       - {key: 'landuse', name: 'landuse', type: string}
   planet_osm_rels:
