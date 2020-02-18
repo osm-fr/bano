@@ -70,7 +70,7 @@ class Adresses:
         return cle
 
     def get_best_fantoir(self, cle):
-        return self[cle]['fantoirs'].get('FANTOIR') or self[cle]['fantoirs'].get('OSM') or ''
+        return self[cle]['fantoirs'].get('OSM') or self[cle]['fantoirs'].get('FANTOIR') or ''
 
     def has_already_fantoir(self,cle,source):
         return source in self[cle]['fantoirs']
