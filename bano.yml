@@ -14,6 +14,8 @@ tables:
       - {name: 'way', type: geometry}
       - {name: 'tags', type: hstore_tags}
       - {key: 'name', name: 'name', type: string}
+      - {key: 'alt_name', name: 'alt_name', type: string}
+      - {key: 'old_name', name: 'old_name', type: string}
       - {key: 'addr:housenumber', name: 'addr:housenumber', type: string}
       - {key: 'addr:street', name: 'addr:street', type: string}
       - {key: 'addr:place', name: 'addr:place', type: string}
@@ -35,6 +37,8 @@ tables:
       - {name: 'way', type: geometry}
       - {name: 'tags', type: hstore_tags}
       - {key: 'name', name: 'name', type: string}
+      - {key: 'alt_name', name: 'alt_name', type: string}
+      - {key: 'old_name', name: 'old_name', type: string}
       - {key: 'ref:FR:FANTOIR', name: 'ref:FR:FANTOIR', type: string}
       - {key: 'ref:FR:FANTOIR:left', name: 'ref:FR:FANTOIR:left', type: string}
       - {key: 'ref:FR:FANTOIR:right', name: 'ref:FR:FANTOIR:right', type: string}
@@ -56,6 +60,8 @@ tables:
       - {name: 'way', type: geometry}
       - {name: 'tags', type: hstore_tags}
       - {key: 'name', name: 'name', type: string}
+      - {key: 'alt_name', name: 'alt_name', type: string}
+      - {key: 'old_name', name: 'old_name', type: string}
       - {key: boundary, name: boundary, type: string}
       - {key: admin_level, name: admin_level, type: integer}
       - {key: 'addr:housenumber', name: 'addr:housenumber', type: string}
