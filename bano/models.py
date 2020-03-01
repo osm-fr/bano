@@ -111,13 +111,23 @@ class Adresses:
                 street_name_fantoir =  self[v]['voies'].get('FANTOIR') or ''
                 street_name_cadastre =  self[v]['voies'].get('CADASTRE') or ''
                 street_name_bal =  self[v]['voies'].get('BAL') or ''
-
-                if len(self[v]['point_par_rue'])>1 and source == 'OSM':
-                    a_values_voie.append(("(ST_PointFromText('POINT({:6f} {:6f})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}',{:d})".format(self[v]['point_par_rue'][0],self[v]['point_par_rue'][1],street_name_cadastre.replace("'","''"),street_name_bal.replace("'","''"),street_name_osm.replace("'","''"), street_name_fantoir.replace("'","''"), cle_fantoir, self.code_insee,code_dept,'',source,self[v]['highway_index'])).replace(",'',",",null,"))
+                lat_point_par_rue = None
+                lon_point_par_rue = None
 
                 for num in self[v]['numeros']:
                     numadresse = self[v]['numeros'][num]
                     a_values.append("(ST_PointFromText('POINT({:6f} {:6f})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}')".format(numadresse.node.attribs['lon'],numadresse.node.attribs['lat'],numadresse.numero.replace("'",""),street_name_cadastre.replace("'","''"),street_name_bal.replace("'","''"),street_name_osm.replace("'","''"),street_name_fantoir.replace("'","''"),cle_fantoir,self.code_insee,code_dept,numadresse.code_postal,source).replace(",''",",null").replace(",''",",null"))
+                    lat_point_par_rue = numadresse.node.attribs['lat']
+                    lon_point_par_rue = numadresse.node.attribs['lon']
+
+                if source == 'OSM':
+                    if len(self[v]['point_par_rue'])>1:
+                        lat_point_par_rue = self[v]['point_par_rue'][0]
+                        lon_point_par_rue = self[v]['point_par_rue'][1]
+
+                if lat_point_par_rue and lon_point_par_rue:
+                    a_values_voie.append(f"(ST_PointFromText('POINT({lat_point_par_rue} {lon_point_par_rue})', 4326),'{hp.escape_quotes(street_name_cadastre)}','{hp.escape_quotes(street_name_bal)}','{hp.escape_quotes(street_name_osm)}','{hp.escape_quotes(street_name_fantoir)}','{cle_fantoir}','{self.code_insee}','{code_dept}','','{source}',{self[v]['highway_index']})".replace(",'',",",null,"))
+
                     nb_rec +=1
             if len(a_values)>0:
                 cur_insert.execute(sload+','.join(a_values)+';COMMIT;')
