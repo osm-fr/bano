@@ -24,6 +24,7 @@ tables:
       - {key: 'amenity', name: 'amenity', type: string}
       - {key: 'place', name: 'place', type: string}
       - {key: 'railway', name: 'railway', type: string}
+      - {key: 'junction', name: 'junction', type: string}
   planet_osm_line:
     type: linestring
     filters:
