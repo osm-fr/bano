@@ -1,46 +1,35 @@
-SELECT insee AS id,
-       CASE
-           WHEN population<1 THEN 'village' 
-           WHEN population<'10' THEN 'town' 
-           ELSE 'city' 
-        END  AS type,
-        g.nom AS name,
-        ca.code_postal AS postcode,
-        round(lat_chf,6) AS lat,
-        round(lon_chf,6) AS lon,
-        g.nom AS city,
-        cog.nom_dep AS departement,
-        cog.nom_reg AS region,
+WITH
+rang_cp
+AS
+(SELECT *,
+        RANK() OVER(PARTITION BY insee ORDER BY ligne_5,cp) AS rang
+FROM    codes_postaux),
+cp
+AS
+(SELECT insee,
+       cp
+FROM rang_cp
+--WHERE insee in (select insee from rang where rang = 1 group by 1 having count(*) > 1)
+WHERE rang = 1)
+--order by 1,3
+SELECT DISTINCT insee AS id, -- id
+       i.type,      -- type
+       i.name,      -- name
+       cp.cp,       -- postcode
+       round(lat,6) AS lat, -- lat
+       round(lon,6) AS lon, -- lon
+       i.name ,            -- city
+       cd.libelle, -- departement
+       cr.libelle, -- region,
         population,
-        CASE
-            WHEN statut LIKE 'Capital%' THEN 6
-            WHEN statut = 'Préfecture de régi' THEN 5
-            WHEN statut='Préfecture' THEN 4
-            WHEN statut LIKE 'Sous-pr%' THEN 3
-            WHEN statut='Chef-lieu canton' THEN 2
-            ELSE 1
-         END AS adm_weight,
-         greatest(0.075,round(log((CASE
-                                       WHEN statut LIKE 'Capital%' THEN 6
-                                       WHEN statut = 'Préfecture de régi' THEN 5
-                                       WHEN statut='Préfecture' THEN 4
-                                       WHEN statut LIKE 'Sous-pr%' THEN 3
-                                       WHEN statut='Chef-lieu canton' THEN 2
-                                       ELSE 1
-                                   END)+log(population+1)/3),4)) AS importance
-FROM geofla_plus g 
-JOIN code_cadastre ca
-ON (ca.insee_com=insee)
-JOIN (SELECT dep, nom_dep, nom_reg FROM cog GROUP BY dep,nom_dep, nom_reg) AS cog
-ON (cog.dep=LEFT(insee,2) or cog.dep=LEFT(insee,3))
+        adm_weight,
+        greatest(0.075,round(log((adm_weight)+log(population+1)/3)::decimal,4)) AS importance
+FROM infos_communes i
+JOIN cp cp
+ON insee_com=insee
+JOIN cog_departement cd
+USING (dep)
+JOIN cog_region cr
+USING (reg)
 WHERE insee LIKE '92%'
 ORDER BY insee;
-
--- insee
--- lat/lon admin_centre
--- pop en milliers
--- statut 
--- code postal
--- dep
--- nom dep
--- nom reg
