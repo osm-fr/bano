@@ -25,3 +25,5 @@ SELECT arr[1],
 FROM a;
 
 CREATE INDEX IF NOT EXISTS gidx_codes_postaux ON codes_postaux USING GIST(geometrie);
+CREATE INDEX IF NOT EXISTS idx_codes_postaux_insee ON codes_postaux (insee);
+CREATE INDEX IF NOT EXISTS idx_codes_postaux_cp ON codes_postaux (cp);

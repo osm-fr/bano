@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS infos_communes (
   lat numeric
 );
 
+CREATE INDEX IF NOT EXISTS idx_infos_communes_insee ON infos_communes(insee_com);
+
 CREATE TEMP TABLE tmp_infos_communes
 AS
 WITH
