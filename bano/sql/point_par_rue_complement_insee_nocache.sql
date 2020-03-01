@@ -14,7 +14,8 @@ FROM	(SELECT	pl.way,
 		ON		pl.way && p.way					AND
 				ST_Intersects(pl.way, p.way)
 		WHERE	p."ref:INSEE" = '__com__'	AND
-				pl."ref:FR:FANTOIR" != ''	AND
+				(pl."ref:FR:FANTOIR" != ''	OR
+				pl.junction != '') AND
 				pl.name != ''
 		UNION
 		SELECT	ST_Centroid(pl.way),
