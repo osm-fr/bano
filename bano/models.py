@@ -117,8 +117,9 @@ class Adresses:
                 for num in self[v]['numeros']:
                     numadresse = self[v]['numeros'][num]
                     a_values.append("(ST_PointFromText('POINT({:6f} {:6f})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}')".format(numadresse.node.attribs['lon'],numadresse.node.attribs['lat'],numadresse.numero.replace("'",""),street_name_cadastre.replace("'","''"),street_name_bal.replace("'","''"),street_name_osm.replace("'","''"),street_name_fantoir.replace("'","''"),cle_fantoir,self.code_insee,code_dept,numadresse.code_postal,source).replace(",''",",null").replace(",''",",null"))
-                    lat_point_par_rue = numadresse.node.attribs['lat']
-                    lon_point_par_rue = numadresse.node.attribs['lon']
+                    if source == 'OSM':
+                        lat_point_par_rue = numadresse.node.attribs['lat']
+                        lon_point_par_rue = numadresse.node.attribs['lon']
 
                 if source == 'OSM':
                     if len(self[v]['point_par_rue'])>1:
