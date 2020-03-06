@@ -46,6 +46,7 @@ CREATE INDEX IF NOT EXISTS cumul_adresses_fantoir ON :schema_cible.cumul_adresse
 CREATE INDEX IF NOT EXISTS cumul_adresses_fantoir_source_idx ON :schema_cible.cumul_adresses(fantoir, source);
 CREATE INDEX IF NOT EXISTS cumul_adresses_geo ON :schema_cible.cumul_adresses USING gist (geometrie);
 CREATE INDEX IF NOT EXISTS cumul_adresses_insee ON :schema_cible.cumul_adresses(insee_com) WITH (fillfactor=95);
+CREATE INDEX IF NOT EXISTS cumul_adresses_dept ON :schema_cible.cumul_adresses(dept) WITH (fillfactor=95);
 CREATE INDEX IF NOT EXISTS cumul_adresses_source ON :schema_cible.cumul_adresses(source) WITH (fillfactor=95);
 CREATE INDEX IF NOT EXISTS cumul_adresses_insee_source ON :schema_cible.cumul_adresses(insee_com,source) WITH (fillfactor=95);
 
@@ -68,6 +69,7 @@ CREATE INDEX IF NOT EXISTS    cumul_voies_fantoir ON :schema_cible.cumul_voies(f
 CREATE INDEX IF NOT EXISTS    cumul_voies_fantoir_source_idx ON :schema_cible.cumul_voies(fantoir, source);
 CREATE INDEX IF NOT EXISTS    cumul_voies_geo ON :schema_cible.cumul_voies USING gist (geometrie);
 CREATE INDEX IF NOT EXISTS    cumul_voies_insee ON :schema_cible.cumul_voies(insee_com) WITH (fillfactor=95);
+CREATE INDEX IF NOT EXISTS    cumul_voies_dept ON :schema_cible.cumul_voies(dept) WITH (fillfactor=95);
 CREATE INDEX IF NOT EXISTS    cumul_voies_source ON :schema_cible.cumul_voies(source) WITH (fillfactor=95);
 CREATE INDEX IF NOT EXISTS    cumul_voies_insee_source ON :schema_cible.cumul_voies(insee_com,source) WITH (fillfactor=95);
 
