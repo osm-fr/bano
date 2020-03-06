@@ -23,6 +23,7 @@ cat deplist.txt        | parallel -j 4 export LANG=fr_FR.UTF-8\; bano process_co
 psql -d osm -U cadastre -f sql/create_table_polygones_communes.sql
 ./copy_table_from_osm_to_cadastre.sh polygones_insee
 psql -d osm -U cadastre -f sql/create_table_polygones_postaux.sql
+./copy_table_from_osm_to_cadastre.sh polygones_postaux
 
 # exports
 bano export
