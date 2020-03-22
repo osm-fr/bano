@@ -21,9 +21,9 @@ SELECT DISTINCT insee AS id, -- id
        i.name ,            -- city
        cd.libelle, -- departement
        cr.libelle, -- region,
-        population,
-        adm_weight,
-        greatest(0.075,round(log((adm_weight)+log(population+1)/3)::decimal,4)) AS importance
+       population,
+       adm_weight,
+       greatest(0.075,round(log((adm_weight)+log(population+1)/3)::decimal,4)) AS importance
 FROM infos_communes i
 JOIN cp cp
 ON insee_com=insee
@@ -31,5 +31,5 @@ JOIN cog_departement cd
 USING (dep)
 JOIN cog_region cr
 USING (reg)
-WHERE insee LIKE '92%'
+WHERE i.dep = '__dept__'
 ORDER BY insee;
