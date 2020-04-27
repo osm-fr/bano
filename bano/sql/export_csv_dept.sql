@@ -120,8 +120,8 @@ SELECT id,
        ville,
        source,
        lat,
-       lon,
-       geom
+       lon--,
+--       geom
 FROM res
 WHERE lat IS NOT NULL AND
       lon IS NOT NULL AND

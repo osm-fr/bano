@@ -31,7 +31,8 @@ class Dataset:
     def get_csv_data(self):
         with db.bano.cursor() as cur:
             cur.execute(self.csv_query)
-            return [d[0:-1] for d in cur.fetchall()]
+            return cur.fetchall()
+            # return [d[0:-1] for d in cur.fetchall()]
 
     def get_json_commune_query(self):
         with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'sql/export_json_dept_communes.sql'),'r') as fq:
@@ -79,6 +80,49 @@ class Dataset:
     def save_as_ttl(self):
         if not self.csv_data :
             self.csv_data = self.get_csv_data()
+        with open(self.get_sas_full_filename('ttl'),'w') as ttlfile:
+            ttlfile.write(f"""@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix locn: <http://www.w3.org/ns/locn#> .
+@prefix gn: <http://www.geonames.org/ontology#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix gsp: <http://www.opengis.net/ont/geosparql#> .
+@prefix geo: <http://www.w3.org/2003/01/geo/wgs84_pos#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dcat: <http://www.w3.org/ns/dcat#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+
+<http://www.openstreetmap.fr/bano/data/> a dcat:Catalog ;
+\tdcterms:title "Donnees des adresses du projet BANO (Base Adresse Nationale Ouverte) en RDF"@fr ;
+\tdcterms:description "Le projet BANO en RDF de Base d\'Adresses Nationale Ouverte initie par OpenStreetMap France."@fr ;
+\tfoaf:homepage <http://openstreetmap.fr/bano> ;
+\tdcterms:language "fr" ;
+\tdcterms:license <http://www.opendatacommons.org/licenses/odbl/> ;
+\tdcterms:publisher <http://www.openstreetmap.fr/> ; #url openstreetmap France
+\tdcterms:issued "2014-05-14"^^xsd:date ; # data issued
+\tdcterms:modified "2014-08-21"^^xsd:date ; #last modification
+\tdcterms:spatial <http://id.insee.fr/geo/departement/{self.dept}>, <http://id.insee.fr/geo/pays/france> ; # region/pays (France)
+\t.
+""")
+            for id,numero,voie,cp,ville,source,lat,lon in self.csv_data:
+                ttlfile.write(f"""<http://id.osmfr.org/bano/{id}>  a locn:Address , gn:Feature ;
+locn:fullAddress "{numero} {voie}, {cp} {ville}, FRANCE";
+locn:addressId "{id}" ;
+locn:locatorDesignator "{numero}" ;
+locn:thoroughfare "{voie}"@fr ;
+locn:postalCode "{cp}" ;
+locn:locatorName "{ville}"@fr ;
+locn:adminUnitL1 "FR" ;""")
+# traitement des arrondissements municipaux de Paris, Lyon, Marseille
+                if self.dept in ['13','69','75'] and int(id[0:5]) in range(13201, 13217)+range(69381, 69370)+range(75101, 75121):
+                    ttlfile.write(f"locn:location <http://id.insee.fr/geo/arrondissementMunicipal/{id[0:5]}> ;")
+                else:
+                    ttlfile.write(f"locn:location <http://id.insee.fr/geo/commune/{id}[0:5]> ;")
+                ttlfile.write(f"""locn:geometry <geo:{lat},{lon};u=0;crs=wgs84> ;
+locn:geometry [a geo:Point ; geo:lat "{lat}" ; geo:long "{lon}" ] ;
+locn:geometry [a gsp:Geometry; gsp:asWKT "POINT({lon} {lat})"^^gsp:wktLiteral ] ;
+.""")
+
 
     def save_as_shp(self):
         subprocess.run(['ogr2ogr', '-f',"ESRI Shapefile", '-lco', 'ENCODING=UTF-8', '-s_srs', 'EPSG:4326', '-t_srs', 'EPSG:4326', '-overwrite', self.get_sas_full_filename('shp'), 'PG:dbname=cadastre user=cadastre', '-sql', f'{self.csv_query}'])
@@ -112,8 +156,8 @@ def process(departements, **kwargs):
             print(f"Code {dept} invalide pour un département - abandon")
             continue
         d = Dataset(dept)
-        # d.save_as_shp()
-        # d.save_as_csv()
-        # d.save_as_ttl()
+        d.save_as_shp()
+        d.save_as_csv()
+        d.save_as_ttl()
         d.save_as_json()
         d.move_to_web_directory()
