@@ -26,7 +26,11 @@ psql -d osm -U cadastre -f sql/create_table_polygones_postaux.sql
 ./copy_table_from_osm_to_cadastre.sh polygones_postaux
 
 # exports
-bano export
+cat deplist.txt | parallel -j 4 bano export {1}
+
+# copie+zip dans le dossier web
+cat deplist.txt | parallel -j 4 bano publish {1}
+bano publish_aggregate
 
 # ménage PostgreSQL
 psql -d cadastre -U cadastre -c "VACUUM FULL cumul_adresses;"

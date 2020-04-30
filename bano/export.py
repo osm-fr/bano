@@ -73,9 +73,11 @@ class Dataset:
     def save_as_csv(self):
         if not self.csv_data :
             self.csv_data = self.get_csv_data()
-        with open(self.get_sas_full_filename('csv'),'w') as csvfile:
-            writer = csv.writer(csvfile)
-            writer.writerows(self.csv_data)
+        with open(self.get_sas_full_filename('csv'),'w', newline='') as csvfile:
+            # fieldnames = ['id','numero','voie','cp','ville','source','lat','lon']
+            # writer = csv.DictWriter(csvfile,fieldnames=fieldnames,restval='ignore')
+            writer = csv.writer(csvfile,dialect='unix',quoting=csv.QUOTE_NONE)
+            writer.writerows([l[0:-1] for l in self.csv_data])
 
     def save_as_ttl(self):
         if not self.csv_data :
@@ -104,7 +106,7 @@ class Dataset:
 \tdcterms:spatial <http://id.insee.fr/geo/departement/{self.dept}>, <http://id.insee.fr/geo/pays/france> ; # region/pays (France)
 \t.
 """)
-            for id,numero,voie,cp,ville,source,lat,lon in self.csv_data:
+            for id,numero,voie,cp,ville,source,lat,lon,*others in self.csv_data:
                 ttlfile.write(f"""<http://id.osmfr.org/bano/{id}>  a locn:Address , gn:Feature ;
 locn:fullAddress "{numero} {voie}, {cp} {ville}, FRANCE";
 locn:addressId "{id}" ;
@@ -114,7 +116,8 @@ locn:postalCode "{cp}" ;
 locn:locatorName "{ville}"@fr ;
 locn:adminUnitL1 "FR" ;""")
 # traitement des arrondissements municipaux de Paris, Lyon, Marseille
-                if self.dept in ['13','69','75'] and int(id[0:5]) in range(13201, 13217)+range(69381, 69370)+range(75101, 75121):
+                # if self.dept in ['13','69','75'] and int(id[0:5]) in range(13201, 13217)+range(69381, 69370)+range(75101, 75121):
+                if int(id[0:5]) in range(13201, 13217) or int(id[0:5]) in range(69381, 69370) or int(id[0:5]) in range(75101, 75121):
                     ttlfile.write(f"locn:location <http://id.insee.fr/geo/arrondissementMunicipal/{id[0:5]}> ;")
                 else:
                     ttlfile.write(f"locn:location <http://id.insee.fr/geo/commune/{id}[0:5]> ;")

@@ -2,7 +2,7 @@ import argparse
 import sys
 
 from .constants import DEPARTEMENTS
-from . import core, core_place, pre_process_suffixe, export
+from . import core, core_place, pre_process_suffixe, export, publish
 from . import update_manager
 from .sources import bal, cadastre_gouv, cadastre_json
 
@@ -46,6 +46,13 @@ def main():
     subparser = subparsers.add_parser('export', help='b help', description="Export par département dans différents formats")
     subparser.add_argument('departements', type=str, help='Départements à traiter', nargs='*', default=DEPARTEMENTS)
     subparser.set_defaults(func=export.process)
+
+    subparser = subparsers.add_parser('publish', help='b help', description="Publication des exports dans un dossier web - fichiers par département")
+    subparser.add_argument('departements', type=str, help='Départements à traiter', nargs='*', default=DEPARTEMENTS)
+    subparser.set_defaults(func=publish.process)
+
+    subparser = subparsers.add_parser('publish_aggregate', help='b help', description="Publication des exports dans un dossier web - fichiers France")
+    subparser.set_defaults(func=publish.process_full)
 
     subparser = subparsers.add_parser('update_insee_lists', help='b help', description="Détermine les communes mises à jour grace aux tuiles impactées")
     subparser.set_defaults(func=update_manager.update_insee_lists)
