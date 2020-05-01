@@ -6,7 +6,6 @@ import os
 
 from glob import glob
 from shutil import copy2
-from time import time
 from pathlib import Path
 
 from .constants import DEPARTEMENTS
@@ -45,9 +44,9 @@ def publish_as_shp(dept):
             shpgz.write(s.read())
         with open(get_source_file(dept,'shx'),'rb') as s:
             shpgz.write(s.read())
-        with open(get_source_file(dept,'prj'),'r') as s:
+        with open(get_source_file(dept,'prj'),'rb') as s:
             shpgz.write(s.read())
-        with open(get_source_file(dept,'cpg'),'r') as s:
+        with open(get_source_file(dept,'cpg'),'rb') as s:
             shpgz.write(s.read())
 
 def publish_as_csv(dept):
@@ -80,24 +79,11 @@ def process(departements, **kwargs):
         if not hp.is_valid_dept(dept):
             print(f"Code {dept} invalide pour un département - abandon")
             continue
-        debut = time()
-        # print (dept)
         publish_as_shp(dept)
-        # print('shp',time() - debut)
-        debut = time()
         publish_as_csv(dept)
-        print('csv',time() - debut)
-        # debut = time()
         publish_as_ttl(dept)
-        # print('ttl',time() - debut)
-        # debut = time()
         publish_as_json(dept)
-        # print('json',time() - debut)
 
 def process_full(**kwargs):
-    debut = time()
     publish_as_full_csv()
-    print('csv',time() - debut)
-    debut = time()
     publish_as_full_json()
-    print('json',time() - debut)
