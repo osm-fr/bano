@@ -23,6 +23,8 @@ class Dataset:
         self.json_voies_rapprochees_data = None
         self.json_voies_non_rapprochees_query = self.get_json_voies_non_rapprochees_query()
         self.json_voies_non_rapprochees_data = None
+        self.json_lieux_dits_query = self.get_json_lieux_dits_query()
+        self.json_lieux_dits_data = None
 
     def get_csv_query(self):
         with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'sql/export_csv_dept.sql'),'r') as fq:
@@ -32,7 +34,6 @@ class Dataset:
         with db.bano.cursor() as cur:
             cur.execute(self.csv_query)
             return cur.fetchall()
-            # return [d[0:-1] for d in cur.fetchall()]
 
     def get_json_commune_query(self):
         with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'sql/export_json_dept_communes.sql'),'r') as fq:
@@ -61,6 +62,15 @@ class Dataset:
             cur.execute(self.json_voies_rapprochees_query)
             return cur.fetchall()
 
+    def get_json_lieux_dits_query(self):
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'sql/export_json_dept_lieux_dits.sql'),'r') as fq:
+            return fq.read().replace('__dept__',self.dept)
+
+    def get_json_lieux_dits_data(self):
+        with db.bano.cursor() as cur:
+            cur.execute(self.json_lieux_dits_query)
+            return cur.fetchall()
+
     def get_target_filename(self,filetype):
         return f'bano-{self.dept}.{filetype}'
 
@@ -74,8 +84,6 @@ class Dataset:
         if not self.csv_data :
             self.csv_data = self.get_csv_data()
         with open(self.get_sas_full_filename('csv'),'w', newline='') as csvfile:
-            # fieldnames = ['id','numero','voie','cp','ville','source','lat','lon']
-            # writer = csv.DictWriter(csvfile,fieldnames=fieldnames,restval='ignore')
             writer = csv.writer(csvfile,dialect='unix',quoting=csv.QUOTE_NONE)
             writer.writerows([l[0:-1] for l in self.csv_data])
 
@@ -116,7 +124,6 @@ locn:postalCode "{cp}" ;
 locn:locatorName "{ville}"@fr ;
 locn:adminUnitL1 "FR" ;""")
 # traitement des arrondissements municipaux de Paris, Lyon, Marseille
-                # if self.dept in ['13','69','75'] and int(id[0:5]) in range(13201, 13217)+range(69381, 69370)+range(75101, 75121):
                 if int(id[0:5]) in range(13201, 13217) or int(id[0:5]) in range(69381, 69370) or int(id[0:5]) in range(75101, 75121):
                     ttlfile.write(f"locn:location <http://id.insee.fr/geo/arrondissementMunicipal/{id[0:5]}> ;")
                 else:
@@ -131,27 +138,26 @@ locn:geometry [a gsp:Geometry; gsp:asWKT "POINT({lon} {lat})"^^gsp:wktLiteral ] 
         subprocess.run(['ogr2ogr', '-f',"ESRI Shapefile", '-lco', 'ENCODING=UTF-8', '-s_srs', 'EPSG:4326', '-t_srs', 'EPSG:4326', '-overwrite', self.get_sas_full_filename('shp'), 'PG:dbname=cadastre user=cadastre', '-sql', f'{self.csv_query}'])
 
     def save_as_json(self):
-        if not self.json_commune_data :
-            self.json_commune_data = self.get_json_commune_data()
-        if not self.json_voies_non_rapprochees_data :
-            self.json_voies_non_rapprochees_data = self.get_json_voies_non_rapprochees_data()
-        if not self.json_voies_rapprochees_data :
-            self.json_voies_rapprochees_data = self.get_json_voies_rapprochees_data()
-
-            # print(self.json_commune_data[1])
         with open(self.get_sas_full_filename('json'),'w') as jsonfile:
-            for id,type,name,cp,lat,lon,cityname,dept,region,population,adm_weight,importance,*others in self.json_commune_data:
-                # jsonfile.write(json.dumps({"id": id,"type": type,"name": name,"postcode":cp,"lat": float(lat),"lon": float(lon),"city":cityname,"departement":dept,"region":region,"population":population,"adm_weight":adm_weight,"importance":float(importance)}))
-                jsonfile.write(f'"id": {id}, "type": {type}, "name": {name}, "postcode": {cp}, "lat": {lat}, "lon": {lon}, "city": {cityname}, "departement": {dept}, "region": {region}, "population": {population}, "adm_weight": {adm_weight}, "importance": {importance}')
-            for fantoir,citycode,type,name,postcode,lat,lon,city,departement,region,importance,housenumbers,*others in self.json_voies_non_rapprochees_data:
-                s_housenumbers = ','.join([f'"{s.split("$")[0]}":{{"lat":{s.split("$")[1]},"lon":{s.split("$")[2]}}}' for s in housenumbers.split('#') ])
-                jsonfile.write(f'{{"id":"{fantoir}","citycode":"{citycode}","type":"{type}","name":"{name}","postcode":"{cp}","lat":"{lat}","lon":"{lon}","city":"{cityname}","departement":"{dept}","region":"{region}","importance":{importance},"housenumbers":{{{s_housenumbers}}}}}\n')
-            for fantoir,citycode,type,name,postcode,lat,lon,city,departement,region,importance,housenumbers,*others in self.json_voies_rapprochees_data:
-                s_housenumbers = ','.join([f'"{s.split("$")[0]}":{{"lat":{s.split("$")[1]},"lon":{s.split("$")[2]}}}' for s in housenumbers.split('#') ])
-                jsonfile.write(f'{{"id":"{fantoir}","citycode":"{citycode}","type":"{type}","name":"{name}","postcode":"{cp}","lat":"{lat}","lon":"{lon}","city":"{cityname}","departement":"{dept}","region":"{region}","importance":{importance},"housenumbers":{{{s_housenumbers}}}}}\n')
+            if not self.json_commune_data :
+                self.json_commune_data = self.get_json_commune_data()
+                for id,type,name,postcode,lat,lon,cityname,dept,region,population,adm_weight,importance,*others in self.json_commune_data:
+                    jsonfile.write(f'"id": {id}, "type": {type}, "name": {name}, "postcode": {postcode}, "lat": {lat}, "lon": {lon}, "city": {cityname}, "departement": {dept}, "region": {region}, "population": {population}, "adm_weight": {adm_weight}, "importance": {importance}')
+            if not self.json_voies_non_rapprochees_data :
+                self.json_voies_non_rapprochees_data = self.get_json_voies_non_rapprochees_data()
+                for fantoir,citycode,type,name,postcode,lat,lon,cityname,departement,region,importance,housenumbers,*others in self.json_voies_non_rapprochees_data:
+                    s_housenumbers = ','.join([f'"{s.split("$")[0]}":{{"lat":{s.split("$")[1]},"lon":{s.split("$")[2]}}}' for s in housenumbers.split('#') ])
+                    jsonfile.write(f'{{"id":"{fantoir}","citycode":"{citycode}","type":"{type}","name":"{name}","postcode":"{postcode}","lat":"{lat}","lon":"{lon}","city":"{cityname}","departement":"{dept}","region":"{region}","importance":{importance},"housenumbers":{{{s_housenumbers}}}}}\n')
+            if not self.json_voies_rapprochees_data :
+                self.json_voies_rapprochees_data = self.get_json_voies_rapprochees_data()
+                for fantoir,citycode,type,name,postcode,lat,lon,cityname,departement,region,importance,housenumbers,*others in self.json_voies_rapprochees_data:
+                    s_housenumbers = ','.join([f'"{s.split("$")[0]}":{{"lat":{s.split("$")[1]},"lon":{s.split("$")[2]}}}' for s in housenumbers.split('#') ])
+                    jsonfile.write(f'{{"id":"{fantoir}","citycode":"{citycode}","type":"{type}","name":"{name}","postcode":"{postcode}","lat":"{lat}","lon":"{lon}","city":"{cityname}","departement":"{dept}","region":"{region}","importance":{importance},"housenumbers":{{{s_housenumbers}}}}}\n')
+            if not self.json_lieux_dits_data :
+                self.json_lieux_dits_data = self.get_json_lieux_dits_data()
+                for fantoir,citycode,type,name,postcode,lat,lon,cityname,departement,region,importance,*others in self.json_lieux_dits_data:
+                    jsonfile.write(f'{{"id":"{fantoir}","citycode":"{citycode}","type":"{type}","name":"{name}","postcode":"{postcode}","lat":"{lat}","lon":"{lon}","city":"{cityname}","departement":"{dept}","region":"{region}","importance":{importance}}}\n')
                
-    def move_to_web_directory(self):
-        return True
 
 def process(departements, **kwargs):
     for dept in departements:
@@ -163,4 +169,3 @@ def process(departements, **kwargs):
         d.save_as_csv()
         d.save_as_ttl()
         d.save_as_json()
-        d.move_to_web_directory()
