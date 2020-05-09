@@ -25,7 +25,7 @@ AS
                           WHEN u.num=od.num THEN od.numero
                           ELSE c.numero
                        END,' ','')) AS numero,
-         REPLACE(REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(COALESCE(CASE 
+         REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(COALESCE(CASE 
                                                                   	WHEN u.num=o.num THEN
                                                                     CASE 
                                                                         WHEN o.voie_osm != '' THEN REPLACE(o.voie_osm,'’',CHR(39))
@@ -53,7 +53,10 @@ AS
                                                     '([dD][eé]partementale?|Rue|[rR]urale?|[vV]icinale?|[cC]ommunale?|Cr) ([0-9]+ )?[dD]ite? ',''),
                                                     '(Draille|Chemin|Sentier) [dD]ite? ','1 '),
                                                     'Voie Che ','Chemin '),
-                                                    'Cours Dit Che ','Chemin ') AS voie, 
+                                                    'Cours Dit Che ','Chemin '),
+                                                    '"',CHR(39)), 
+                                                    ', ',' '), 
+                                                    ',',' ') AS voie, 
         COALESCE(cp.postal_code, lp.cp, ca.code_postal) AS code_post,
         COALESCE(cn.libelle,initcap(ca.nom_com)) AS ville, 
         CASE 
