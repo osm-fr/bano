@@ -142,7 +142,7 @@ locn:geometry [a gsp:Geometry; gsp:asWKT "POINT({lon} {lat})"^^gsp:wktLiteral ] 
             if not self.json_commune_data :
                 self.json_commune_data = self.get_json_commune_data()
                 for id,type,name,postcode,lat,lon,cityname,dept,region,population,adm_weight,importance,*others in self.json_commune_data:
-                    jsonfile.write(f'"id": {id}, "type": {type}, "name": {name}, "postcode": {postcode}, "lat": {lat}, "lon": {lon}, "city": {cityname}, "departement": {dept}, "region": {region}, "population": {population}, "adm_weight": {adm_weight}, "importance": {importance}')
+                    jsonfile.write(f'{{"id":"{id}","type":"{type}", "name":"{name}", "postcode":"{postcode}", "lat":{lat}, "lon":{lon}, "city":"{cityname}", "departement":"{dept}", "region":"{region}", "population":{population}, "adm_weight":{adm_weight}, "importance":{importance}}}\n')
             if not self.json_voies_non_rapprochees_data :
                 self.json_voies_non_rapprochees_data = self.get_json_voies_non_rapprochees_data()
                 for fantoir,citycode,type,name,postcode,lat,lon,cityname,departement,region,importance,housenumbers,*others in self.json_voies_non_rapprochees_data:
