@@ -69,7 +69,8 @@ LEFT OUTER JOIN pop
 USING (insee_com)
 JOIN  pp
 USING (osm_id)
-WHERE pop.rang = 1;
+WHERE pop.rang = 1 AND
+      cc.typecom != 'COMD';
 
 TRUNCATE TABLE infos_communes;
 INSERT INTO infos_communes
