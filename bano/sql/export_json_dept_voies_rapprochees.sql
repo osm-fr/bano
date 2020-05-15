@@ -1,20 +1,37 @@
 WITH
+sort_order
+AS
+(SELECT 1::integer as sortnum, 'OSM' as source
+UNION ALL
+SELECT 2,'BAL'
+UNION ALL
+SELECT 3,'CADASTRE'
+),
+pre_osm
+AS
+(SELECT geometrie,
+        insee_com,
+        fantoir,
+        REPLACE(REPLACE(numero,'\',';'),'"','') AS numero,
+        code_postal,
+        source
+FROM    cumul_adresses
+WHERE   dept = '__dept__'),
 osm
 AS
 (SELECT geometrie,
-             insee_com,
-             voie_osm,
-             fantoir,
-             numero,
-             code_postal,
-             RANK() OVER (PARTITION BY fantoir,numero ORDER BY source DESC) rang
-      FROM   cumul_adresses
-      WHERE  dept = '__dept__'),
+        insee_com,
+        fantoir,
+        numero,
+        code_postal,
+        ROW_NUMBER() OVER (PARTITION BY fantoir,numero ORDER BY sortnum) rang
+FROM    pre_osm
+JOIN    sort_order USING (source)),
 osm_postal
 AS
 (SELECT o.geometrie,
         o.insee_com,
-        o.voie_osm,
+--        o.voie_osm,
         o.fantoir,
         o.numero,
         COALESCE(o.code_postal,pp.code_postal) code_postal,
@@ -37,7 +54,7 @@ AS
 SELECT osm_postal.fantoir, --|| CASE WHEN coalesce(cp.postal_code, lp.cp)!=lp.cp THEN ('_' || cp.postal_code) ELSE '' END AS id,
        osm_postal.insee_com AS citycode,
        'street' AS type,
-       replace(replace(v.voie_osm,'\"',''),'’',chr(39)) AS name,
+       REPLACE(REPLACE(REGEXP_REPLACE(v.voie_osm,'\t',' '),'"',chr(39)),'’',chr(39)) AS name,
        osm_postal.code_postal AS postcode,
        round(st_y(v.geometrie)::numeric,6) AS lat,
        round(st_x(v.geometrie)::numeric,6) AS lon,
@@ -54,6 +71,7 @@ ON osm_postal.fantoir=v.fantoir
 LEFT JOIN cog
 ON v.insee_com = cog.insee
 WHERE v.dept = '__dept__' AND
+      osm_postal.rang_postal = 1 AND
       osm_postal.numero ~ '^[0-9]{1,4}( ?[A-Z]?.*)?' AND
       osm_postal.numero !~'.[0-9 \\.\\-]{9,}'
 GROUP BY osm_postal.fantoir,

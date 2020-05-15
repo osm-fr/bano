@@ -50,7 +50,7 @@ class Dataset:
 
     def get_json_voies_non_rapprochees_data(self):
         with db.bano.cursor() as cur:
-            cur.execute(self.json_voies_rapprochees_query)
+            cur.execute(self.json_voies_non_rapprochees_query)
             return cur.fetchall()
 
     def get_json_voies_rapprochees_query(self):
@@ -124,7 +124,7 @@ locn:postalCode "{cp}" ;
 locn:locatorName "{ville}"@fr ;
 locn:adminUnitL1 "FR" ;""")
 # traitement des arrondissements municipaux de Paris, Lyon, Marseille
-                if int(id[0:5]) in range(13201, 13217) or int(id[0:5]) in range(69381, 69370) or int(id[0:5]) in range(75101, 75121):
+                if id[0:2] in '13 69 75' and (int(id[0:5]) in range(13201, 13217) or int(id[0:5]) in range(69381, 69370) or int(id[0:5]) in range(75101, 75121)):
                     ttlfile.write(f"locn:location <http://id.insee.fr/geo/arrondissementMunicipal/{id[0:5]}> ;")
                 else:
                     ttlfile.write(f"locn:location <http://id.insee.fr/geo/commune/{id}[0:5]> ;")
@@ -141,22 +141,22 @@ locn:geometry [a gsp:Geometry; gsp:asWKT "POINT({lon} {lat})"^^gsp:wktLiteral ] 
         with open(self.get_sas_full_filename('json'),'w') as jsonfile:
             if not self.json_commune_data :
                 self.json_commune_data = self.get_json_commune_data()
-                for id,type,name,postcode,lat,lon,cityname,dept,region,population,adm_weight,importance,*others in self.json_commune_data:
-                    jsonfile.write(f'{{"id":"{id}","type":"{type}", "name":"{name}", "postcode":"{postcode}", "lat":{lat}, "lon":{lon}, "city":"{cityname}", "departement":"{dept}", "region":"{region}", "population":{population}, "adm_weight":{adm_weight}, "importance":{importance}}}\n')
+            for id,type,name,postcode,lat,lon,cityname,departement,region,population,adm_weight,importance,*others in self.json_commune_data:
+                    jsonfile.write(f'{{"id":"{id}","type":"{type}", "name":"{name}", "postcode":"{postcode}", "lat":{lat}, "lon":{lon}, "city":"{cityname}", "departement":"{departement}", "region":"{region}", "population":{population}, "adm_weight":{adm_weight}, "importance":{importance}}}\n')
             if not self.json_voies_non_rapprochees_data :
                 self.json_voies_non_rapprochees_data = self.get_json_voies_non_rapprochees_data()
-                for fantoir,citycode,type,name,postcode,lat,lon,cityname,departement,region,importance,housenumbers,*others in self.json_voies_non_rapprochees_data:
+            for fantoir,citycode,type,name,postcode,lat,lon,cityname,departement,region,importance,housenumbers,*others in self.json_voies_non_rapprochees_data:
                     s_housenumbers = ','.join([f'"{s.split("$")[0]}":{{"lat":{s.split("$")[1]},"lon":{s.split("$")[2]}}}' for s in housenumbers.split('#') ])
-                    jsonfile.write(f'{{"id":"{fantoir}","citycode":"{citycode}","type":"{type}","name":"{name}","postcode":"{postcode}","lat":"{lat}","lon":"{lon}","city":"{cityname}","departement":"{dept}","region":"{region}","importance":{importance},"housenumbers":{{{s_housenumbers}}}}}\n')
+                    jsonfile.write(f'{{"id":"{fantoir}","citycode":"{citycode}","type":"{type}","name":"{name}","postcode":"{postcode}","lat":"{lat}","lon":"{lon}","city":"{cityname}","departement":"{departement}","region":"{region}","importance":{importance},"housenumbers":{{{s_housenumbers}}}}}\n')
             if not self.json_voies_rapprochees_data :
                 self.json_voies_rapprochees_data = self.get_json_voies_rapprochees_data()
-                for fantoir,citycode,type,name,postcode,lat,lon,cityname,departement,region,importance,housenumbers,*others in self.json_voies_rapprochees_data:
+            for fantoir,citycode,type,name,postcode,lat,lon,cityname,departement,region,importance,housenumbers,*others in self.json_voies_rapprochees_data:
                     s_housenumbers = ','.join([f'"{s.split("$")[0]}":{{"lat":{s.split("$")[1]},"lon":{s.split("$")[2]}}}' for s in housenumbers.split('#') ])
-                    jsonfile.write(f'{{"id":"{fantoir}","citycode":"{citycode}","type":"{type}","name":"{name}","postcode":"{postcode}","lat":"{lat}","lon":"{lon}","city":"{cityname}","departement":"{dept}","region":"{region}","importance":{importance},"housenumbers":{{{s_housenumbers}}}}}\n')
+                    jsonfile.write(f'{{"id":"{fantoir}","citycode":"{citycode}","type":"{type}","name":"{name}","postcode":"{postcode}","lat":"{lat}","lon":"{lon}","city":"{cityname}","departement":"{departement}","region":"{region}","importance":{importance},"housenumbers":{{{s_housenumbers}}}}}\n')
             if not self.json_lieux_dits_data :
                 self.json_lieux_dits_data = self.get_json_lieux_dits_data()
-                for fantoir,citycode,type,name,postcode,lat,lon,cityname,departement,region,importance,*others in self.json_lieux_dits_data:
-                    jsonfile.write(f'{{"id":"{fantoir}","citycode":"{citycode}","type":"{type}","name":"{name}","postcode":"{postcode}","lat":"{lat}","lon":"{lon}","city":"{cityname}","departement":"{dept}","region":"{region}","importance":{importance}}}\n')
+            for fantoir,citycode,type,name,postcode,lat,lon,cityname,departement,region,importance,*others in self.json_lieux_dits_data:
+                    jsonfile.write(f'{{"id":"{fantoir}","citycode":"{citycode}","type":"{type}","name":"{name}","postcode":"{postcode}","lat":"{lat}","lon":"{lon}","city":"{cityname}","departement":"{departement}","region":"{region}","importance":{importance}}}\n')
                
 
 def process(departements, **kwargs):
