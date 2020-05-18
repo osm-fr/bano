@@ -115,7 +115,8 @@ LEFT JOIN cog_commune cn
 ON (cn.com = u.insee_com) 
 LEFT JOIN planet_osm_postal_code cp 
 ON (cp."ref:INSEE" = u.insee_com AND ST_Contains(cp.way, COALESCE(o.geometrie, od.geometrie, c.geometrie))) 
-WHERE u.num>'0')
+WHERE u.num>'0' AND
+      cn.typecom != 'COMD')
 SELECT id,
        numero,
        voie,
