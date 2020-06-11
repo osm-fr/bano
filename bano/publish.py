@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import gzip
+import tarfile
 import os
 
 from glob import glob
@@ -29,25 +30,20 @@ def get_source_file(dept,extension):
     return Path(get_source_dir()) / f'bano-{dept}.{extension}'
 
 def get_dest_file(dept,filetype,gzip=False):
-    gz_ext = '.gz' if gzip else ''
-    return Path(get_dest_dir()) / f'bano-{dept}.{filetype}{gz_ext}'
+    gz_ext = '.tar.gz' if gzip else ''
+    return Path(get_dest_dir()) / f'bano-{dept}-{filetype}{gz_ext}'
 
 def get_dest_file_full(filetype,gzip=False):
     gz_ext = '.gz' if gzip else ''
     return Path(get_dest_dir()) / f'full.{filetype}{gz_ext}'
 
 def publish_as_shp(dept):
-    with gzip.open(get_dest_file(dept,'shp',True),'wb') as shpgz:
-        with open(get_source_file(dept,'shp'),'rb') as s:
-            shpgz.write(s.read())
-        with open(get_source_file(dept,'dbf'),'rb') as s:
-            shpgz.write(s.read())
-        with open(get_source_file(dept,'shx'),'rb') as s:
-            shpgz.write(s.read())
-        with open(get_source_file(dept,'prj'),'rb') as s:
-            shpgz.write(s.read())
-        with open(get_source_file(dept,'cpg'),'rb') as s:
-            shpgz.write(s.read())
+    with tarfile.open(get_dest_file(dept, 'shp', True), "w:gz") as tar:
+        tar.add(get_source_file(dept,'shp'), arcname=f'bano-{dept}.shp')
+        tar.add(get_source_file(dept,'dbf'), arcname=f'bano-{dept}.dbf')
+        tar.add(get_source_file(dept,'shx'), arcname=f'bano-{dept}.shx')
+        tar.add(get_source_file(dept,'prj'), arcname=f'bano-{dept}.prj')
+        tar.add(get_source_file(dept,'cpg'), arcname=f'bano-{dept}.cpg')
 
 def publish_as_csv(dept):
     copy2(get_source_file(dept,'csv'),get_dest_dir())
