@@ -24,6 +24,8 @@ psql -d osm -U cadastre -f sql/create_table_polygones_communes.sql
 ./copy_table_from_osm_to_cadastre.sh polygones_insee
 psql -d osm -U cadastre -f sql/create_table_polygones_postaux.sql
 ./copy_table_from_osm_to_cadastre.sh polygones_postaux
+./copy_table_from_osm_to_cadastre.sh ban_odbl
+psql -d cadastre -U cadastre -f sql/post_copie_ban_odbl.sql
 
 # exports
 cat deplist.txt | parallel -j 4 bano export {1}

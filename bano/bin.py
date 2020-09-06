@@ -4,7 +4,7 @@ import sys
 from .constants import DEPARTEMENTS
 from . import core, core_place, pre_process_suffixe, export, publish
 from . import update_manager
-from .sources import bal, cadastre_gouv, cadastre_json
+from .sources import bal, cadastre_gouv, cadastre_json, ban
 
 
 def main():
@@ -31,6 +31,10 @@ def main():
     subparser.add_argument('departements', type=str, help='Départements à traiter', nargs='*', default=DEPARTEMENTS)
     subparser.set_defaults(func=bal.process)
     
+    subparser = subparsers.add_parser('download_ban', help='b help', description="Met à jour les fichiers d'adresses de source BAN")
+    subparser.add_argument('departements', type=str, help='Départements à traiter', nargs='*', default=DEPARTEMENTS)
+    subparser.set_defaults(func=ban.process)
+
     subparser = subparsers.add_parser('download_cadastre', help='b help', description="Met à jour les fichiers du cadastre hors adresses au format JSON")
     subparser.add_argument('prefixe', choices=['lieux_dits'], type=str, help='Source des données à traiter')
     subparser.add_argument('departements', type=str, help='Départements à traiter', nargs='*', default=DEPARTEMENTS)
