@@ -20,8 +20,11 @@ cat deplist.txt        | parallel -j 4 export LANG=fr_FR.UTF-8\; bano process_co
 # Mise à jour quotidienne dans la base cadastre des couches des polygones postaux d'OSM et des statuts admin de communes en vue des exports
 ./copy_table_from_osm_to_cadastre.sh planet_osm_postal_code
 ./copy_table_from_osm_to_cadastre.sh infos_communes
+
 psql -d osm -U cadastre -f sql/create_table_polygones_communes.sql
 ./copy_table_from_osm_to_cadastre.sh polygones_insee
+./copy_table_from_osm_to_cadastre.sh polygones_insee_geo
+
 psql -d osm -U cadastre -f sql/create_table_polygones_postaux.sql
 ./copy_table_from_osm_to_cadastre.sh polygones_postaux
 ./copy_table_from_osm_to_cadastre.sh ban_odbl
