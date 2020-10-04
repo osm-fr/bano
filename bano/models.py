@@ -103,7 +103,7 @@ class Adresses:
             nb_rec = 0
             a_values = []
             a_values_voie = []
-            sload = 'INSERT INTO cumul_adresses (geometrie,numero,voie_cadastre,voie_bal,voie_osm,voie_fantoir,fantoir,insee_com,dept,code_postal,source) VALUES'
+            sload = 'INSERT INTO cumul_adresses (geometrie,numero,voie_cadastre,voie_bal,voie_osm,voie_fantoir,fantoir,insee_com,dept,code_postal,source,voie_autre) VALUES'
             for v in self:
                 code_postal = ''
                 cle_fantoir = self.get_best_fantoir(v)
@@ -111,12 +111,20 @@ class Adresses:
                 street_name_fantoir =  self[v]['voies'].get('FANTOIR') or ''
                 street_name_cadastre =  self[v]['voies'].get('CADASTRE') or ''
                 street_name_bal =  self[v]['voies'].get('BAL') or ''
+                if source == 'CADASTRE':
+                    street_name_autre =  self[v]['voies'].get('CADASTRE') or ''
+                elif source == 'BAL':
+                    street_name_autre =  self[v]['voies'].get('BAL') or ''
+                elif source == 'BAN':
+                    street_name_autre =  self[v]['voies'].get('BAN') or ''
+                else:
+                    street_name_autre = ''
                 lat_point_par_rue = None
                 lon_point_par_rue = None
 
                 for num in self[v]['numeros']:
                     numadresse = self[v]['numeros'][num]
-                    a_values.append("(ST_GeomFromText('POINT({:6f} {:6f})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}')".format(numadresse.node.attribs['lon'],numadresse.node.attribs['lat'],numadresse.numero.replace("'",""),street_name_cadastre.replace("'","''"),street_name_bal.replace("'","''"),street_name_osm.replace("'","''"),street_name_fantoir.replace("'","''"),cle_fantoir,self.code_insee,code_dept,numadresse.code_postal,source).replace(",''",",null").replace(",''",",null"))
+                    a_values.append("(ST_GeomFromText('POINT({:6f} {:6f})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}')".format(numadresse.node.attribs['lon'],numadresse.node.attribs['lat'],numadresse.numero.replace("'",""),street_name_cadastre.replace("'","''"),street_name_bal.replace("'","''"),street_name_osm.replace("'","''"),street_name_fantoir.replace("'","''"),cle_fantoir,self.code_insee,code_dept,numadresse.code_postal,source,street_name_autre.replace("'","''")).replace(",''",",null").replace(",''",",null"))
                     if source == 'OSM':
                         lat_point_par_rue = numadresse.node.attribs['lat']
                         lon_point_par_rue = numadresse.node.attribs['lon']

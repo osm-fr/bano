@@ -100,6 +100,20 @@ def has_addreses_with_suffix(insee):
     cur.close()
     return res
 
+def load_ban_hsnr(code_insee):
+    dict_node_relations = {}
+    with db.bano_cache.cursor() as cur:
+        cur.execute(f"SELECT id,TRIM (BOTH FROM (numero||' '||COALESCE(rep,''))), nom_voie, lon, lat FROM ban_odbl WHERE code_insee = '{code_insee}';")
+        for id, housenumber, name, lon, lat in cur:
+            if not name or len(name) < 2 or not lon:
+                continue
+            adresses.register(name)
+            if not id in dict_node_relations:
+                dict_node_relations[id] = []
+                dict_node_relations[id].append(hp.normalize(name))
+            if hp.is_valid_housenumber(housenumber):
+                adresses.add_adresse(Adresse(Node({'id':id,'lon':lon,'lat':lat},{}),housenumber,name,'',''), 'BAN')
+
 def load_bases_adresses_locales_hsnr(code_insee):
     dict_node_relations = {}
     with db.bano_cache.cursor() as cur:
@@ -261,10 +275,10 @@ def addr_2_db(code_insee, source, **kwargs):
     # global batch_id
     global code_dept
     global nodes,ways,adresses
-    global schema_cible
+    # global schema_cible
 
-    schema_cible = 'public'
-    if ('SCHEMA_CIBLE' in os.environ) : schema_cible = (os.environ['SCHEMA_CIBLE'])
+    # schema_cible = 'public'
+    # if ('SCHEMA_CIBLE' in os.environ) : schema_cible = (os.environ['SCHEMA_CIBLE'])
 
     debut_total = time.time()
     
@@ -279,6 +293,8 @@ def addr_2_db(code_insee, source, **kwargs):
 
     if source == 'BAL':
         load_bases_adresses_locales_hsnr(code_insee)
+    if source == 'BAN':
+        load_ban_hsnr(code_insee)
     if source == 'CADASTRE':
         adresses.load_cadastre_hsnr()
     if source == 'OSM':

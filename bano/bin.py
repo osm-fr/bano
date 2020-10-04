@@ -12,7 +12,7 @@ def main():
     subparsers = parser.add_subparsers(help='Commandes disponibles')
 
     subparser = subparsers.add_parser('process_commune', help='a help', description='Traite une commune')
-    subparser.add_argument('source', choices=['OSM', 'CADASTRE', 'BAL'], type=str, help='Source des données à traiter')
+    subparser.add_argument('source', choices=['OSM', 'CADASTRE', 'BAL','BAN'], type=str, help='Source des données à traiter')
     group = subparser.add_mutually_exclusive_group(required=True)
     group.add_argument('--code_insee', type=str, help='Code INSEE de la commune à traiter')
     group.add_argument('--depts', type=str, help='Départements à traiter', nargs='*')
