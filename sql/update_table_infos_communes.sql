@@ -7,10 +7,12 @@ CREATE TABLE IF NOT EXISTS infos_communes (
   population_milliers numeric,
   type text,
   lon numeric,
-  lat numeric
+  lat numeric,
+  geometrie geometry(Point, 4326)
 );
 
 CREATE INDEX IF NOT EXISTS idx_infos_communes_insee ON infos_communes(insee_com);
+CREATE INDEX IF NOT EXISTS gidx_infos_communes ON infos_communes USING GIST(geometrie);
 
 CREATE TEMP TABLE tmp_infos_communes
 AS
@@ -46,7 +48,8 @@ pp
 AS
 (SELECT osm_id,
         ROUND(ST_X(ST_Transform(way,4326))::numeric,6) lon,
-        ROUND(ST_Y(ST_Transform(way,4326))::numeric,6) lat
+        ROUND(ST_Y(ST_Transform(way,4326))::numeric,6) lat,
+        ST_Transform(way,4326) geometrie
 FROM planet_osm_point pp
 WHERE   place != '')
 SELECT cc.dep,
@@ -61,7 +64,8 @@ SELECT cc.dep,
          ELSE 'city'
        END AS type,
        pp.lon,
-       pp.lat
+       pp.lat,
+       pp.geometrie
 FROM adm_weight
 JOIN cog_commune cc
 ON cc.com = insee_com
