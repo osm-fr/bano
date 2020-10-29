@@ -1,7 +1,10 @@
 #!/bin/bash
 
 source /data/work/vdct/bano_venv37/bin/activate
-cd /data/project/bano
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd $SCRIPT_DIR
+
 source config
 
 # Sources
@@ -13,7 +16,6 @@ bano update_code_cadastre
 
 # BANO
 bano update_insee_lists
-cat insee_cadastre.csv | parallel -j 4 export LANG=fr_FR.UTF-8\; bano process_commune CADASTRE --code_insee {1}
 cat insee_osm.csv      | parallel -j 4 export LANG=fr_FR.UTF-8\; bano process_commune OSM      --code_insee {1}
 cat insee_locales.csv  | parallel -j 4 export LANG=fr_FR.UTF-8\; bano process_commune BAL      --code_insee {1}
 cat insee_osm.csv      | parallel -j 4 export LANG=fr_FR.UTF-8\; bano process_commune BAN      --code_insee {1}
