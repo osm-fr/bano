@@ -29,6 +29,11 @@ def get_data_from_pg(query_name,insee_com):
     return res
 
 
+def load_fantoir(liste_fantoir):
+    for c in liste_fantoir:
+        places.add_place(Place(0,0,'',fantoir.mapping.fantoir[c]['nom'],'','',c,fantoir.mapping.fantoir[c]['ld_bati'], c[0:5]))
+
+
 def load_cadastre(code_insee):
     data = get_data_from_pg('cadastre_2_place',code_insee)
     for lon, lat, name, fantoir, *others in data:
@@ -40,21 +45,20 @@ def load_cadastre(code_insee):
             places.add_place(Place(lon,lat,'','',name,'',fantoir,-1,code_insee))
 
 
-def load_fantoir(liste_fantoir):
-    for c in liste_fantoir:
-        places.add_place(Place(0,0,'',fantoir.mapping.fantoir[c]['nom'],'','',c,fantoir.mapping.fantoir[c]['ld_bati'], c[0:5]))
-
 
 def load_osm(code_insee):
     data = get_data_from_pg('place_insee',code_insee)
     for lon, lat, place, name, fantoir, ld_bati, tags, *others in data:
-        targets = places.match_name(name,'FANTOIR')
-        if targets:
-            for t in targets:
+        targets_fantoir = places.match_fantoir(fantoir)
+        targets_name = places.match_name(name,'FANTOIR')
+        if targets_fantoir:
+            for t in targets_fantoir:
+                places.p[t].update_osm(lon, lat, place, name, fantoir if hp.is_valid_fantoir(fantoir,code_insee) else '')
+        elif targets_name:
+            for t in targets_name:
                 places.p[t].update_osm(lon, lat, place, name, fantoir if hp.is_valid_fantoir(fantoir,code_insee) else '')
         else:
-            places.add_place(Place(lon, lat, place,'','',name, fantoir if hp.is_valid_fantoir(fantoir,code_insee) else '',-1, code_insee))
-
+            places.add_place(Place(lon, lat, place,'','',name, fantoir if hp.is_valid_fantoir(fantoir,code_insee) else '',-1, code_insee))        
 
 def load_to_db(places, code_insee):
     with db.bano.cursor() as conn:

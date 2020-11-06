@@ -103,7 +103,7 @@ class Adresses:
             nb_rec = 0
             a_values = []
             a_values_voie = []
-            sload = 'INSERT INTO cumul_adresses (geometrie,numero,voie_cadastre,voie_bal,voie_osm,voie_fantoir,fantoir,insee_com,dept,code_postal,source) VALUES'
+            sload = 'INSERT INTO cumul_adresses (geometrie,numero,voie_cadastre,voie_bal,voie_osm,voie_fantoir,fantoir,insee_com,dept,code_postal,source,voie_autre) VALUES'
             for v in self:
                 code_postal = ''
                 cle_fantoir = self.get_best_fantoir(v)
@@ -111,12 +111,20 @@ class Adresses:
                 street_name_fantoir =  self[v]['voies'].get('FANTOIR') or ''
                 street_name_cadastre =  self[v]['voies'].get('CADASTRE') or ''
                 street_name_bal =  self[v]['voies'].get('BAL') or ''
+                if source == 'CADASTRE':
+                    street_name_autre =  self[v]['voies'].get('CADASTRE') or ''
+                elif source == 'BAL':
+                    street_name_autre =  self[v]['voies'].get('BAL') or ''
+                elif source == 'BAN':
+                    street_name_autre =  self[v]['voies'].get('BAN') or ''
+                else:
+                    street_name_autre = ''
                 lat_point_par_rue = None
                 lon_point_par_rue = None
 
                 for num in self[v]['numeros']:
                     numadresse = self[v]['numeros'][num]
-                    a_values.append("(ST_GeomFromText('POINT({:6f} {:6f})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}')".format(numadresse.node.attribs['lon'],numadresse.node.attribs['lat'],numadresse.numero.replace("'",""),street_name_cadastre.replace("'","''"),street_name_bal.replace("'","''"),street_name_osm.replace("'","''"),street_name_fantoir.replace("'","''"),cle_fantoir,self.code_insee,code_dept,numadresse.code_postal,source).replace(",''",",null").replace(",''",",null"))
+                    a_values.append("(ST_GeomFromText('POINT({:6f} {:6f})', 4326),'{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}','{:s}')".format(numadresse.node.attribs['lon'],numadresse.node.attribs['lat'],numadresse.numero.replace("'",""),street_name_cadastre.replace("'","''"),street_name_bal.replace("'","''"),street_name_osm.replace("'","''"),street_name_fantoir.replace("'","''"),cle_fantoir,self.code_insee,code_dept,numadresse.code_postal,source,street_name_autre.replace("'","''")).replace(",''",",null").replace(",''",",null"))
                     if source == 'OSM':
                         lat_point_par_rue = numadresse.node.attribs['lat']
                         lon_point_par_rue = numadresse.node.attribs['lon']
@@ -178,7 +186,7 @@ class Fantoir:
         self.name = name
         self.name_norm = hp.normalize(name)
         self.fantoir = fantoir
-        self.bati = bati
+        self.bati = bati if bati != '' else None
 class Cadastre:
     def __init__(self,lon,lat,name):
         self.lon = lon
@@ -220,7 +228,7 @@ class Place:
         self.cadastre = Cadastre(lon,lat,name)
         self.has_cadastre = True
     def as_string(self):
-        return "{:s}:{:s}\t{:s}\t{:6f}\t{:6f}\t{:s}\t{:s}\t{:6f}\t{:6f}\t{:s}".format(self.id,self.fantoir.name,self.fantoir.fantoir,self.osm.lon,self.osm.lat,self.osm.place,self.osm.name,self.cadastre.lon,self.cadastre.lat,self.cadastre.name)
+        return f"ID {self.id} \n FANTOIR {self.fantoir.name} - FANTOIR {self.fantoir.fantoir} \nOSM {self.osm.lon} - {self.osm.lat} - {self.osm.place} - {self.osm.name} \nCADASTRE {self.cadastre.lon} - {self.cadastre.lat} - {self.cadastre.name}"
     def as_SQL_cadastre_row(self):
         if self.has_cadastre:
             return hp.remove_quotes_on_null(f"(ST_PointFromText('POINT({self.cadastre.lon} {self.cadastre.lat})',4326),'{hp.escape_quotes(hp.format_toponyme(self.cadastre.name)) or 'null'}','{hp.escape_quotes(self.osm.name) or 'null'}','{hp.escape_quotes(self.fantoir.name) or 'null'}','{self.fantoir.fantoir or 'null'}','{self.code_insee}','{self.code_dept}','null','CADASTRE',{self.fantoir.bati or 'null'},'')")
@@ -234,10 +242,11 @@ class Places:
     def add_place(self,new_p):
         self.p[new_p.id]=new_p
     def match_fantoir(self,fantoir):
+        res = []
         for c in self.p:
-            if c.fantoir and c.fantoir.fantoir and c.fantoir.fantoir == fantoir:
-                return c
-        return 0
+            if self.p[c].fantoir and self.p[c].fantoir.fantoir and self.p[c].fantoir.fantoir == fantoir:
+                res+=[c]
+        return res
     def match_name(self,name,target):
         res = []
         name_norm = hp.normalize(name)
@@ -256,7 +265,7 @@ class Places:
         return res
     def _print(self):
         for c in self.p:
-            print(self.p[c].osm.name)
+            print(f'ID : {self.p[c].id} - FANTOIR : {self.p[c].fantoir.name} - OSM : {self.p[c].osm.name}')
             print(self.p[c].as_string())
     def _print_SQL_Cadastre(self):
         for c in self.p:
