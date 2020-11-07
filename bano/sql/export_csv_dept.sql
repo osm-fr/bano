@@ -10,6 +10,27 @@ FROM     cumul_adresses
 WHERE    fantoir IS NOT NULL AND
          dept = '__dept__' 
 GROUP BY 1,2,3),
+-- ocod_brut
+-- AS
+-- (SELECT *, 
+--         REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REGEXP_REPLACE(UPPER(numero),'^0*',''),'BIS','B'),'TER','T'),'QUATER','Q'),'QUAT','Q'),' ',''),'à','-'),';',',') AS num
+-- FROM    cumul_adresses 
+-- WHERE   dept = '__dept__'),
+-- ocod
+-- AS
+-- (SELECT *,
+--         ROW_NUMBER() OVER (PARTITION BY fantoir,num,source) AS rownum
+-- FROM    ocod_brut
+-- ),
+-- o
+-- AS
+-- (SELECT * FROM ocod WHERE source = 'OSM' AND rownum = 1),
+-- c
+-- AS
+-- (SELECT * FROM ocod WHERE source = 'CADASTRE' AND rownum = 1),
+-- od
+-- AS
+-- (SELECT * FROM ocod WHERE source = 'BAL' AND rownum = 1),
 lp
 AS
 (SELECT  insee,
@@ -25,38 +46,24 @@ AS
                           WHEN u.num=od.num THEN od.numero
                           ELSE c.numero
                        END,' ','')) AS numero,
-         REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(COALESCE(CASE 
-                                                                  	WHEN u.num=o.num THEN
-                                                                    CASE 
-                                                                        WHEN o.voie_osm != '' THEN REPLACE(o.voie_osm,'’',CHR(39))
-                                                                        ELSE o.voie_cadastre
-                                                                    END
-                                                                    WHEN u.num=od.num THEN
-                                                                    CASE
-                                                                        WHEN od.voie_osm IS NOT NULL THEN REPLACE(od.voie_osm,'’',CHR(39))
-                                                                        ELSE od.voie_cadastre
-                                                                    END
-                                                                    ELSE
-                                                                    CASE
-                                                                        WHEN c.voie_osm!='' THEN REPLACE(c.voie_osm,'’',CHR(39))
-                                                                        ELSE c.voie_cadastre
-                                                                    END
-                                                                END,
-                                                                CASE
-                                                                    WHEN u.num=o.num THEN REPLACE(o.voie_osm,'’',CHR(39))
-                                                                    ELSE 
-                                                                    CASE
-                                                                        WHEN c.voie_osm !='' THEN REPLACE(c.voie_osm,'’',CHR(39))
-                                                                        ELSE c.voie_cadastre
-                                                                    END
-                                                                END),
-                                                    '([dD][eé]partementale?|Rue|[rR]urale?|[vV]icinale?|[cC]ommunale?|Cr) ([0-9]+ )?[dD]ite? ',''),
-                                                    '(Draille|Chemin|Sentier) [dD]ite? ','1 '),
-                                                    'Voie Che ','Chemin '),
-                                                    'Cours Dit Che ','Chemin '),
-                                                    '"',CHR(39)), 
-                                                    ', ',' '), 
-                                                    ',',' ') AS voie, 
+         REPLACE(
+          REPLACE(
+            REPLACE(
+              REPLACE(
+                REPLACE(
+                  REGEXP_REPLACE(
+                    REGEXP_REPLACE(CASE 
+            	                       WHEN u.num=o.num THEN REPLACE(o.voie_osm,'’',CHR(39))
+                                     WHEN u.num=od.num THEN COALESCE(REPLACE(od.voie_osm,'’',CHR(39)),od.voie_bal)
+                                     ELSE COALESCE(REPLACE(c.voie_osm,'’',CHR(39)),c.voie_cadastre)
+                                   END,
+                                   '([dD][eé]partementale?|Rue|[rR]urale?|[vV]icinale?|[cC]ommunale?|Cr) ([0-9]+ )?[dD]ite? ',''),
+                                 '(Draille|Chemin|Sentier) [dD]ite? ','1 '),
+                               'Voie Che ','Chemin '),
+                             'Cours Dit Che ','Chemin '),
+                           '"',CHR(39)), 
+                         ', ',' '), 
+                       ',',' ') AS voie, 
         COALESCE(cp.postal_code, lp.cp, ca.code_postal) AS code_post,
         COALESCE(cn.libelle,initcap(ca.nom_com)) AS ville, 
         CASE 
