@@ -147,18 +147,23 @@ locn:geometry [a gsp:Geometry; gsp:asWKT "POINT({lon} {lat})"^^gsp:wktLiteral ] 
                 self.json_voies_non_rapprochees_data = self.get_json_voies_non_rapprochees_data()
             for fantoir,citycode,type,name,postcode,lat,lon,cityname,departement,region,importance,housenumbers,*others in self.json_voies_non_rapprochees_data:
                     s_housenumbers = ','.join([f'"{s.split("$")[0]}":{{"lat":{s.split("$")[1]},"lon":{s.split("$")[2]}}}' for s in housenumbers.split('#') ])
+                    if ';' in postcode:
+                        postcode = f"{postcode.split(';')}"
                     jsonfile.write(f'{{"id":"{fantoir}","citycode":"{citycode}","type":"{type}","name":"{name}","postcode":"{postcode}","lat":"{lat}","lon":"{lon}","city":"{cityname}","departement":"{departement}","region":"{region}","importance":{importance},"housenumbers":{{{s_housenumbers}}}}}\n')
             if not self.json_voies_rapprochees_data :
                 self.json_voies_rapprochees_data = self.get_json_voies_rapprochees_data()
             for fantoir,citycode,type,name,postcode,lat,lon,cityname,departement,region,importance,housenumbers,*others in self.json_voies_rapprochees_data:
                     s_housenumbers = ','.join([f'"{s.split("$")[0]}":{{"lat":{s.split("$")[1]},"lon":{s.split("$")[2]}}}' for s in housenumbers.split('#') ])
+                    if ';' in postcode:
+                        postcode = f"{postcode.split(';')}"
                     jsonfile.write(f'{{"id":"{fantoir}","citycode":"{citycode}","type":"{type}","name":"{name}","postcode":"{postcode}","lat":"{lat}","lon":"{lon}","city":"{cityname}","departement":"{departement}","region":"{region}","importance":{importance},"housenumbers":{{{s_housenumbers}}}}}\n')
             if not self.json_lieux_dits_data :
                 self.json_lieux_dits_data = self.get_json_lieux_dits_data()
             for fantoir,citycode,type,name,postcode,lat,lon,cityname,departement,region,importance,*others in self.json_lieux_dits_data:
+                    if ';' in postcode:
+                        postcode = f"{postcode.split(';')}"
                     jsonfile.write(f'{{"id":"{fantoir}","citycode":"{citycode}","type":"{type}","name":"{name}","postcode":"{postcode}","lat":"{lat}","lon":"{lon}","city":"{cityname}","departement":"{departement}","region":"{region}","importance":{importance}}}\n')
                
-
 def process(departements, **kwargs):
     for dept in departements:
         if not hp.is_valid_dept(dept):
