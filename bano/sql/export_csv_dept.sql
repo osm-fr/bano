@@ -121,7 +121,7 @@ ON (ca.insee_com = u.insee_com)
 LEFT JOIN cog_commune cn 
 ON (cn.com = u.insee_com) 
 LEFT JOIN planet_osm_postal_code cp 
-ON (cp."ref:INSEE" = u.insee_com AND ST_Contains(cp.way, COALESCE(o.geometrie, od.geometrie, c.geometrie))) 
+ON (cp."ref:INSEE" = u.insee_com AND ST_Contains(cp.way, ST_Transform(COALESCE(o.geometrie, od.geometrie, c.geometrie),3857))) 
 WHERE u.num>'0' AND
       cn.typecom != 'COMD')
 SELECT id,
