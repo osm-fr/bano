@@ -23,9 +23,7 @@ def batch_start_log(source,etape,code_geo):
             whereclause = f"dept = '{dept}' AND source = '{source}' AND etape = '{etape}'"
             str_query = f"INSERT INTO batch_historique (SELECT * FROM batch WHERE {whereclause});DELETE FROM batch WHERE {whereclause};INSERT INTO batch (source,etape,timestamp_debut,date_debut,dept,nombre_adresses) VALUES ('{source}','{etape}',{t},'{th}','{dept}',0);COMMIT;"
         
-        # print(str_query)
         cur.execute(str_query)
-        print(str_query)
 
         cur.execute(f"SELECT id_batch::integer FROM batch WHERE {whereclause};")
         c = cur.fetchone()
