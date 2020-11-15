@@ -172,7 +172,7 @@ def process(departements, **kwargs):
             print(f"Code {dept} invalide pour un département - abandon")
             continue
         d = Dataset(dept)
-        # d.save_as_shp()
-        # d.save_as_csv()
-        # d.save_as_ttl()
+        d.save_as_shp()
+        d.save_as_csv()
+        d.save_as_ttl()
         d.save_as_json()
