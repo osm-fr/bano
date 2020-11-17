@@ -75,6 +75,8 @@ CREATE INDEX IF NOT EXISTS    cumul_voies_dept ON cumul_voies(dept) WITH (fillfa
 CREATE INDEX IF NOT EXISTS    cumul_voies_source ON cumul_voies(source) WITH (fillfactor=95);
 CREATE INDEX IF NOT EXISTS    cumul_voies_insee_source ON cumul_voies(insee_com,source) WITH (fillfactor=95);
 
+ALTER TABLE cumul_voies CLUSTER ON cumul_voies_insee;
+
 CREATE TABLE IF NOT EXISTS cumul_places
 (   geometrie       geometry ,
     libelle_cadastre    character varying (300),
@@ -92,6 +94,8 @@ CREATE TABLE IF NOT EXISTS cumul_places
 
 CREATE INDEX IF NOT EXISTS cumul_places_geo ON cumul_places USING GIST(geometrie);
 CREATE INDEX IF NOT EXISTS cumul_places_insee_com ON cumul_places (insee_com);
+
+ALTER TABLE cumul_places CLUSTER ON cumul_places_insee_com;
 
 CREATE TABLE IF NOT EXISTS batch (
     id_batch        serial,
