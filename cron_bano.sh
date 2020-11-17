@@ -42,6 +42,6 @@ cat deplist.txt | parallel -j 4 bano publish {1}
 bano publish_aggregate
 
 # ménage PostgreSQL
-psql -d cadastre -U cadastre -c "VACUUM FULL cumul_adresses;"
-psql -d cadastre -U cadastre -c "VACUUM FULL cumul_voies;"
-psql -d cadastre -U cadastre -c "VACUUM FULL cumul_places;"
+psql -d cadastre -U cadastre -c "VACUUM cumul_adresses;"
+psql -d cadastre -U cadastre -c "VACUUM cumul_voies;"
+psql -d cadastre -U cadastre -c "VACUUM cumul_places;"
