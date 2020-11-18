@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export BANO_DIR=/data/project/bano
+export BANO_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 export LOG_DIR=$BANO_DIR/log
 export DATA_DIR=/data/project/bano_data
 export DOWNLOAD_DIR=/data/download
