@@ -1,4 +1,14 @@
 WITH
+sort_order
+AS
+(SELECT 1::integer as sortnum, 'OSM' as source
+UNION ALL
+SELECT 2,'BAL'
+UNION ALL
+SELECT 3,'BAN'
+-- UNION ALL
+-- SELECT 4,'CADASTRE'
+),
 v
 AS
 (SELECT   code_insee AS insee_com,
@@ -13,15 +23,18 @@ osm
 AS
 (SELECT c.geometrie,
              c.insee_com,
-             COALESCE(voie_bal,voie_cadastre) voie,
+             c.voie_autre AS voie,
              c.fantoir,
              c.numero,
              c.code_postal,
              source,
-             RANK() OVER (PARTITION BY c.fantoir,c.numero ORDER BY c.source DESC) rang
+--             RANK() OVER (PARTITION BY c.fantoir,c.numero ORDER BY c.source DESC) rang
+             ROW_NUMBER() OVER (PARTITION BY fantoir,numero ORDER BY sortnum) rang
       FROM   cumul_adresses c
       JOIN   v
       USING (fantoir)
+      JOIN   sort_order
+      USING (source)
       WHERE  dept = '__dept__'),
 osm_postal
 AS
