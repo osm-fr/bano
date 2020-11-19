@@ -7,7 +7,7 @@ cd $SCRIPT_DIR
 
 source config
 
-pip install .
+pip install -e .
 
 # Sources
 cat deplist.txt | parallel -j 4 export LANG=fr_FR.UTF-8\; bano download_bal CADASTRE {1}
