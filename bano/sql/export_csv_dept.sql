@@ -40,7 +40,7 @@ AS
         COALESCE(cn.libelle,initcap(ca.nom_com)) AS ville, 
         CASE 
             WHEN u.num=o.num THEN 'OSM' 
-            WHEN (u.num=od.num AND od.voie_osm != od.voie_cadastre AND od.voie_osm IS NOT NULL) THEN 'O+O' 
+            WHEN (u.num=od.num AND od.voie_osm != od.voie_autre AND od.voie_osm IS NOT NULL) THEN 'O+O' 
             WHEN u.num=od.num THEN 'OD' 
             WHEN c.voie_osm != '' THEN 'C+O' 
             ELSE 'CAD' 
@@ -63,7 +63,7 @@ LEFT JOIN
         REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REGEXP_REPLACE(UPPER(numero),'^0*',''),'BIS','B'),'TER','T'),'QUATER','Q'),'QUAT','Q'),' ',''),'à','-'),';',',') AS num 
 FROM    cumul_adresses 
 WHERE   dept = '__dept__' AND
-        source = 'CADASTRE' AND
+        source = 'BAN' AND
         st_x(geometrie)!=0  AND
         st_y(geometrie)!=0) AS c 
 ON (c.num=u.num AND c.fantoir=u.fantoir) 
@@ -72,7 +72,7 @@ LEFT JOIN
         REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REGEXP_REPLACE(UPPER(numero),'^0*',''),'BIS','B'),'TER','T'),'QUATER','Q'),'QUAT','Q'),' ',''),'à','-'),';',',') AS num 
 FROM cumul_adresses 
 WHERE dept = '__dept__' AND
-      source LIKE 'OD%' AND
+      source = 'BAL' AND
       st_x(geometrie)!=0 AND
       st_y(geometrie)!=0) AS od 
 ON (od.num = u.num AND od.fantoir = u.fantoir) 
