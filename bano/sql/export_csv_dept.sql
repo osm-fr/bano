@@ -10,27 +10,6 @@ FROM     cumul_adresses
 WHERE    fantoir IS NOT NULL AND
          dept = '__dept__' 
 GROUP BY 1,2,3),
--- ocod_brut
--- AS
--- (SELECT *, 
---         REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REGEXP_REPLACE(UPPER(numero),'^0*',''),'BIS','B'),'TER','T'),'QUATER','Q'),'QUAT','Q'),' ',''),'à','-'),';',',') AS num
--- FROM    cumul_adresses 
--- WHERE   dept = '__dept__'),
--- ocod
--- AS
--- (SELECT *,
---         ROW_NUMBER() OVER (PARTITION BY fantoir,num,source) AS rownum
--- FROM    ocod_brut
--- ),
--- o
--- AS
--- (SELECT * FROM ocod WHERE source = 'OSM' AND rownum = 1),
--- c
--- AS
--- (SELECT * FROM ocod WHERE source = 'CADASTRE' AND rownum = 1),
--- od
--- AS
--- (SELECT * FROM ocod WHERE source = 'BAL' AND rownum = 1),
 lp
 AS
 (SELECT  insee,
@@ -41,29 +20,22 @@ GROUP BY 1),
 res
 AS
 (SELECT   CONCAT(u.fantoir,'-',u.num) AS id,
-         UPPER(REPLACE(CASE
-                          WHEN u.num=o.num THEN o.numero
-                          WHEN u.num=od.num THEN od.numero
-                          ELSE c.numero
-                       END,' ','')) AS numero,
+         UPPER(REPLACE(COALESCE(o.numero,od.numero,c.numero),' ','')) AS numero,
          REPLACE(
           REPLACE(
             REPLACE(
               REPLACE(
                 REPLACE(
                   REGEXP_REPLACE(
-                    REGEXP_REPLACE(CASE 
-            	                       WHEN u.num=o.num THEN REPLACE(o.voie_osm,'’',CHR(39))
-                                     WHEN u.num=od.num THEN COALESCE(REPLACE(od.voie_osm,'’',CHR(39)),od.voie_bal)
-                                     ELSE COALESCE(REPLACE(c.voie_osm,'’',CHR(39)),c.voie_cadastre)
-                                   END,
-                                   '([dD][eé]partementale?|Rue|[rR]urale?|[vV]icinale?|[cC]ommunale?|Cr) ([0-9]+ )?[dD]ite? ',''),
-                                 '(Draille|Chemin|Sentier) [dD]ite? ','1 '),
-                               'Voie Che ','Chemin '),
-                             'Cours Dit Che ','Chemin '),
-                           '"',CHR(39)), 
-                         ', ',' '), 
-                       ',',' ') AS voie, 
+                    REGEXP_REPLACE(
+                      COALESCE(REPLACE(o.voie_osm,'’',CHR(39)),REPLACE(od.voie_osm,'’',CHR(39)),REPLACE(c.voie_osm,'’',CHR(39)),od.voie_autre,c.voie_autre),
+                    '([dD][eé]partementale?|Rue|[rR]urale?|[vV]icinale?|[cC]ommunale?|Cr) ([0-9]+ )?[dD]ite? ',''),
+                  '(Draille|Chemin|Sentier) [dD]ite? ','1 '),
+                'Voie Che ','Chemin '),
+              'Cours Dit Che ','Chemin '),
+            '"',CHR(39)), 
+          ', ',' '), 
+        ',',' ') AS voie, 
         COALESCE(cp.postal_code, lp.cp, ca.code_postal) AS code_post,
         COALESCE(cn.libelle,initcap(ca.nom_com)) AS ville, 
         CASE 
@@ -73,21 +45,9 @@ AS
             WHEN c.voie_osm != '' THEN 'C+O' 
             ELSE 'CAD' 
         END AS SOURCE, 
-        CASE 
-            WHEN u.num=o.num THEN st_y(o.geometrie) 
-            WHEN u.num=od.num THEN st_y(od.geometrie) 
-            ELSE st_y(c.geometrie) 
-        END AS lat, 
-        CASE 
-            WHEN u.num=o.num THEN st_x(o.geometrie) 
-            WHEN u.num=od.num THEN st_x(od.geometrie) 
-            ELSE st_x(c.geometrie) 
-        END AS lon, 
-        CASE 
-            WHEN u.num=o.num THEN o.geometrie 
-            WHEN u.num=od.num THEN od.geometrie 
-            ELSE c.geometrie 
-        END AS geom 
+        COALESCE(st_y(o.geometrie),st_y(od.geometrie),st_y(c.geometrie)) AS lat, 
+        COALESCE(st_x(o.geometrie),st_x(od.geometrie),st_x(c.geometrie)) AS lon, 
+        COALESCE(o.geometrie,od.geometrie,c.geometrie) AS geom 
 FROM u 
 LEFT JOIN lp
 ON (lp.insee= u.insee_com) 
