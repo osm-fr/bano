@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS cumul_adresses (
     insee_com       character           (5),
     cadastre_com    character varying (10),
     dept            character varying (3),
-    code_postal     character varying (5),
+    code_postal     text,
     source          character varying (100),
     batch_import_id integer);
 
