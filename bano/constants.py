@@ -14,7 +14,7 @@ DEPARTEMENTS = [
 DEPARTEMENTS_3CHAR = [('0'+s)[-3:] for s in DEPARTEMENTS]
 
 LETTRE_A_LETTRE = {
-    "A": ["Â", "À", "Á"],
+    "A": ["Â", "À", "Á","Ã"],
     "C": ["Ç"],
     "E": ["È", "Ê", "É", "Ë"],
     "I": ["Ï", "Î", "Í"],
