@@ -5,7 +5,7 @@ from . import db
 
 def get_insee_name_list_by_dept(dept):
     with db.bano.cursor() as conn :
-        conn.execute(f"SELECT insee_com, nom_com FROM code_cadastre WHERE dept = '{dept}' ORDER BY 1;")
+        conn.execute(f"SELECT com, ncc FROM cog_commune WHERE dep = '{dept}' AND typecom != 'COMD' ORDER BY 1;")
         return conn.fetchall()
 
 def get_insee_name(insee_com):
