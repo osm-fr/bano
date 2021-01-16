@@ -104,6 +104,6 @@ def process(code_insee, depts, France, **kwargs):
         for d in (depts or France):
             liste_codes_insee += dbhp.get_insee_name_list_by_dept(d)
     for code_insee, nom in liste_codes_insee:
-        print(f"{code_insee} - {nom}")
+        # print(f"{code_insee} - {nom}")
         place_2_db(code_insee)
 
