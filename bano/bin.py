@@ -104,6 +104,13 @@ def main():
     subparser.set_defaults(func=cadastre_gouv.process)
 
     subparser = subparsers.add_parser(
+        "update_bis_table",
+        help="Identifie les indices de répétition b,t,q assimilables à bis, ter, quater",
+        description="Identifie les indices de répétition b,t,q assimilables à bis, ter, quater",
+    )
+    subparser.set_defaults(func=ban.update_bis_table)
+
+    subparser = subparsers.add_parser(
         "pre_process_suffixe",
         help="Détermine les zones où les noms dans le Cadastre sont suffixés",
         description="Détermine les zones où les noms dans le Cadastre sont suffixés",

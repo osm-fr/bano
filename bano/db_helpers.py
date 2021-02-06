@@ -1,4 +1,5 @@
 import time
+import os
 
 from . import db
 
@@ -24,3 +25,11 @@ def age_etape_dept(etape,dept):
     cur.execute(str_query)
     c = cur.fetchone()
     return round(time.mktime(time.localtime()),0) - c[0]
+
+def process_sql(database,query_name,dict_args):
+    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'sql/{:s}.sql'.format(query_name)),'r') as fq:
+        str_query = fq.read()
+        for k,v in dict_args.items():
+            str_query = str_query.replace(k,str(v))
+    with database.cursor() as cur :
+        cur.execute(str_query)

@@ -11,6 +11,7 @@ import psycopg2
 
 from ..constants import DEPARTEMENTS
 from .. import db
+from .. import db_helpers as dbh
 from .. import outils_de_gestion as m
 from .. import update_manager as um
 
@@ -70,3 +71,6 @@ def get_destination(departement):
     if not cwd.exists():
         raise ValueError(f"Le répertoire {cwd} n'existe pas")
     return cwd / f'adresses-{departement}.csv.gz'
+
+def update_bis_table(**kwargs):
+    dbh.process_sql(db.bano_cache,'update_table_rep_b_as_bis',dict())
