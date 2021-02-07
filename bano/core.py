@@ -102,17 +102,16 @@ def has_addreses_with_suffix(insee):
 
 def load_ban_hsnr(code_insee):
     dict_node_relations = {}
-    with db.bano_cache.cursor() as cur:
-        cur.execute(f"SELECT id,TRIM (BOTH FROM (numero||' '||COALESCE(rep,''))), nom_voie, lon, lat FROM ban_odbl WHERE code_insee = '{code_insee}';")
-        for id, housenumber, name, lon, lat in cur:
-            if not name or len(name) < 2 or not lon:
-                continue
-            adresses.register(name)
-            if not id in dict_node_relations:
-                dict_node_relations[id] = []
-                dict_node_relations[id].append(hp.normalize(name))
-            if hp.is_valid_housenumber(housenumber):
-                adresses.add_adresse(Adresse(Node({'id':id,'lon':lon,'lat':lat},{}),housenumber,name,'',''), 'BAN')
+    data = get_data_from_pg_direct('ban_hsnr',code_insee)
+    for id, housenumber, name, lon, lat in data:
+        if not name or len(name) < 2 or not lon:
+            continue
+        adresses.register(name)
+        if not id in dict_node_relations:
+            dict_node_relations[id] = []
+            dict_node_relations[id].append(hp.normalize(name))
+        if hp.is_valid_housenumber(housenumber):
+            adresses.add_adresse(Adresse(Node({'id':id,'lon':lon,'lat':lat},{}),housenumber,name,'',''), 'BAN')
 
 def load_bases_adresses_locales_hsnr(code_insee):
     dict_node_relations = {}
