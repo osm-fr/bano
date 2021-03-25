@@ -16,7 +16,8 @@ AS
 			        ELSE NULL
 		        END
         	ELSE NULL
-        END as rep_bis
+        END as rep_bis,
+        code_postal
 FROM    ban_odbl b
 LEFT OUTER JOIN rep_b_as_bis r
 USING   (id_fantoir,numero)
@@ -26,5 +27,6 @@ SELECT  id,
         TRIM (BOTH FROM (numero||' '||COALESCE(rep_bis,rep,''))),
         nom_voie,
         lon,
-        lat
+        lat,
+        code_postal
 FROM    j;
