@@ -36,7 +36,7 @@ AS
             '"',CHR(39)), 
           ', ',' '), 
         ',',' ') AS voie, 
-        COALESCE(cp.postal_code, lp.cp, ca.code_postal) AS code_post,
+        COALESCE(o.code_postal,c.code_postal,cp.postal_code, lp.cp, ca.code_postal) AS code_post,
         COALESCE(cn.libelle,initcap(ca.nom_com)) AS ville, 
         CASE 
             WHEN u.num=o.num THEN 'OSM' 
