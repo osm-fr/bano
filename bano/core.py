@@ -10,6 +10,7 @@ import xml.etree.ElementTree as ET
 from . import constants, db
 from . import helpers as hp
 from . import db_helpers as dbhp
+from . import log_2_file as log 
 from .models import Adresse, Adresses, Node, Pg_hsnr
 from .outils_de_gestion import batch_start_log
 from .outils_de_gestion import batch_end_log
@@ -318,6 +319,11 @@ def process(source, code_insee, depts, France, **kwargs):
     if not liste_codes_insee:
         for d in (depts or France):
             liste_codes_insee += dbhp.get_insee_name_list_by_dept(d)
+    logfile = log.start_log_to_file(source,'process_commune','00')
     for code_insee, nom in liste_codes_insee:
         # print(f"{code_insee} - {nom}")
-        addr_2_db(code_insee, source)
+        try:
+            addr_2_db(code_insee, source)
+        except:
+            log.write_log_to_file(logfile,f"Erreur pour {code_insee} - {nom}")
+    log.end_log_to_file(logfile)

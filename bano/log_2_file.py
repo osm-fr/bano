@@ -22,7 +22,7 @@ def write_sep_to_file(flog):
     flog.write('\n####################\n')
     flog.flush()
 
-def end_log_to_file(flog,display):
+def end_log_to_file(flog,display=False):
     t = time.localtime()
     th =  time.strftime('%d-%m-%Y %H:%M:%S',t)
     flog.write(u'Fin   : {:s}\n'.format(th))

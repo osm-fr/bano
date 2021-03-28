@@ -6,7 +6,12 @@ from . import db
 
 def get_insee_name_list_by_dept(dept):
     with db.bano.cursor() as conn :
-        conn.execute(f"SELECT com, ncc FROM cog_commune WHERE dep = '{dept}' AND typecom != 'COMD' ORDER BY 1;")
+        conn.execute(f"""SELECT com, ncc
+                         FROM cog_commune c
+                         LEFT OUTER JOIN (SELECT comparent FROM cog_commune WHERE dep = '{dept}' AND typecom = 'ARM') p
+                         ON (c.com = p.comparent)
+                         WHERE c.dep = '{dept}' AND c.typecom != 'COMD' AND p.comparent IS NULL
+                         ORDER BY 1""")
         return conn.fetchall()
 
 def get_insee_name(insee_com):
