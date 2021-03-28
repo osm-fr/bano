@@ -4,6 +4,7 @@ import time
 from . import db
 from . import helpers as hp
 from .sources import fantoir
+from . import core as c
 
 
 class Adresse:
@@ -95,6 +96,19 @@ class Adresses:
                 if hp.is_valid_housenumber(housenumber):
                     nd = Node({'id':cle_interop,'lon':lon,'lat':lat},{})
                     self.add_adresse(Adresse(nd,housenumber,name,'',code_postal), 'CADASTRE')
+
+    def load_ban_hsnr(self):
+        dict_node_relations = {}
+        data = c.get_data_from_pg_direct('ban_hsnr',self.code_insee)
+        for id, housenumber, name, lon, lat in data:
+            if not name or len(name) < 2 or not lon:
+                continue
+            self.register(name)
+            if not id in dict_node_relations:
+                dict_node_relations[id] = []
+                dict_node_relations[id].append(hp.normalize(name))
+            if hp.is_valid_housenumber(housenumber):
+                self.add_adresse(Adresse(Node({'id':id,'lon':lon,'lat':lat},{}),housenumber,name,'',''), 'BAN')
 
     def save(self, source, code_dept):
         with db.bano.cursor() as cur_insert :

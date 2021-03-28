@@ -14,6 +14,7 @@ from . import db
 from . import helpers as hp
 from . import db_helpers as dh
 from .models import Adresses
+from .core import load_ban_hsnr
 
 def collect_adresses_points(selection, adresses):
     kres = {}
@@ -80,7 +81,7 @@ def select_street_names_by_name(freq):
     return sel
 
 def process(departements, **kwargs):
-    source = 'CADASTRE'
+    source = 'BAN'
     for dept in departements:
         if hp.is_valid_dept(dept):
             for code_insee, nom_commune in dh.get_insee_name_list_by_dept(dept):
@@ -90,7 +91,8 @@ def process(departements, **kwargs):
              
                 batch_id = batch_start_log(source,'detectesuffixe',code_insee)
 
-                adresses.load_cadastre_hsnr()
+                # adresses.load_cadastre_hsnr()
+                adresses.load_ban_hsnr()
                 freq = name_frequency(adresses)
                 selection = select_street_names_by_name(freq)
                 adds = collect_adresses_points(selection, adresses)
