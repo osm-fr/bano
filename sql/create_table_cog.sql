@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS cog_commune (
         com character(5),
         reg character(2),
         dep character varying(3),
+        ctcd character(4),
         arr character(4),
         tncc character(1),
         ncc text,

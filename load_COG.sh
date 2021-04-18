@@ -5,14 +5,14 @@ cd $DATA_DIR
 mkdir -p cog
 cd cog
 rm *.csv
-wget -NS https://www.insee.fr/fr/statistiques/fichier/3720946/cog_ensemble_2019_csv.zip
-unzip cog_ensemble_2019_csv.zip
+wget -NS https://www.insee.fr/fr/statistiques/fichier/5057840/cog_ensemble_2021_csv.zip
+unzip -o -j cog_ensemble_2021_csv.zip
 
-CSV_COMMUNE=communes-01042019.csv
-CSV_CANTON=canton2019.csv
-CSV_ARRONDISSEMENT=arrondissement2019.csv
-CSV_DEPARTEMENT=departement2019.csv
-CSV_REGION=region2019.csv
+CSV_COMMUNE=commune2021.csv
+CSV_CANTON=canton2021.csv
+CSV_ARRONDISSEMENT=arrondissement2021.csv
+CSV_DEPARTEMENT=departement2021.csv
+CSV_REGION=region2021.csv
 
 for d in osm cadastre
 do
