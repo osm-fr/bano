@@ -7,6 +7,8 @@ cd $SCRIPT_DIR
 
 source config
 
+./arborescence.sh
+
 pip install -e .
 
 # Sources
