@@ -21,6 +21,8 @@ class Dataset:
         self.json_commune_data = None
         self.json_voies_rapprochees_query = self.get_json_voies_rapprochees_query()
         self.json_voies_rapprochees_data = None
+        self.json_voies_rapprochees_sans_adresses_query = self.get_json_voies_rapprochees_sans_adresses_query()
+        self.json_voies_rapprochees_sans_adresses_data = None
         self.json_voies_non_rapprochees_query = self.get_json_voies_non_rapprochees_query()
         self.json_voies_non_rapprochees_data = None
         self.json_lieux_dits_query = self.get_json_lieux_dits_query()
@@ -55,6 +57,15 @@ class Dataset:
 
     def get_json_voies_rapprochees_query(self):
         with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'sql/export_json_dept_voies_rapprochees.sql'),'r') as fq:
+            return fq.read().replace('__dept__',self.dept)
+
+    def get_json_voies_rapprochees_sans_adresses_data(self):
+        with db.bano.cursor() as cur:
+            cur.execute(self.json_voies_rapprochees_sans_adresses_query)
+            return cur.fetchall()
+
+    def get_json_voies_rapprochees_sans_adresses_query(self):
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'sql/export_json_dept_voies_rapprochees_sans_adresses.sql'),'r') as fq:
             return fq.read().replace('__dept__',self.dept)
 
     def get_json_voies_rapprochees_data(self):
@@ -159,6 +170,12 @@ locn:geometry [a gsp:Geometry; gsp:asWKT "POINT({lon} {lat})"^^gsp:wktLiteral ] 
                     if ';' in postcode:
                         postcode = postcode.split(';')
                     jsonfile.write(f'{{"id":"{fantoir}","citycode":"{citycode}","type":"{type}","name":"{name}","postcode":{json.dumps(postcode)},"lat":"{lat}","lon":"{lon}","city":"{cityname}","departement":"{departement}","region":"{region}","importance":{importance},"housenumbers":{{{s_housenumbers}}}}}\n')
+            if not self.json_voies_rapprochees_sans_adresses_data :
+                self.json_voies_rapprochees_sans_adresses_data = self.get_json_voies_rapprochees_sans_adresses_data()
+            for fantoir,citycode,type,name,postcode,lat,lon,cityname,departement,region,importance in self.json_voies_rapprochees_sans_adresses_data:
+                    if ';' in postcode:
+                        postcode = postcode.split(';')
+                    jsonfile.write(f'{{"id":"{fantoir}","citycode":"{citycode}","type":"{type}","name":"{name}","postcode":{json.dumps(postcode)},"lat":"{lat}","lon":"{lon}","city":"{cityname}","departement":"{departement}","region":"{region}","importance":{importance}}}\n')
             if not self.json_lieux_dits_data :
                 self.json_lieux_dits_data = self.get_json_lieux_dits_data()
             for fantoir,citycode,type,name,postcode,lat,lon,cityname,departement,region,importance,*others in self.json_lieux_dits_data:
