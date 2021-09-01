@@ -73,6 +73,7 @@ ON v.insee_com = cog.insee
 WHERE v.dept = '__dept__' AND
       osm_postal.rang_postal = 1 AND
       osm_postal.numero ~ '^[0-9]{1,4}( ?[A-Z]?.*)?' AND
+      osm_postal.numero != '99999' AND
       osm_postal.numero !~'.[0-9 \\.\\-]{9,}'
 GROUP BY osm_postal.fantoir,
          osm_postal.insee_com,

@@ -97,5 +97,6 @@ FROM res
 WHERE lat IS NOT NULL AND
       lon IS NOT NULL AND
       numero ~ '^[0-9]{1,4}( ?[A-Z]?.*)?' AND
+      numero != '99999' AND
       numero !~'.[0-9 .-]{9,}' 
 ORDER BY id
