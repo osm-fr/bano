@@ -193,7 +193,7 @@ def load_highways_from_pg_osm(insee_com):
         adresses.add_voie(name_suffixe,'OSM',name)
 
 def load_highways_relations_bbox_from_pg_osm(code_insee):
-    data = get_data_from_pg_direct('highway_relation_suffixe_insee', code_insee) # manque la version bbox
+    data = get_data_from_pg_direct('highway_relation_suffixe_insee_bbox', code_insee)
     for name, tags, suffixe, insee, *others in data:
         fantoir = ''
         if 'ref:FR:FANTOIR' in tags and hp.is_valid_fantoir(tags['ref:FR:FANTOIR'], code_insee):
