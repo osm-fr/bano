@@ -80,7 +80,7 @@ LEFT JOIN code_cadastre ca
 ON (ca.insee_com = u.insee_com) 
 LEFT JOIN cog_commune cn 
 ON (cn.com = u.insee_com) 
-LEFT JOIN (SELECT * FROM planet_osm_postal_code WHERE cp.postal_code != '') cp 
+LEFT JOIN (SELECT * FROM planet_osm_postal_code WHERE postal_code != '') cp 
 ON (cp."ref:INSEE" = u.insee_com AND ST_Contains(cp.way, ST_Transform(COALESCE(o.geometrie, od.geometrie, c.geometrie),3857))) 
 WHERE u.num>'0' AND
       cn.typecom != 'COMD')
