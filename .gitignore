@@ -215,7 +215,6 @@ pip-log.txt
 .mr.developer.cfg
 
 #donnees OSM
-pg_connexion.py
 parcelles_adresses/
 osm_output/
 fantoir/
@@ -230,3 +229,4 @@ opendata/
 *.shx
 *.tgz
 code_cadastre.csv
+config

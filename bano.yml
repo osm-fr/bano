@@ -1,0 +1,126 @@
+tables:
+  planet_osm_point:
+    type: point
+    mapping:
+      name: [__any__]
+      amenity: [__any__]
+      place: [__any__]
+      railway: [__any__]
+      'addr:housenumber': [__any__]
+      'addr:street': [__any__]
+      'ref:FR:FANTOIR': [__any__]
+    columns:
+      - {name: 'osm_id', type: id}
+      - {name: 'way', type: geometry}
+      - {name: 'tags', type: hstore_tags}
+      - {key: 'name', name: 'name', type: string}
+      - {key: 'alt_name', name: 'alt_name', type: string}
+      - {key: 'old_name', name: 'old_name', type: string}
+      - {key: 'addr:housenumber', name: 'addr:housenumber', type: string}
+      - {key: 'addr:street', name: 'addr:street', type: string}
+      - {key: 'addr:place', name: 'addr:place', type: string}
+      - {key: 'ref:FR:FANTOIR', name: 'ref:FR:FANTOIR', type: string}
+      - {key: 'highway', name: 'highway', type: string}
+      - {key: 'amenity', name: 'amenity', type: string}
+      - {key: 'place', name: 'place', type: string}
+      - {key: 'railway', name: 'railway', type: string}
+      - {key: 'junction', name: 'junction', type: string}
+  planet_osm_line:
+    type: linestring
+    filters:
+      require:
+        name: [__any__]
+    mapping:
+      highway: [__any__]
+      waterway: [__any__]
+    columns:
+      - {name: 'osm_id', type: id}
+      - {name: 'way', type: geometry}
+      - {name: 'tags', type: hstore_tags}
+      - {key: 'name', name: 'name', type: string}
+      - {key: 'alt_name', name: 'alt_name', type: string}
+      - {key: 'old_name', name: 'old_name', type: string}
+      - {key: 'ref:FR:FANTOIR', name: 'ref:FR:FANTOIR', type: string}
+      - {key: 'ref:FR:FANTOIR:left', name: 'ref:FR:FANTOIR:left', type: string}
+      - {key: 'ref:FR:FANTOIR:right', name: 'ref:FR:FANTOIR:right', type: string}
+      - {key: 'highway', name: 'highway', type: string}
+      - {key: 'waterway', name: 'waterway', type: string}
+      - {key: 'ref', name: 'ref', type: string}
+  planet_osm_polygon:
+    type: polygon
+    filters:
+    mapping:
+      boundary: ['administrative']
+      amenity: [__any__]
+      highway: [__any__]
+      place: [__any__]
+      addr:housenumber: [__any__]
+      ref:FR:FANTOIR: [__any__]
+    columns:
+      - {name: 'osm_id', type: id}
+      - {name: 'way', type: geometry}
+      - {name: 'tags', type: hstore_tags}
+      - {key: 'name', name: 'name', type: string}
+      - {key: 'alt_name', name: 'alt_name', type: string}
+      - {key: 'old_name', name: 'old_name', type: string}
+      - {key: boundary, name: boundary, type: string}
+      - {key: admin_level, name: admin_level, type: integer}
+      - {key: 'addr:housenumber', name: 'addr:housenumber', type: string}
+      - {key: 'addr:street', name: 'addr:street', type: string}
+      - {key: 'ref:INSEE', name: 'ref:INSEE', type: string}
+      - {key: 'ref:FR:FANTOIR', name: 'ref:FR:FANTOIR', type: string}
+      - {key: 'ref:FR:FANTOIR:left', name: 'ref:FR:FANTOIR:left', type: string}
+      - {key: 'ref:FR:FANTOIR:right', name: 'ref:FR:FANTOIR:right', type: string}
+      - {key: 'highway', name: 'highway', type: string}
+      - {key: 'place', name: 'place', type: string}
+      - {key: 'amenity', name: 'amenity', type: string}
+      - {key: 'landuse', name: 'landuse', type: string}
+  planet_osm_rels:
+    type: relation_member
+    mapping:
+      type: ['associatedStreet']
+      'ref:FR:FANTOIR': [__any__]
+    columns:
+      - {name: 'rel_id', type: id}
+      - {name: 'osm_id', type: member_id}
+      - {name: 'way', type: geometry}
+      - {name: 'tags', type: hstore_tags}
+      - {name: 'osm_type', type: member_type}
+      - {name: 'member_role', type: member_role}
+      - {name: 'member_index', type: member_index}
+      - {key: 'ref:FR:FANTOIR', name: 'ref:FR:FANTOIR', type: string}
+      - {key: 'name', name: 'name', type: string}
+      - {key: 'type', name: 'type', type: string}
+  planet_osm_postal_code:
+    type: polygon
+    filters:
+    mapping:
+      postal_code: [__any__]
+      'addr:postcode': [__any__]
+    columns:
+      - {name: 'osm_id', type: id}
+      - {name: 'way', type: geometry}
+      - {name: 'tags', type: hstore_tags}
+      - {key: 'name', name: 'name', type: string}
+      - {key: boundary, name: boundary, type: string}
+      - {key: admin_level, name: admin_level, type: integer}
+      - {key: 'addr:postcode', name: 'addr:postcode', type: string}
+      - {key: 'ref:INSEE', name: 'ref:INSEE', type: string}
+      - {key: 'postal_code', name: 'postal_code', type: string}
+  planet_osm_communes_statut:
+    type: relation_member
+    mapping:
+      boundary: [administrative, political]
+    columns:
+      - {name: 'rel_id', type: id}
+      - {name: 'osm_id', type: member_id}
+      - {name: 'tags', type: hstore_tags}
+      - {name: 'osm_type', type: member_type}
+      - {name: 'member_role', type: member_role}
+      - {key: 'ref:INSEE', name: 'ref:INSEE', type: string}
+      - {key: 'name', name: 'name', type: string}
+      - {key: 'boundary', name: 'boundary', from_member: false, type: string}
+      - {key: 'political_division', name: 'political_division', from_member: false, type: string}
+      - {key: 'admin_level', name: 'admin_level', type: integer}
+      - {key: 'population', name: 'population_member', from_member: true, type: integer}
+      - {key: 'population', name: 'population_rel', from_member: false, type: integer}
