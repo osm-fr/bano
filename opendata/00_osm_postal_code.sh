@@ -11,3 +11,7 @@ ogr2ogr -f PostgreSQL PG:dbname=cadastre postal_code.shp -overwrite -nlt GEOMETR
 # suppression colonne inutile et création index sur le code INSEE
 psql cadastre -c "alter table postal_code drop column ogc_fid; create index postal_code_insee on postal_code (insee);"
 psql cadastre -c "grant select on table postal_code to public;"
+
+# mise à jour code INSEE Paris 16ème
+psql cadastre -c "UPDATE postal_code SET insee='75116' WHERE insee='75056' and postal_cod like '%16';"
+
