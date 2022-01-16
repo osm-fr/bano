@@ -24,20 +24,12 @@ AS
          REPLACE(
           REPLACE(
             REPLACE(
-              REPLACE(
-                REPLACE(
-                  REGEXP_REPLACE(
-                    REGEXP_REPLACE(
-                      COALESCE(REPLACE(o.voie_osm,'’',CHR(39)),REPLACE(od.voie_osm,'’',CHR(39)),REPLACE(c.voie_osm,'’',CHR(39)),od.voie_autre,c.voie_autre),
-                    '([dD][eé]partementale?|Rue|[rR]urale?|[vV]icinale?|[cC]ommunale?|Cr) ([0-9]+ )?[dD]ite? ',''),
-                  '(Draille|Chemin|Sentier) [dD]ite? ','1 '),
-                'Voie Che ','Chemin '),
-              'Cours Dit Che ','Chemin '),
+              COALESCE(REPLACE(o.voie_osm,'’',CHR(39)),REPLACE(od.voie_osm,'’',CHR(39)),REPLACE(c.voie_osm,'’',CHR(39)),od.voie_autre,c.voie_autre),
             '"',CHR(39)), 
           ', ',' '), 
         ',',' ') AS voie, 
-        COALESCE(o.code_postal,c.code_postal,cp.postal_code, lp.cp, ca.code_postal) AS code_post,
-        COALESCE(cn.libelle,initcap(ca.nom_com)) AS ville, 
+        COALESCE(o.code_postal,c.code_postal,cp.postal_code, lp.cp) AS code_post,
+        cn.libelle AS ville, 
         CASE 
             WHEN u.num=o.num THEN 'OSM' 
             WHEN (u.num=od.num AND od.voie_osm != od.voie_autre AND od.voie_osm IS NOT NULL) THEN 'O+O' 
@@ -75,10 +67,8 @@ WHERE dept = '__dept__' AND
       source = 'BAL' AND
       st_x(geometrie)!=0 AND
       st_y(geometrie)!=0) AS od 
-ON (od.num = u.num AND od.fantoir = u.fantoir) 
-LEFT JOIN code_cadastre ca 
-ON (ca.insee_com = u.insee_com) 
-LEFT JOIN cog_commune cn 
+ON (od.num = u.num AND od.fantoir = u.fantoir)
+JOIN cog_commune cn 
 ON (cn.com = u.insee_com) 
 LEFT JOIN (SELECT * FROM planet_osm_postal_code WHERE postal_code != '') cp 
 ON (cp."ref:INSEE" = u.insee_com AND ST_Contains(cp.way, ST_Transform(COALESCE(o.geometrie, od.geometrie, c.geometrie),3857))) 
