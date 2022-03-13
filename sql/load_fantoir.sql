@@ -2,7 +2,11 @@ CREATE TEMP TABLE load_fantoir (raw text);
 \copy load_fantoir FROM 'fantoir.txt' WITH csv delimiter '#' quote '>';
 
 TRUNCATE fantoir_voie;
-INSERT INTO fantoir_voie (SELECT substr(raw,1,2) as code_dept, 
+INSERT INTO fantoir_voie (SELECT CASE
+	                                 WHEN substr(raw,1,2) = '97'
+	                                     THEN substr(raw,1,2)||substr(raw,4,1)
+	                                     ELSE substr(raw,1,2)
+	                                 END AS code_dept, 
 	                             substr(raw,3,1) as code_dir,
 	                             substr(raw,4,3) as code_com,
 	                             substr(raw,1,2)||substr(raw,4,3) as code_insee,

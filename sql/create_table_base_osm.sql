@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS fantoir_voie (
-                            code_dept       character(2),
+                            code_dept       character(3),
                             code_dir        character(1),
                             code_com        character(3),
                             code_insee      character(5),
