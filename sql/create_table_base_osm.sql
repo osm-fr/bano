@@ -175,3 +175,5 @@ CREATE TABLE IF NOT EXISTS expire_tiles (
   geometrie geometry(Polygon, 3857)
 );
 CREATE INDEX IF NOT EXISTS gidx_expire_tiles ON expire_tiles(geometrie);
+
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO public;

@@ -136,34 +136,4 @@ CREATE TABLE IF NOT EXISTS code_cadastre (
 CREATE TABLE IF NOT EXISTS tmp_code_cadastre
 AS SELECT * FROM code_cadastre LIMIT 0;
 
--- CREATE TABLE IF NOT EXISTS suffixe (
---                 geometrie               geometry,
---                 insee_com               character(5),
---                 libelle_suffixe character varying(100)
--- );
--- CREATE INDEX IF NOT EXISTS gidx_suffixe ON suffixe USING GIST(geometrie);
-
-/*CREATE TABLE IF NOT EXISTS type_voie (
-        id_voie integer,
-        tag_value text,
-        tag_index integer);
-TRUNCATE TABLE type_voie; 
-INSERT INTO type_voie (id_voie,tag_value) 
-    VALUES (1,'steps'),
-            (2,'path'),
-            (3,'cycleway'),
-            (4,'footway'),
-            (5,'pedestrian'),
-            (6,'track'),
-            (7,'service'),
-            (8,'road'),
-            (9,'living_street'),
-            (10,'residential'),
-            (11,'unclassified'),
-            (12,'tertiary'),
-            (13,'secondary'),
-            (14,'primary'),
-            (15,'trunk'),
-            (16,'motorway');
-UPDATE type_voie SET tag_index = power(2,id_voie-1);
-*/
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO public;
