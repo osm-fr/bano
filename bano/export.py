@@ -95,7 +95,7 @@ class Dataset:
         if not self.csv_data :
             self.csv_data = self.get_csv_data()
         with open(self.get_sas_full_filename('csv'),'w', newline='') as csvfile:
-            writer = csv.writer(csvfile,dialect='unix',quoting=csv.QUOTE_NONE)
+            writer = csv.writer(csvfile,dialect='unix',quoting=csv.QUOTE_MINIMAL)
             writer.writerows([l[0:-1] for l in self.csv_data])
 
     def save_as_ttl(self):
