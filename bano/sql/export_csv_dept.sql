@@ -17,7 +17,7 @@ AS
 FROM     codes_postaux
 WHERE    insee LIKE '__dept__%'
 GROUP BY 1),
-res
+res_non_unique
 AS
 (SELECT   CONCAT(u.fantoir,'-',u.num) AS id,
          UPPER(REPLACE(COALESCE(o.numero,od.numero,c.numero),' ','')) AS numero,
@@ -73,20 +73,34 @@ ON (cn.com = u.insee_com)
 LEFT JOIN (SELECT * FROM planet_osm_postal_code WHERE postal_code != '') cp 
 ON (cp."ref:INSEE" = u.insee_com AND ST_Contains(cp.way, ST_Transform(COALESCE(o.geometrie, od.geometrie, c.geometrie),3857))) 
 WHERE u.num>'0' AND
-      cn.typecom != 'COMD')
-SELECT id,
-       numero,
-       voie,
-       code_post,
-       ville,
-       source,
-       lat,
-       lon,
-       geom
-FROM res
-WHERE lat IS NOT NULL AND
-      lon IS NOT NULL AND
-      numero ~ '^[0-9]{1,4}( ?[A-Z]?.*)?' AND
-      numero != '99999' AND
-      numero !~'.[0-9 .-]{9,}' 
+      cn.typecom != 'COMD'),
+res_avec_ordre_des_douoblons
+AS
+(SELECT id,
+        numero,
+        voie,
+        code_post,
+        ville,
+        source,
+        lat,
+        lon,
+        geom,
+        ROW_NUMBER() OVER(PARTITION BY id,numero ORDER BY lat,lon) AS sequence
+FROM    res_non_unique
+WHERE   lat IS NOT NULL AND
+        lon IS NOT NULL AND
+        numero ~ '^[0-9]{1,4}( ?[A-Z]?.*)?' AND
+        numero != '99999' AND
+        numero !~'.[0-9 .-]{9,}')
+SELECT  id,
+        numero,
+        voie,
+        code_post,
+        ville,
+        source,
+        lat,
+        lon,
+        geom
+FROM    res_avec_ordre_des_douoblons
+WHERE   sequence = 1
 ORDER BY id
