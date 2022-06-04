@@ -42,12 +42,15 @@ CREATE TABLE IF NOT EXISTS ban_odbl (
     y float,
     lon float,
     lat float,
+    type_position text,
     alias text,
     nom_ld text,
     libelle_acheminement text,
     nom_afnor text,
     source_position text,
-    source_nom_voie text);
+    source_nom_voie text,
+    certification_commune integer,
+    cad_parcelles text);
 --    geometrie geometry (Point, 4326) DEFAULT (ST_Point(lon,lat)));
 CREATE INDEX IF NOT EXISTS idx_ban_odbl_code_insee ON ban_odbl(code_insee);
 
