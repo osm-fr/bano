@@ -85,7 +85,7 @@ AS
         lat,
         lon,
         geom,
-        ROW_NUMBER() OVER(PARTITION BY id,numero ORDER BY lat,lon) AS sequence
+        RANK() OVER(PARTITION BY id ORDER BY numero) AS sequence
 FROM    res_non_unique
 WHERE   lat IS NOT NULL AND
         lon IS NOT NULL AND
