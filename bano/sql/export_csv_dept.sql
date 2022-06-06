@@ -74,7 +74,7 @@ LEFT JOIN (SELECT * FROM planet_osm_postal_code WHERE postal_code != '') cp
 ON (cp."ref:INSEE" = u.insee_com AND ST_Contains(cp.way, ST_Transform(COALESCE(o.geometrie, od.geometrie, c.geometrie),3857))) 
 WHERE u.num>'0' AND
       cn.typecom != 'COMD'),
-res_avec_ordre_des_douoblons
+res_avec_ordre_des_doublons
 AS
 (SELECT id,
         numero,
@@ -85,7 +85,7 @@ AS
         lat,
         lon,
         geom,
-        RANK() OVER(PARTITION BY id ORDER BY numero) AS sequence
+        ROW_NUMBER() OVER(PARTITION BY id ORDER BY numero) AS sequence
 FROM    res_non_unique
 WHERE   lat IS NOT NULL AND
         lon IS NOT NULL AND
@@ -101,6 +101,6 @@ SELECT  id,
         lat,
         lon,
         geom
-FROM    res_avec_ordre_des_douoblons
+FROM    res_avec_ordre_des_doublons
 WHERE   sequence = 1
 ORDER BY id
