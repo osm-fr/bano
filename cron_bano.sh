@@ -52,3 +52,4 @@ bano publish_aggregate
 psql -d cadastre -U cadastre -c "VACUUM cumul_adresses;"
 psql -d cadastre -U cadastre -c "VACUUM cumul_voies;"
 psql -d cadastre -U cadastre -c "VACUUM cumul_places;"
+psql -d cadastre -U cadastre -c "GRANT SELECT ON ALL TABLES IN SCHEMA PUBLIC TO PUBLIC";
