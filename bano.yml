@@ -75,6 +75,7 @@ tables:
       - {key: 'place', name: 'place', type: string}
       - {key: 'amenity', name: 'amenity', type: string}
       - {key: 'landuse', name: 'landuse', type: string}
+      - {key: 'admin_type:FR', name: 'admin_type:FR', type: string}
   planet_osm_rels:
     type: relation_member
     mapping:
