@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+# coding: UTF-8
+
+import json
 from pathlib import Path
 
 
@@ -5,6 +9,12 @@ def load_pairs_from_file(basename):
     with (Path(__file__).parent / "dictionnaires" / f"{basename}.txt").open() as f:
         return [l[:-1].split("\t") for l in f.readlines() if not l.startswith("#")]
 
+def load_json_from_file(json_filename):
+    with (Path(__file__).parent / "data" / json_filename).open() as f:
+        return json.loads(f.read())
+
+def get_const_code_dir():
+    return load_json_from_file('code_dir.json')
 
 DEPARTEMENTS = [
     f"{n:>02}"
@@ -72,3 +82,5 @@ HIGHWAY_TYPES = [
     "motorway",
 ]
 HIGHWAY_TYPES_INDEX = {e: 2 ** i for i, e in enumerate(HIGHWAY_TYPES)}
+
+CODE_VOIE_FANTOIR = "0123456789ABCDEFGHIJKLMNOPQRSTVWXYZ"
