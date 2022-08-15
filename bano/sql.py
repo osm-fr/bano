@@ -15,7 +15,6 @@ def sql_process(sqlfile,args,conn):
 
     with conn.cursor() as cur:
         cur.execute(q)
-        cur.execute('COMMIT')
 
 def sql_get_data(sqlfile,args,conn):
     sqlfile = (Path(SQLDIR) / sqlfile).with_suffix('.sql')
@@ -26,6 +25,7 @@ def sql_get_data(sqlfile,args,conn):
 
     with conn.cursor() as cur:
         cur.execute(q)
+
         return cur.fetchall()
 
     return None
