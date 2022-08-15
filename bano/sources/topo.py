@@ -8,19 +8,26 @@ from ..constants import get_const_code_dir,CODE_VOIE_FANTOIR
 
 from ..db import bano_sources
 from .. import helpers as h
+from .. import batch as b
 
 CODE_DIR = get_const_code_dir()
 
 
 def fantoir9_vers_fantoir10(fantoir):
     insee = fantoir[0:5]
-    code_dir = CODE_DIR.get(insee,0)
+    code_dir = CODE_DIR.get(insee,'0')
     dept = fantoir[0:2] # pour les DOM le distingo se fait avec le code direction
+    if dept == '2A':
+        dept = '210'
+    if dept == '2B':
+        dept = '20'
+        code_dir = '1' #2B
     commune = insee[2:]
     code_voie = '0123456789ABCDEFGHIJKLMNOPQRSTVWXYZ'.index(fantoir[5:6])
     numero = fantoir[6:]
     cle = 'ABCDEFGHJKLMNPRSTUVWXYZ'[(int(dept+code_dir+commune)*19+code_voie*11+int(numero))%23]
 
+    # print(f"{fantoir}{cle}")
     return(f"{fantoir}{cle}")
 
 def topo_voie_to_csv(ligne_brute):
@@ -31,9 +38,8 @@ def topo_voie_to_csv(ligne_brute):
     for l in longueurs:
         champs.append((ligne_brute[:l]).strip())
         ligne_brute = ligne_brute[l:]
-        # print(ligne_brute)
     # selection
-    champs = [champs[2]]+champs[4:6]+champs[11:]
+    champs = [champs[2]]+champs[4:6]+champs[11:-1]
     #insee
     champs.insert(0,champs[0][0:5])
     # code dept
@@ -44,8 +50,9 @@ def topo_voie_to_csv(ligne_brute):
     return champs
 
 
-def import_to_pg(**kwargs):
+def import_to_pg():
     fichier_source = '/data/download/TOPO20211101.gz'
+    # fichier_source = '/data/download/corse.txt.gz'
     io_in_csv = io.StringIO()
     with gzip.open(fichier_source, mode='rt') as f:
         f.readline()  # skip CSV headers
@@ -54,11 +61,19 @@ def import_to_pg(**kwargs):
                 continue
             # print(line)
             topo_voie_to_csv(line)
-            io_in_csv.write(','.join(topo_voie_to_csv(line)))
-            if i > 20:
-                break
+            io_in_csv.write('$'.join(topo_voie_to_csv(line))+'\n') # separateur $ car on trouve des virgules dans le contenu
+            # if i > 20:
+            #     break
+        io_in_csv.seek(0)
+        with bano_sources.cursor() as cur_insert:
+            cur_insert.execute("TRUNCATE topo")
+            cur_insert.copy_from(io_in_csv, "topo", sep='$',null='')
+            bano_sources.commit()
 
-        with  db.bano_sources.cursor() as cur_insert:
-            cur_insert.execute(f"DELETE FROM topo WHERE code_insee LIKE '{departement+'%'}'")
-            cur_insert.copy_from(f, "topo", sep=';', null='')
-            db.bano_cache.commit()
+def process_topo(**kwargs):
+    id_batch = b.batch_start_log('import source', 'TOPO','France','France')
+    try:
+        import_to_pg()
+        b.batch_stop_log(id_batch,True)
+    except:
+        b.batch_stop_log(id_batch,False)

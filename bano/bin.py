@@ -5,7 +5,8 @@ import argparse
 import sys
 
 from . import setup_db
-from .sources import topo
+from .sources import topo,ban
+from .constants import DEPARTEMENTS
 
 
 def main():
@@ -21,10 +22,29 @@ def main():
     subparser.set_defaults(func=setup_db.setup_bano_sources)
 
     subparser = subparsers.add_parser(
+        "setup_db_bano",
+        description="Initialisation de la BD BANO",
+    )
+    subparser.set_defaults(func=setup_db.setup_bano)
+
+    subparser = subparsers.add_parser(
         "charge_topo",
         description="Charge une version du fichier TOPO",
     )
-    subparser.set_defaults(func=topo.import_to_pg)
+    subparser.set_defaults(func=topo.process_topo)
+
+    subparser = subparsers.add_parser(
+        "charge_ban",
+        description="Charge une version des fichiers BAN",
+    )
+    subparser.add_argument(
+        "departements",
+        type=str,
+        help="Départements à traiter",
+        nargs="*",
+        default=DEPARTEMENTS,
+    )
+    subparser.set_defaults(func=ban.process_ban)
 
     args = parser.parse_args()
 
