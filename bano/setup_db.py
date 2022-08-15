@@ -6,3 +6,6 @@ from .sql import sql_process
 
 def setup_bano_sources(**kwargs):
 	sql_process('create_table_base_bano_sources',{},db.bano_sources)
+
+def setup_bano(**kwargs):
+	sql_process('create_table_base_bano',{},db.bano)
