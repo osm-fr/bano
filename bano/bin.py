@@ -4,8 +4,9 @@
 import argparse
 import sys
 
+from . import pre_process_suffixe
 from . import setup_db
-from .sources import topo,ban
+from .sources import topo,ban,cog
 from .constants import DEPARTEMENTS
 
 
@@ -17,25 +18,31 @@ def main():
 
     subparser = subparsers.add_parser(
         "setup_db_bano_sources",
-        description="Initialisation de la BD des sources : OSM, BAN, TOPO",
+        help="Initialisation de la BD des sources : OSM, BAN, TOPO",
     )
     subparser.set_defaults(func=setup_db.setup_bano_sources)
 
     subparser = subparsers.add_parser(
         "setup_db_bano",
-        description="Initialisation de la BD BANO",
+        help="Initialisation de la BD BANO",
     )
     subparser.set_defaults(func=setup_db.setup_bano)
 
     subparser = subparsers.add_parser(
         "charge_topo",
-        description="Charge une version du fichier TOPO",
+        help="Charge une version du fichier TOPO",
     )
     subparser.set_defaults(func=topo.process_topo)
 
     subparser = subparsers.add_parser(
+        "charge_cog",
+        help="Charge une version des fichiers COG",
+    )
+    subparser.set_defaults(func=cog.process_cog)
+
+    subparser = subparsers.add_parser(
         "charge_ban",
-        description="Charge une version des fichiers BAN",
+        help="Charge une version des fichiers BAN",
     )
     subparser.add_argument(
         "departements",
@@ -45,6 +52,26 @@ def main():
         default=DEPARTEMENTS,
     )
     subparser.set_defaults(func=ban.process_ban)
+
+    subparser = subparsers.add_parser(
+        "update_bis_table",
+        help="Identifie les indices de répétition b,t,q assimilables à bis, ter, quater",
+    )
+    subparser.set_defaults(func=ban.update_bis_table)
+
+    subparser = subparsers.add_parser(
+        "pre_process_suffixe",
+        help="Détermine les zones où les noms dans le Cadastre sont suffixés",
+    )
+    subparser.add_argument(
+        "departements",
+        type=str,
+        help="Départements à traiter",
+        nargs="*",
+        default=DEPARTEMENTS,
+    )
+    subparser.set_defaults(func=pre_process_suffixe.process)
+
 
     args = parser.parse_args()
 
