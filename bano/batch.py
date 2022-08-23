@@ -29,3 +29,5 @@ def batch_stop_log(id_batch,status):
     date_fin =  time.strftime('%d-%m-%Y %H:%M:%S',t)
     timestamp_fin = round(time.mktime(t),0)
     sql_process('batch_stop_log',dict(id_batch=str(id_batch),date_fin=str(date_fin),timestamp_fin=str(timestamp_fin),status=str(status)),db.bano)
+    if not status:
+        print(f"Erreur pendant le processus {id_batch}")
