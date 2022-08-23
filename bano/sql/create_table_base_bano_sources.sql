@@ -14,7 +14,7 @@ CREATE INDEX IF NOT EXISTS idx_topo_dep  ON topo(code_dep);
 CREATE INDEX IF NOT EXISTS idx_topo_code_insee ON topo(code_insee);
 CREATE INDEX IF NOT EXISTS idx_topo_fantoir10  ON topo(fantoir10);
 
-CREATE TABLE IF NOT EXISTS ban_odbl (
+CREATE TABLE IF NOT EXISTS ban (
     id text,
     id_fantoir text,
     numero  text,
@@ -39,6 +39,13 @@ CREATE TABLE IF NOT EXISTS ban_odbl (
     certification_commune integer,
     cad_parcelles text);
 --    geometrie geometry (Point, 4326) DEFAULT (ST_Point(lon,lat)));
-CREATE INDEX IF NOT EXISTS idx_ban_odbl_code_insee ON ban_odbl(code_insee);
+CREATE INDEX IF NOT EXISTS idx_ban_code_insee ON ban(code_insee);
+
+CREATE TABLE IF NOT EXISTS suffixe (
+                geometrie               geometry,
+                insee_com               character(5),
+                libelle_suffixe character varying(100)
+);
+CREATE INDEX IF NOT EXISTS gidx_suffixe ON suffixe USING GIST(geometrie);
 
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO public;
