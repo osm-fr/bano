@@ -31,10 +31,9 @@ class Adresse:
 
 class Adresses:
     def __init__(self, code_insee):
-        self.a = {}
-        self.liste = []
-        self.index_by_voie = defaultdict(list)
         self.code_insee = code_insee
+        self.liste = []
+        self.index_voie = defaultdict(list)
         self.noms_de_voies = set()
 
     # def __contains__(self, item):
@@ -49,14 +48,57 @@ class Adresses:
     def __iter__(self):
         return iter(self.liste)
 
+    def _print(self,pattern=None):
+        for a in self:
+            if not pattern or pattern in a._as_string():
+                print(a._as_string())
+
+
     def add_adresse(self,ad):
         """ une adresses est considérée dans la commune si sans Fantoir ou avec un Fantoir de la commune"""
         # if (ad.fantoir == None or hp.is_valid_fantoir(ad.fantoir, self.code_insee)) and hp.is_valid_housenumber(ad.numero):
         self.liste.append(ad)
-        self.index_by_voie[ad.voie].append(len(self.liste)-1)
+        self.index_voie[ad.voie].append(len(self.liste)-1)
         self.noms_de_voies.add(ad.voie)
 
     def charge_numeros_ban(self):
-        data = sql_get_data('numeros_ban',dict(code_insee=self.code_insee),db.bano_sources)
+        data = sql_get_data('charge_ban_commune',dict(code_insee=self.code_insee),db.bano_sources)
         for numero, voie, lon, lat, code_postal, code_insee_ac, nom_ac in data:
             self.add_adresse(Adresse(lon,lat,numero,'BAN',voie=voie,code_postal=code_postal,sous_commune_code=code_insee_ac,sous_commune_nom=nom_ac))
+
+    def charge_numeros_osm(self):
+        return None
+
+    def charge_noms_osm(self):
+        data = sql_get_data('charge_ban_commune',dict(code_insee=self.code_insee),db.bano_sources)
+        return None
+
+
+class Topo:
+    def __init__(self, code_insee):
+        self.code_insee = code_insee
+        self.topo = {}
+
+        # self.index_by_nom_normalise = defaultdict(list)
+
+        self.charge_topo()
+
+    def __iter__(self):
+        return iter(self.topo.items())
+
+    # def __contains__(self, item):
+    #     return item in self.a
+
+    def __getitem__(self, key):
+        return self.topo[key]
+
+    def _print(self,pattern=None):
+        for k,v in self:
+            if not pattern or pattern in v:
+                print(f"{k} : {v}")
+
+    def charge_topo(self):
+        data = sql_get_data('charge_topo_commune',dict(code_insee=self.code_insee),db.bano_sources)
+        for fantoir,nom in data:
+            self.topo[fantoir] = nom
+            self.topo[nom] = fantoir
