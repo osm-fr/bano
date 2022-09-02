@@ -6,6 +6,8 @@ import sys
 
 from . import pre_process_suffixe
 from . import setup_db
+from . import rapprochement
+from . import boite_a_outils
 from .sources import topo,ban,cog
 from .constants import DEPARTEMENTS
 
@@ -60,6 +62,12 @@ def main():
     subparser.set_defaults(func=ban.update_bis_table)
 
     subparser = subparsers.add_parser(
+        "update_table_communes",
+        help="Met à jour les polygones administratifs OSM",
+    )
+    subparser.set_defaults(func=boite_a_outils.maj_table_communes)
+
+    subparser = subparsers.add_parser(
         "pre_process_suffixe",
         help="Détermine les zones où les noms dans le Cadastre sont suffixés",
     )
@@ -72,6 +80,22 @@ def main():
     )
     subparser.set_defaults(func=pre_process_suffixe.process)
 
+    subparser = subparsers.add_parser(
+        "rapprochement",
+        help="Effectue l'appariement entre sources OSM ou BAN et TOPO",
+    )
+    subparser.add_argument(
+        "--source",
+        choices=["OSM", "BAN"],
+        type=str,
+        help="Source des données à traiter",
+    )
+    group = subparser.add_mutually_exclusive_group(required=True)
+    group.add_argument(
+        "--code_insee", type=str, help="Code INSEE de la commune à traiter"
+    )
+    group.add_argument("--dept", type=str, help="Département à traiter (toutes les communes du dept sont traitées une par une)")
+    subparser.set_defaults(func=rapprochement.process)
 
     args = parser.parse_args()
 
