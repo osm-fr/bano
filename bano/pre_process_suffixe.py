@@ -76,12 +76,12 @@ def collect_adresses_points(selection, adresses):
         for nom_voie in selection[k]['liste']:
             s = 0
             max = 2
-            for i in adresses.index_by_voie[nom_voie]:
+            for i in adresses.index_voie[nom_voie]:
                 add = adresses[i]
                 suffixe = k.replace("'","''")
                 kres[k].append(f"SELECT '{suffixe}' AS libelle_suffixe,'{adresses.code_insee}' AS code_insee,ST_BUFFER(ST_PointFromText('POINT({add.x} {add.y})',4326),0.0003,2) as g")
-                # s+=1
-                # if s == max: break
+                s+=1
+                if s == max: break
     return kres
 
 def load_suffixe_2_db(adds, code_insee, nom_commune):
@@ -91,7 +91,7 @@ def load_suffixe_2_db(adds, code_insee, nom_commune):
             if code_insee == '34003':
                 continue
             print(f"{code_insee} - {nom_commune}......... {h}")
-            str_query = f"INSERT INTO suffixe SELECT ST_Transform(ST_SetSRID((ST_Dump(gu)).geom,4326),3857),code_insee,libelle_suffixe FROM (SELECT ST_Union(g) gu,code_insee,libelle_suffixe FROM({' UNION ALL '.join(adds[h])})a GROUP BY 2,3)a;"
+            str_query = f"INSERT INTO suffixe SELECT ST_SetSRID((ST_Dump(gu)).geom,4326),code_insee,libelle_suffixe FROM (SELECT ST_Union(g) gu,code_insee,libelle_suffixe FROM({' UNION ALL '.join(adds[h])})a GROUP BY 2,3)a;"
             cur.execute(str_query)
 
 def process(departements, **kwargs):
