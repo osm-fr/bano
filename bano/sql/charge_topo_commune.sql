@@ -15,4 +15,5 @@ FROM    t)
 SELECT  fantoir10,
         nom
 FROM    tr
-WHERE   rang = 1;
+WHERE   rang = 1
+ORDER BY length(nom) DESC,nom;
