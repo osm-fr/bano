@@ -4,7 +4,7 @@ import sys
 from .constants import DEPARTEMENTS
 from . import core, core_place, pre_process_suffixe, export, publish
 from . import update_manager
-from .sources import bal, cadastre_gouv, cadastre_json, ban
+from .sources import bal, cadastre_gouv, cadastre_json, ban,ban2fantoir
 
 
 def main():
@@ -44,6 +44,16 @@ def main():
     group.add_argument("--depts", type=str, help="Départements à traiter (toutes les communes de chaque dept sont traitées une par une)", nargs="*")
     group.add_argument("--France", help="Raccourci pour tous les départements d'un coup", action="store_const", const=DEPARTEMENTS)
     subparser.set_defaults(func=core_place.process)
+
+    subparser = subparsers.add_parser(
+        "ban2fantoir",
+        help="Ajoute dans FANTOIR des libellés BAN", 
+        description="Ajoute dans FANTOIR des libellés BAN"
+    )
+    subparser.add_argument(
+        "--code_insee", type=str, help="Code INSEE de la commune à traiter"
+    )
+    subparser.set_defaults(func=ban2fantoir.process)
 
     subparser = subparsers.add_parser(
         "download_bal",

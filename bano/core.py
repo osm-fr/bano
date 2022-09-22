@@ -15,7 +15,7 @@ from .models import Adresse, Adresses, Node, Pg_hsnr
 from .outils_de_gestion import batch_start_log
 from .outils_de_gestion import batch_end_log
 # from .outils_de_gestion import age_etape_dept
-from .sources import fantoir
+from .sources import fantoir,ban2fantoir
 
 os.umask(0000)
 
@@ -294,6 +294,7 @@ def addr_2_db(code_insee, source, **kwargs):
     if source == 'BAL':
         load_bases_adresses_locales_hsnr(code_insee)
     if source == 'BAN':
+        ban2fantoir.process(code_insee)
         load_ban_hsnr(code_insee)
     if source == 'CADASTRE':
         adresses.load_cadastre_hsnr()
@@ -321,7 +322,6 @@ def process(source, code_insee, depts, France, **kwargs):
             liste_codes_insee += dbhp.get_insee_name_list_by_dept(d)
     logfile = log.start_log_to_file(source,'process_commune','00')
     for code_insee, nom in liste_codes_insee:
-        # print(f"{code_insee} - {nom}")
         try:
             addr_2_db(code_insee, source)
         except:
