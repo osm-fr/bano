@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS fantoir_voie (
                             fantoir10       character(10),
                             cle_rivoli      character(1),
                             nature_voie     character varying(4),
-                            libelle_voie    character varying(26),
+                            libelle_voie    text,
                             type_commune    character(1),
                             caractere_rur   character(1),
                             caractere_voie  character(1),

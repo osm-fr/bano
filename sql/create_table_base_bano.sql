@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS fantoir_voie (
                             fantoir10       character(10),
                             cle_rivoli      character(1),
                             nature_voie     character varying(4),
-                            libelle_voie    character varying(26),
+                            libelle_voie    text,
                             type_commune    character(1),
                             caractere_rur   character(1),
                             caractere_voie  character(1),
@@ -135,5 +135,24 @@ CREATE TABLE IF NOT EXISTS code_cadastre (
 
 CREATE TABLE IF NOT EXISTS tmp_code_cadastre
 AS SELECT * FROM code_cadastre LIMIT 0;
+
+
+CREATE TABLE IF NOT EXISTS communes_summary (
+        reg character varying(3),
+        dep character varying(3),
+        com character(5),
+        libelle text,
+        population integer,
+        type_composition text,
+        nb_lieux_dits integer,
+        nb_voies integer,
+        nb_numeros integer,
+        nb_numeros_certifies integer,
+        analyse_adressage_nb_adresses_attendues integer,
+        analyse_adressage_ratio float,
+        analyse_adressage_deficit_adresses float,
+        composed_at text);
+
+CREATE INDEX IF NOT EXISTS communes_summary_com ON communes_summary (com);
 
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO public;
