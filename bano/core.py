@@ -284,6 +284,9 @@ def addr_2_db(code_insee, source, **kwargs):
     
     adresses = Adresses(code_insee)
 
+    if source == 'BAN':
+        ban2fantoir.process(code_insee)
+
     fantoir.mapping.reset()
     fantoir.mapping.load(code_insee)
 
@@ -294,7 +297,6 @@ def addr_2_db(code_insee, source, **kwargs):
     if source == 'BAL':
         load_bases_adresses_locales_hsnr(code_insee)
     if source == 'BAN':
-        ban2fantoir.process(code_insee)
         load_ban_hsnr(code_insee)
     if source == 'CADASTRE':
         adresses.load_cadastre_hsnr()
