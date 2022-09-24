@@ -22,9 +22,11 @@ def process(code_insee,**kwargs):
     purge_noms_ban_dans_fantoir(code_insee)
     fantoir.mapping.load(code_insee)
     noms_ban = get_noms_ban(code_insee)
-    noms_ban_norm = set()
-    for i,n in enumerate(noms_ban):
-        nom_norm = normalize(n[0])
-        if not nom_norm in fantoir.mapping.fantoir:
-            noms_ban_norm.add(f"'{code_insee}','{pseudo_fantoir(i,code_insee)}',' ','{nom_norm}','B','B','0000000'")
-    add_noms_ban_dans_fantoir(code_insee, f"({'),('.join(noms_ban_norm)})")
+    if len(noms_ban) > 0:
+        noms_ban_norm = set()
+        for i,n in enumerate(noms_ban):
+            nom_norm = normalize(n[0])
+            if not nom_norm in fantoir.mapping.fantoir:
+                noms_ban_norm.add(f"'{code_insee}','{pseudo_fantoir(i,code_insee)}',' ','{nom_norm}','B','B','0000000'")
+        if len(noms_ban_norm)>0:
+            add_noms_ban_dans_fantoir(code_insee, f"({'),('.join(noms_ban_norm)})")
