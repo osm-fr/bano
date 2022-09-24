@@ -108,13 +108,12 @@ def load_ban_hsnr(code_insee):
         if not name or len(name) < 2 or not lon:
             continue
         adresses.register(name)
-        # fantoir10 = ''
-        # if fantoir_ban:
-        #     fantoir9 = f"{fantoir_ban[0:5]}{fantoir_ban[6:10]}"
-        #     if fantoir9 in fantoir.mapping.code_fantoir9_vers_fantoir10:
-        #         fantoir10 = fantoir.mapping.code_fantoir9_vers_fantoir10[fantoir9]
-        #         adresses.add_fantoir(hp.normalize(name),fantoir10,'FANTOIR')
-        #         print(name,fantoir.mapping.code_fantoir9_vers_fantoir10[fantoir9])
+        fantoir10 = ''
+        if fantoir_ban:
+            fantoir9 = f"{fantoir_ban[0:5]}{fantoir_ban[6:10]}"
+            if fantoir9 in fantoir.mapping.code_fantoir9_vers_fantoir10:
+                fantoir10 = fantoir.mapping.code_fantoir9_vers_fantoir10[fantoir9]
+                adresses.add_fantoir(hp.normalize(name),fantoir10,'FANTOIR')
 
         if not id in dict_node_relations:
             dict_node_relations[id] = []
