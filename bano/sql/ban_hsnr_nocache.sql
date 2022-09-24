@@ -17,7 +17,8 @@ AS
 		        END
         	ELSE NULL
         END as rep_bis,
-        code_postal
+        code_postal,
+        id_fantoir
 FROM    ban_odbl b
 LEFT OUTER JOIN rep_b_as_bis r
 USING   (id_fantoir,numero)
@@ -28,5 +29,6 @@ SELECT  id,
         nom_voie,
         lon,
         lat,
-        code_postal
+        code_postal,
+        id_fantoir
 FROM    j;

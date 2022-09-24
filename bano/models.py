@@ -15,6 +15,9 @@ class Adresse:
         self.fantoir = fantoir
         self.code_postal = code_postal
 
+    def _as_string(self):
+        return f"{self.numero} {self.voie},fantoir : {self.fantoir} {self.code_postal}"
+
 
 class Adresses:
     def __init__(self, code_insee):
@@ -71,7 +74,7 @@ class Adresses:
         return cle
 
     def get_best_fantoir(self, cle):
-        return self[cle]['fantoirs'].get('OSM') or self[cle]['fantoirs'].get('FANTOIR') or ''
+        return self[cle]['fantoirs'].get('OSM') or self[cle]['fantoirs'].get('FANTOIR') or self[cle]['fantoirs'].get('BAN') or ''
 
     def has_already_fantoir(self,cle,source):
         return source in self[cle]['fantoirs']
