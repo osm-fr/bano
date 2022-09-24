@@ -14,7 +14,7 @@ class Mapping:
 
     def load(self,insee):
         str_query = ("""SELECT *
-                        FROM    (SELECT code_insee||id_voie||cle_rivoli,
+                        FROM    (SELECT fantoir10,
                                         nature_voie||' '||libelle_voie,
                                         rank() OVER(PARTITION BY nature_voie||' '||libelle_voie ORDER BY type_voie,id_voie,cle_rivoli) rang
                                 FROM    fantoir_voie
