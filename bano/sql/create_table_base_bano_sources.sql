@@ -43,9 +43,10 @@ CREATE INDEX IF NOT EXISTS idx_ban_code_insee ON ban(code_insee);
 
 CREATE TABLE IF NOT EXISTS suffixe (
                 geometrie               geometry,
-                insee_com               character(5),
+                code_insee              character(5),
                 libelle_suffixe character varying(100)
 );
 CREATE INDEX IF NOT EXISTS gidx_suffixe ON suffixe USING GIST(geometrie);
+CREATE INDEX IF NOT EXISTS idx_suffixe ON suffixe USING GIST(code_insee);
 
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO public;
