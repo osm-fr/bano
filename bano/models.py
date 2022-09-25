@@ -6,7 +6,7 @@ from collections import defaultdict,OrderedDict
 
 from . import db
 from . import helpers as hp
-from .sources import fantoir
+# from .sources import fantoir
 from .sql import sql_get_data,sql_process
 
 
@@ -32,13 +32,58 @@ class Adresse:
     def _as_string(self):
         return (f"source : {self.source}, numero : {self.numero}, voie : {self.voie} ({self.voie_normalisee}), place : {self.place}, fantoir : {self.fantoir}, code_postal:{self.code_postal}, sous_commune : {self.sous_commune_code} - {self.sous_commune_nom}")
 
+class Nom:
+    def __init__(self,nom,fantoir,source,code_insee):
+        self.code_insee = code_insee
+        self.nom = nom
+        self.source = source
+        self.fantoir = fantoir
+        self.nom_normalise = hp.normalize(nom)
+
+    def __eq__(self,other):
+        return self.nom == other.nom and self.fantoir == other.fantoir and self.source == other.source and self.code_insee == other.code_insee
+
+    def __hash__(self):
+        return hash((self.nom,self.fantoir,self.source,self.code_insee))
+
+    def _as_csv_format_bano(self):
+        return f"{self.fantoir}${hp.escape_quotes(self.nom)}${self.code_insee}${self.source}"
+
+    def add_fantoir(self,topo):
+        if not self.fantoir:
+            self.fantoir = topo.topo.get(self.nom_normalise)
+
+class Noms:
+    def __init__(self, code_insee,source):
+        self.code_insee = code_insee
+        self.source = source
+        self.triplets_nom_fantoir_source = set()
+
+    def add_nom(self,nom=Nom):
+        self.triplets_nom_fantoir_source.add(nom)
+
+    def add_fantoir(self,topo):
+        for t in self.triplets_nom_fantoir_source:
+            t.add_fantoir(topo)
+
+    def enregistre(self):
+        sql_process('suppression_noms_commune_source',dict(code_insee=self.code_insee,source=self.source),db.bano)
+        io_in_csv = io.StringIO()
+        for t in self.triplets_nom_fantoir_source:
+            if t.fantoir:
+                io_in_csv.write(t._as_csv_format_bano()+'\n')
+        io_in_csv.seek(0)
+        with db.bano.cursor() as cur_insert:
+            cur_insert.copy_from(io_in_csv, "nom_fantoir", sep='$',null='',columns=('fantoir','nom','code_insee','source'))
 
 class Adresses:
-    def __init__(self, code_insee):
+    def __init__(self, code_insee,source):
         self.code_insee = code_insee
+        self.source = source
         self.liste = []
         self.index_voie = defaultdict(list)
         self.noms_de_voies = set()
+        self.triplets_nom_fantoir_source = set()
 
     # def __contains__(self, item):
     #     return item in self.a
@@ -65,13 +110,17 @@ class Adresses:
         self.index_voie[ad.voie].append(len(self.liste)-1)
         self.noms_de_voies.add(ad.voie)
 
+    def add_fantoir(self):
+        for nom in self.noms:
+            fantoir = topo.topo.get(a.voie_normalisee) 
+      
     def charge_numeros_ban(self):
         data = sql_get_data('charge_ban_commune',dict(code_insee=self.code_insee),db.bano_sources)
         for numero, voie, lon, lat, code_postal, code_insee_ac, nom_ac in data:
             self.add_adresse(Adresse(self.code_insee,lon,lat,numero,'BAN',voie=voie,code_postal=code_postal,sous_commune_code=code_insee_ac,sous_commune_nom=nom_ac))
 
     def charge_numeros_osm(self):
-        return None
+        data = sql_get_data('charge_numeros_bbox_OSM',dict(code_insee=self.code_insee),db.bano_sources)
 
     def charge_noms_osm(self):
         # data = sql_get_data('charge_noms_voies_lieux-dits_OSM',dict(code_insee=self.code_insee),db.bano_sources)
@@ -79,20 +128,25 @@ class Adresses:
         data = sql_get_data('charge_noms_voies_relation_OSM',dict(code_insee=self.code_insee),db.bano_sources)
 
         for d in data:
-            print(hp.normalize(d[0]),d)
+            print(d)
+            print(hp.normalize(d[0]))
         return None
 
-    def save(self,source):
-        sql_process('suppression_adresses_commune_source',dict(code_insee=self.code_insee,source=source),db.bano)
+    def noms_des_adresses(self,noms):
+        for a in self:
+            if a.voie:
+                noms.triplets_nom_fantoir_source.add(Nom(a.voie,a.fantoir,a.source,self.code_insee))
+            if a.place:
+                noms.triplets_nom_fantoir_source.add(Nom(a.place,a.fantoir,a.source,self.code_insee))
+
+    def enregistre(self):
+        sql_process('suppression_adresses_commune_source',dict(code_insee=self.code_insee,source=self.source),db.bano)
         io_in_csv = io.StringIO()
         for a in self:
-            if a.source == source:
-                io_in_csv.write(a._as_csv_format_bano()+'\n') # separateur $ car on trouve des virgules dans le contenu
+            io_in_csv.write(a._as_csv_format_bano()+'\n') # separateur $ car on trouve des virgules dans le contenu
         io_in_csv.seek(0)
         with db.bano.cursor() as cur_insert:
             cur_insert.copy_from(io_in_csv, "bano_adresses", sep='$',null='',columns=('fantoir','lon','lat','numero','nom_voie','code_postal','code_insee','code_insee_ancienne_commune','source'))
-
-
 
 
 class Topo:
