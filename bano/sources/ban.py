@@ -1,6 +1,7 @@
 import csv
 import gzip
 import os
+import io
 import subprocess
 from datetime import datetime
 from email.utils import formatdate, parsedate_to_datetime
@@ -57,9 +58,24 @@ def import_to_pg(source, departement, **kwargs):
                 cur_insert.execute(f"DELETE FROM ban_odbl WHERE code_insee LIKE '{departement+'%'}'")
                 cur_insert.copy_from(f, "ban_odbl", sep=';', null='')
                 db.bano_cache.commit()
-                # um.save_bal_insee_list(um.get_directory_pathname(),departement)
             except psycopg2.DataError as e:
-                db.bano_cache.reset()
+                print(f"Erreur au chargement de la BAN {departement}")
+                print(e)
+                print("Essai via shell")
+                try:
+                    cur_insert.close()
+                    db.bano_cache.reset()
+                    ret = subprocess.run(["gzip","-cd",fichier_source],capture_output=True,text=True)
+                    tmp_filename = Path(os.environ['BAN_CACHE_DIR']) / 'tmp.csv'
+                    with open(tmp_filename,'w') as tmpfile:
+                        tmpfile.write(ret.stdout)
+
+                    subprocess.run(["psql","-d","osm","-U","cadastre","-1","-c",f"COPY ban_odbl FROM '{tmp_filename}' WITH CSV HEADER NULL '' DELIMITER ';'"])
+                    tmp_filename.unlink()
+                except e:
+                    print(f"Erreur au chargement de la BAN {departement}")
+                    print(f"Abandon du chargement de la BAN {departement}")
+                    db.bano_cache.reset()
     m.batch_end_log(-1,batch_id)
 
     
