@@ -1,10 +1,10 @@
 CREATE TABLE IF NOT EXISTS polygones_insee (
         geometrie geometry (Geometry, 4326),
-        insee_com character(5),
+        code_insee character(5),
         nom text,
         admin_level integer);
 CREATE INDEX IF NOT EXISTS gidx_polygones_insee ON polygones_insee USING GIST (geometrie);
-CREATE INDEX IF NOT EXISTS idx_polygones_insee_insee_com ON polygones_insee(insee_com);
+CREATE INDEX IF NOT EXISTS idx_polygones_insee_code_insee ON polygones_insee(code_insee);
 
 TRUNCATE TABLE polygones_insee;
 INSERT INTO polygones_insee
@@ -19,19 +19,19 @@ WHERE boundary='administrative' AND
 
 CREATE TABLE IF NOT EXISTS polygones_insee_a9 (
         geometrie geometry (Geometry, 4326),
-        insee_com character(5),
+        code_insee character(5),
         nom text,
         insee_a8 character(5));
 CREATE INDEX IF NOT EXISTS gidx_polygones_insee_a9 ON polygones_insee_a9 USING GIST (geometrie);
-CREATE INDEX IF NOT EXISTS idx_polygones_insee_a9_insee_com ON polygones_insee_a9(insee_com);
+CREATE INDEX IF NOT EXISTS idx_polygones_insee_a9_code_insee ON polygones_insee_a9(code_insee);
 CREATE INDEX IF NOT EXISTS idx_polygones_insee_a9_insee_a8 ON polygones_insee_a9(insee_a8);
 
 TRUNCATE TABLE polygones_insee_a9;
 INSERT INTO polygones_insee_a9
 SELECT a9.geometrie,
-       a9.insee_com,
+       a9.code_insee,
        a9.nom,
-       a8.insee_com
+       a8.code_insee
 FROM   (SELECT * FROM polygones_insee WHERE admin_level = 9) a9
 JOIN   (SELECT * FROM polygones_insee WHERE admin_level = 8) a8
 ON     ST_Contains(a8.geometrie,a9.geometrie);
