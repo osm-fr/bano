@@ -19,6 +19,7 @@ tables:
       - {key: 'addr:housenumber', name: 'addr:housenumber', type: string}
       - {key: 'addr:street', name: 'addr:street', type: string}
       - {key: 'addr:place', name: 'addr:place', type: string}
+      - {key: 'addr:postcode', name: 'addr:postcode', type: string}
       - {key: 'ref:FR:FANTOIR', name: 'ref:FR:FANTOIR', type: string}
       - {key: 'highway', name: 'highway', type: string}
       - {key: 'amenity', name: 'amenity', type: string}
@@ -67,6 +68,8 @@ tables:
       - {key: admin_level, name: admin_level, type: integer}
       - {key: 'addr:housenumber', name: 'addr:housenumber', type: string}
       - {key: 'addr:street', name: 'addr:street', type: string}
+      - {key: 'addr:place', name: 'addr:place', type: string}
+      - {key: 'addr:postcode', name: 'addr:postcode', type: string}
       - {key: 'ref:INSEE', name: 'ref:INSEE', type: string}
       - {key: 'ref:FR:FANTOIR', name: 'ref:FR:FANTOIR', type: string}
       - {key: 'ref:FR:FANTOIR:left', name: 'ref:FR:FANTOIR:left', type: string}
