@@ -11,21 +11,22 @@ from . import helpers as hp
 from .sql import sql_get_data,sql_process
 
 class Nom:
-    def __init__(self,nom,fantoir,source,code_insee):
+    def __init__(self,nom,fantoir,nature,source,code_insee):
         self.code_insee = code_insee
         self.nom = nom
-        self.source = source
         self.fantoir = fantoir
+        self.nature = nature
+        self.source = source
         self.nom_normalise = hp.normalize(nom)
 
     def __eq__(self,other):
-        return self.nom == other.nom and self.fantoir == other.fantoir and self.source == other.source and self.code_insee == other.code_insee
+        return self.nom == other.nom and self.fantoir == other.fantoir and self.nature == other.nature and self.source == other.source and self.code_insee == other.code_insee
 
     def __hash__(self):
-        return hash((self.nom,self.fantoir,self.source,self.code_insee))
+        return hash((self.nom,self.fantoir,self.source,self.nature,self.code_insee))
 
     def _as_csv_format_bano(self):
-        return f"{self.fantoir}${hp.escape_quotes(self.nom)}${self.code_insee}${self.source}"
+        return f"{self.fantoir}${hp.escape_quotes(self.nom)}${self.nature}${self.code_insee}${self.source}"
 
     def add_fantoir(self,topo):
         if not self.fantoir:
@@ -52,7 +53,7 @@ class Noms:
                 io_in_csv.write(t._as_csv_format_bano()+'\n')
         io_in_csv.seek(0)
         with db.bano.cursor() as cur_insert:
-            cur_insert.copy_from(io_in_csv, "nom_fantoir", sep='$',null='',columns=('fantoir','nom','code_insee','source'))
+            cur_insert.copy_from(io_in_csv, "nom_fantoir", sep='$',null='',columns=('fantoir','nom','nature','code_insee','source'))
 
 class Adresse:
     def __init__(self, code_insee, x, y, num, source, voie=None, place=None, fantoir=None, code_postal=None, sous_commune_code=None, sous_commune_nom=None):
@@ -77,7 +78,7 @@ class Adresse:
         return (self.code_insee == other.code_insee and self.source == other.source and self.numero == other.numero and self.voie == other.voie and self.place == other.place and self.sous_commune_code == other.sous_commune_code)
 
     def _as_csv_format_bano(self):
-        return f"{self.fantoir}${self.x}${self.y}${self.numero}${hp.escape_quotes(self.voie)}${self.code_postal}${self.code_insee}${self.sous_commune_code if self.sous_commune_code else ''}${self.source}"
+        return f"{self.fantoir}${self.x}${self.y}${self.numero}${hp.escape_quotes(self.voie) if self.voie else ''}${hp.escape_quotes(self.place) if self.place else ''}${self.code_postal}${self.code_insee}${self.sous_commune_code if self.sous_commune_code else ''}${self.source}"
 
     def _as_string(self):
         return (f"source : {self.source}, numero : {self.numero}, voie : {self.voie} ({self.voie_normalisee}), place : {self.place}, fantoir : {self.fantoir}, code_postal:{self.code_postal}, sous_commune : {self.sous_commune_code} - {self.sous_commune_nom}")
@@ -138,16 +139,6 @@ class Adresses:
                     self.add_adresse(Adresse(self.code_insee,lon,lat,numero,'OSM',voie=tags['name'],place=None,code_postal=code_postal,sous_commune_code=code_insee_ac,sous_commune_nom=nom_ac))
 
 
-            # if not voie:
-            #     print(lon, lat, provenance, numero, voie, place, tags, suffixe, code_postal, code_insee_ac, nom_ac)
-        # data = sql_get_data('charge_numeros_bbox_OSM',dict(code_insee=self.code_insee),db.bano_sources)
-        # for d in data:
-        #     print(d)
-        # for lon, lat, provenance, numero, voie, place, tags, suffixe, code_postal, code_insee_ac, nom_ac in data:
-        #     self.add_adresse(Adresse(self.code_insee,lon,lat,numero,'OSM',voie=voie,code_postal=code_postal,sous_commune_code=code_insee_ac,sous_commune_nom=nom_ac))
-        #     if not voie:
-        #         print(lon, lat, provenance, numero, voie, place, tags, suffixe, code_postal, code_insee_ac, nom_ac)
-
 
     def charge_noms_osm(self):
         # data = sql_get_data('charge_noms_voies_lieux-dits_OSM',dict(code_insee=self.code_insee),db.bano_sources)
@@ -162,9 +153,9 @@ class Adresses:
     def noms_des_adresses(self,noms):
         for a in self:
             if a.voie:
-                noms.triplets_nom_fantoir_source.add(Nom(a.voie,a.fantoir,a.source,self.code_insee))
+                noms.triplets_nom_fantoir_source.add(Nom(a.voie,a.fantoir,'voie',a.source,self.code_insee))
             if a.place:
-                noms.triplets_nom_fantoir_source.add(Nom(a.place,a.fantoir,a.source,self.code_insee))
+                noms.triplets_nom_fantoir_source.add(Nom(a.place,a.fantoir,'place',a.source,self.code_insee))
 
     def enregistre(self):
         sql_process('suppression_adresses_commune_source',dict(code_insee=self.code_insee,source=self.source),db.bano)
@@ -173,7 +164,7 @@ class Adresses:
             io_in_csv.write(a._as_csv_format_bano()+'\n') # separateur $ car on trouve des virgules dans le contenu
         io_in_csv.seek(0)
         with db.bano.cursor() as cur_insert:
-            cur_insert.copy_from(io_in_csv, "bano_adresses", sep='$',null='',columns=('fantoir','lon','lat','numero','nom_voie','code_postal','code_insee','code_insee_ancienne_commune','source'))
+            cur_insert.copy_from(io_in_csv, "bano_adresses", sep='$',null='',columns=('fantoir','lon','lat','numero','nom_voie','nom_place','code_postal','code_insee','code_insee_ancienne_commune','source'))
 
 
 class Topo:

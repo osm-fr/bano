@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS bano_adresses (
     lat float,
     numero  text,
     nom_voie text,
+    nom_place text,
     code_postal text,
     code_insee text,
     code_insee_ancienne_commune text,
@@ -19,6 +20,7 @@ CREATE TABLE IF NOT EXISTS nom_fantoir (
     fantoir text,
     nom text,
     code_insee text,
+    nature text,
     source text);
 
 CREATE INDEX IF NOT EXISTS idx_nom_fantoir_code_insee ON nom_fantoir (code_insee);
