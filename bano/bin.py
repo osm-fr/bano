@@ -2,7 +2,7 @@ import argparse
 import sys
 
 from .constants import DEPARTEMENTS
-from . import core, core_place, pre_process_suffixe, export, publish
+from . import core, core_place, pre_process_suffixe, export, publish,debug
 from . import update_manager
 from .sources import bal, cadastre_gouv, cadastre_json, ban,ban2fantoir
 
@@ -175,6 +175,11 @@ def main():
         description="Détermine les communes mises à jour grace aux tuiles impactées",
     )
     subparser.set_defaults(func=update_manager.update_insee_lists)
+
+    subparser = subparsers.add_parser("debug_sql")
+    subparser.add_argument("source",choices=["OSM", "BAN"],type=str,help="Source des données à traiter",)
+    subparser.add_argument("code_insee", type=str, help="Code INSEE de la commune à traiter")
+    subparser.set_defaults(func=debug.process_sql)
 
     args = parser.parse_args()
 
