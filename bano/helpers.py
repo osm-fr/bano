@@ -172,7 +172,7 @@ def replace_type_voie(s,nb):
     return s
 
 
-def is_valid_fantoir(f, insee):
+def fantoir_valide(f, insee):
     return (len(f) == 10 and f[0:5] == insee);
 
 def display_insee_commune(code_insee, nom_commune):

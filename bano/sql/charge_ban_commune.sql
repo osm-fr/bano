@@ -1,7 +1,8 @@
 WITH
 j
 AS
-(SELECT numero,
+(SELECT id_fantoir,
+	    numero,
 	    nom_voie,
 	    lon,
 	    lat,
@@ -23,7 +24,8 @@ FROM    ban_odbl b
 LEFT OUTER JOIN rep_b_as_bis r
 USING   (id_fantoir,numero)
 WHERE   code_insee = '__code_insee__')
-SELECT  TRIM (BOTH FROM (numero||' '||COALESCE(rep_bis,rep,''))),
+SELECT  id_fantoir,
+        TRIM (BOTH FROM (numero||' '||COALESCE(rep_bis,rep,''))),
         nom_voie,
         lon,
         lat,

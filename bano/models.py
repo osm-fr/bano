@@ -11,8 +11,9 @@ from . import helpers as hp
 from .sql import sql_get_data,sql_process
 
 class Nom:
-    def __init__(self,nom,fantoir,nature,source,code_insee):
+    def __init__(self,nom,fantoir,nature,source,code_insee,code_insee_ancienne_commune):
         self.code_insee = code_insee
+        self.code_insee_ancienne_commune = code_insee_ancienne_commune
         self.nom = nom
         self.fantoir = fantoir
         self.nature = nature
@@ -20,13 +21,15 @@ class Nom:
         self.nom_normalise = hp.normalize(nom)
 
     def __eq__(self,other):
-        return self.nom == other.nom and self.fantoir == other.fantoir and self.nature == other.nature and self.source == other.source and self.code_insee == other.code_insee
+        return (self.nom == other.nom and self.fantoir == other.fantoir and self.nature == other.nature and self.source == other.source and self.code_insee == other.code_insee)
+        # return (self.nom == other.nom and self.fantoir == other.fantoir)
 
     def __hash__(self):
         return hash((self.nom,self.fantoir,self.source,self.nature,self.code_insee))
+        # return hash((self.nom,self.fantoir))
 
     def _as_csv_format_bano(self):
-        return f"{self.fantoir}${hp.escape_quotes(self.nom)}${self.nature}${self.code_insee}${self.source}"
+        return f"{self.fantoir}${hp.escape_quotes(self.nom)}${self.nature}${self.code_insee}${self.code_insee_ancienne_commune}${self.source}"
 
     def add_fantoir(self,topo):
         if not self.fantoir:
@@ -36,10 +39,21 @@ class Noms:
     def __init__(self, code_insee,source):
         self.code_insee = code_insee
         self.source = source
-        self.triplets_nom_fantoir_source = set()
+        self.triplets_nom_fantoir_source = []
 
+    # On ne charge pas les noms des numeros OSM. Ils sont ajoutés via Adresses.nom_des_adresses
+    def charge_noms_osm_hors_numeros(self):
+        data = sql_get_data('charge_noms_voies_lieux-dits_OSM',dict(code_insee=self.code_insee),db.bano_sources)+sql_get_data('charge_noms_voies_relation_bbox_OSM',dict(code_insee=self.code_insee),db.bano_sources)+sql_get_data('charge_noms_voies_relation_OSM',dict(code_insee=self.code_insee),db.bano_sources)
+        for provenance,name,tags,libelle_suffixe,ac_code_insee,ac_nom,nature in data:
+            if provenance in (1,2,3,4,5):
+                self.add_nom(Nom(name,tags.get('ref:FR:FANTOIR'),nature,'OSM',self.code_insee,ac_code_insee))
+            if provenance in (6,7) and tags.get('ref:FR:FANTOIR'):
+                self.add_nom(Nom(name,tags['ref:FR:FANTOIR'],nature,'OSM',self.code_insee,ac_code_insee))
+
+    # On ajoute un nom s'il n'a pas de FANTOIR ou si son FANTOIR appartient à la commune
     def add_nom(self,nom=Nom):
-        self.triplets_nom_fantoir_source.add(nom)
+        if not nom.fantoir or nom.fantoir[0:5] == self.code_insee:
+            self.triplets_nom_fantoir_source.append(nom)
 
     def add_fantoir(self,topo):
         for t in self.triplets_nom_fantoir_source:
@@ -48,12 +62,12 @@ class Noms:
     def enregistre(self):
         sql_process('suppression_noms_commune_source',dict(code_insee=self.code_insee,source=self.source),db.bano)
         io_in_csv = io.StringIO()
-        for t in self.triplets_nom_fantoir_source:
+        for t in set(self.triplets_nom_fantoir_source):
             if t.fantoir:
                 io_in_csv.write(t._as_csv_format_bano()+'\n')
         io_in_csv.seek(0)
         with db.bano.cursor() as cur_insert:
-            cur_insert.copy_from(io_in_csv, "nom_fantoir", sep='$',null='',columns=('fantoir','nom','nature','code_insee','source'))
+            cur_insert.copy_from(io_in_csv, "nom_fantoir", sep='$',null='',columns=('fantoir','nom','nature','code_insee','code_insee_ancienne_commune','source'))
 
 class Adresse:
     def __init__(self, code_insee, x, y, num, source, voie=None, place=None, fantoir=None, code_postal=None, sous_commune_code=None, sous_commune_nom=None):
@@ -78,7 +92,7 @@ class Adresse:
         return (self.code_insee == other.code_insee and self.source == other.source and self.numero == other.numero and self.voie == other.voie and self.place == other.place and self.sous_commune_code == other.sous_commune_code)
 
     def _as_csv_format_bano(self):
-        return f"{self.fantoir}${self.x}${self.y}${self.numero}${hp.escape_quotes(self.voie) if self.voie else ''}${hp.escape_quotes(self.place) if self.place else ''}${self.code_postal}${self.code_insee}${self.sous_commune_code if self.sous_commune_code else ''}${self.source}"
+        return f"{self.fantoir if self.fantoir else ''}${self.x}${self.y}${self.numero}${hp.escape_quotes(self.voie) if self.voie else ''}${hp.escape_quotes(self.place) if self.place else ''}${self.code_postal}${self.code_insee}${self.sous_commune_code if self.sous_commune_code else ''}${self.source}"
 
     def _as_string(self):
         return (f"source : {self.source}, numero : {self.numero}, voie : {self.voie} ({self.voie_normalisee}), place : {self.place}, fantoir : {self.fantoir}, code_postal:{self.code_postal}, sous_commune : {self.sous_commune_code} - {self.sous_commune_nom}")
@@ -90,7 +104,6 @@ class Adresses:
         self.liste = set()
         self.index_voie = defaultdict(list)
         self.noms_de_voies = set()
-        self.triplets_nom_fantoir_source = set()
 
     # def __contains__(self, item):
     #     return item in self.a
@@ -117,45 +130,44 @@ class Adresses:
         self.index_voie[ad.voie].append(len(self.liste)-1)
         self.noms_de_voies.add(ad.voie)
 
-    def add_fantoir(self):
-        for nom in self.noms:
-            fantoir = topo.topo.get(a.voie_normalisee) 
+    # def add_fantoir(self):
+    #     for nom in self.noms:
+    #         fantoir = topo.topo.get(a.voie_normalisee) 
       
-    def charge_numeros_ban(self):
+    def charge_numeros_ban(self,topo):
         data = sql_get_data('charge_ban_commune',dict(code_insee=self.code_insee),db.bano_sources)
-        for numero, voie, lon, lat, code_postal, code_insee_ac, nom_ac in data:
-            self.add_adresse(Adresse(self.code_insee,lon,lat,numero,'BAN',voie=voie,code_postal=code_postal,sous_commune_code=code_insee_ac,sous_commune_nom=nom_ac))
+        for id_fantoir, numero, voie, lon, lat, code_postal, code_insee_ac, nom_ac in data:
+            if id_fantoir:
+                fantoir9 = f"{id_fantoir[0:5]}{id_fantoir[6:10]}"
+                fantoir = topo.code_fantoir9_vers_fantoir10.get(fantoir9)
+            else:
+                fantoir = None
+            self.add_adresse(Adresse(self.code_insee,lon,lat,numero,'BAN',voie=voie,fantoir=fantoir,code_postal=code_postal,sous_commune_code=code_insee_ac,sous_commune_nom=nom_ac))
 
     def charge_numeros_osm(self):
         data = sql_get_data('charge_numeros_OSM',dict(code_insee=self.code_insee),db.bano_sources)+sql_get_data('charge_numeros_bbox_OSM',dict(code_insee=self.code_insee),db.bano_sources)
-        # print(data)
+
         for lon, lat, provenance, numero, voie, place, tags, suffixe, code_postal, code_insee_ac, nom_ac in data:
+
+            fantoir = tags.get('ref:FR:FANTOIR')
+            if fantoir and not hp.fantoir_valide(fantoir,self.code_insee):
+                print("fantoir invalide",fantoir,self.code_insee)
+                continue
+
             if provenance in (1,2,):
-                self.add_adresse(Adresse(self.code_insee,lon,lat,numero,'OSM',voie=voie,place=place,code_postal=code_postal,sous_commune_code=code_insee_ac,sous_commune_nom=nom_ac))
+                self.add_adresse(Adresse(self.code_insee,lon,lat,numero,'OSM',voie=voie,place=place,fantoir=fantoir,code_postal=code_postal,sous_commune_code=code_insee_ac,sous_commune_nom=nom_ac))
             if provenance in (3,4,) and tags.get('name'):
-                self.add_adresse(Adresse(self.code_insee,lon,lat,numero,'OSM',voie=tags['name'],place=None,code_postal=code_postal,sous_commune_code=code_insee_ac,sous_commune_nom=nom_ac))
+                self.add_adresse(Adresse(self.code_insee,lon,lat,numero,'OSM',voie=tags['name'],place=None,fantoir=fantoir,code_postal=code_postal,sous_commune_code=code_insee_ac,sous_commune_nom=nom_ac))
             if provenance in (5,6,) and tags.get('name') and tags.get('ref:FR:FANTOIR'):
                 if tags['ref:FR:FANTOIR'][0:5] == self.code_insee:
-                    self.add_adresse(Adresse(self.code_insee,lon,lat,numero,'OSM',voie=tags['name'],place=None,code_postal=code_postal,sous_commune_code=code_insee_ac,sous_commune_nom=nom_ac))
-
-
-
-    def charge_noms_osm(self):
-        # data = sql_get_data('charge_noms_voies_lieux-dits_OSM',dict(code_insee=self.code_insee),db.bano_sources)
-        # data = sql_get_data('charge_noms_voies_relation_bbox_OSM',dict(code_insee=self.code_insee),db.bano_sources)
-        data = sql_get_data('charge_noms_voies_relation_OSM',dict(code_insee=self.code_insee),db.bano_sources)
-
-        for d in data:
-            print(d)
-            print(hp.normalize(d[0]))
-        return None
+                    self.add_adresse(Adresse(self.code_insee,lon,lat,numero,'OSM',voie=tags['name'],place=None,fantoir=tags['ref:FR:FANTOIR'],code_postal=code_postal,sous_commune_code=code_insee_ac,sous_commune_nom=nom_ac))
 
     def noms_des_adresses(self,noms):
         for a in self:
             if a.voie:
-                noms.triplets_nom_fantoir_source.add(Nom(a.voie,a.fantoir,'voie',a.source,self.code_insee))
+                noms.add_nom(Nom(a.voie,a.fantoir,'voie',a.source,self.code_insee,a.sous_commune_code))
             if a.place:
-                noms.triplets_nom_fantoir_source.add(Nom(a.place,a.fantoir,'place',a.source,self.code_insee))
+                noms.add_nom(Nom(a.place,a.fantoir,'place',a.source,self.code_insee,a.sous_commune_code))
 
     def enregistre(self):
         sql_process('suppression_adresses_commune_source',dict(code_insee=self.code_insee,source=self.source),db.bano)
@@ -171,6 +183,7 @@ class Topo:
     def __init__(self, code_insee):
         self.code_insee = code_insee
         self.topo = OrderedDict()
+        self.code_fantoir9_vers_fantoir10 = {}
 
         # self.index_by_nom_normalise = defaultdict(list)
 
@@ -195,4 +208,5 @@ class Topo:
         for fantoir,nom in data:
             nom = hp.normalize(' '.join(nom.replace('-',' ').split()))
             self.topo[fantoir] = nom
+            self.code_fantoir9_vers_fantoir10[fantoir[0:9]] = fantoir
             self.topo[nom] = fantoir

@@ -1,55 +1,43 @@
-SELECT	pl.name,
-		pl."ref:FR:FANTOIR" f,
-		'' fl,
-		'' fr,
-		h.libelle_suffixe,
-		p."ref:INSEE",
-		CASE
-		    WHEN pl.place='' THEN 'voie'::text
-		    ELSE 'lieudit'
-		END AS nature
-FROM	planet_osm_polygon 	p
-JOIN	planet_osm_point 	pl
-ON		pl.way && p.way					AND
-		ST_Intersects(pl.way, p.way)
+SELECT  DISTINCT provenance,
+        name,
+        tags,
+        libelle_suffixe,
+        a9.code_insee,
+        a9.nom,
+        nature
+FROM    (SELECT  1::integer AS provenance,
+                 pt.way,
+                 UNNEST(ARRAY[pt.name,pt.tags->'alt_name',pt.tags->'old_name']) as name,
+                 tags,
+                 CASE
+                     WHEN pt.place='' THEN 'voie'::text
+                     ELSE 'place'
+                 END AS nature
+         FROM    (SELECT way FROM planet_osm_polygon WHERE "ref:INSEE" = '__code_insee__')                    p
+         JOIN    (SELECT * FROM planet_osm_point WHERE ("ref:FR:FANTOIR" !='' OR place != '') AND name != '') pt
+         ON      pt.way && p.way                 AND
+                 ST_Intersects(pt.way, p.way)
+         UNION ALL
+         SELECT  2,
+                 l.way,
+                 UNNEST(ARRAY[l.name,l.tags->'alt_name',l.tags->'old_name']) as name,
+                 tags,
+                 'voie'
+         FROM    (SELECT way FROM planet_osm_polygon WHERE "ref:INSEE" = '__code_insee__') p
+         JOIN    (SELECT * FROM planet_osm_line WHERE highway != '' AND name != '')        l
+         ON      p.way && l.way AND ST_Contains(p.way, l.way)
+         UNION ALL
+         SELECT  3,
+                 pl.way,
+                 UNNEST(ARRAY[pl.name,pl.tags->'alt_name',pl.tags->'old_name']) as name,
+                 tags,
+                 'voie'
+         FROM    (SELECT way FROM planet_osm_polygon WHERE "ref:INSEE" = '__code_insee__')                                                                    p
+         JOIN    (SELECT * FROM planet_osm_polygon WHERE (highway||"ref:FR:FANTOIR" != '' OR landuse = 'residential' OR amenity = 'parking') AND name != '') pl
+         ON      pl.way && p.way                 AND
+                 ST_Intersects(pl.way, p.way)) l
 LEFT OUTER JOIN suffixe h
-ON		ST_Intersects(pl.way, h.geometrie)
-WHERE	p."ref:INSEE" = '__code_insee__'	                 AND
-		(pl."ref:FR:FANTOIR" !='' OR pl.place != '') AND
-		pl.name != ''
-UNION
-SELECT	l.name,
-		l.tags->'ref:FR:FANTOIR' f,
-		l.tags->'ref:FR:FANTOIR:left' fl,
-		l.tags->'ref:FR:FANTOIR:right' fr,
-		h.libelle_suffixe,
-		p."ref:INSEE",
-		'voie'
-FROM	planet_osm_polygon 	p
-JOIN	planet_osm_line 	l
-ON		ST_Intersects(l.way, p.way)
-LEFT OUTER JOIN suffixe h
-ON		ST_Intersects(l.way, h.geometrie)
-WHERE	p."ref:INSEE" = '__code_insee__'	AND
-		l.highway 	!= ''			AND
-		l.name 		!= ''
-UNION
-SELECT	pl.name,
-		pl."ref:FR:FANTOIR" f,
-		pl."ref:FR:FANTOIR:left" fl,
-		pl."ref:FR:FANTOIR:right" fr,
-		h.libelle_suffixe,
-		p."ref:INSEE",
-		'voie'
-FROM	planet_osm_polygon 	p
-JOIN	planet_osm_polygon 	pl
-ON		pl.way && p.way					AND
-		ST_Intersects(pl.way, p.way)
-LEFT OUTER JOIN suffixe h
-ON		ST_Intersects(pl.way, h.geometrie)
-WHERE	p."ref:INSEE" = '__code_insee__'		AND
-		            (pl.highway||pl."ref:FR:FANTOIR" != ''	OR
-					pl.landuse = 'residential'				OR
-					pl.amenity = 'parking')	AND
-		pl.name 	!= '';
-
+ON      ST_Intersects(l.way, h.geometrie)
+LEFT OUTER JOIN (SELECT * FROM polygones_insee_a9 where insee_a8 = '__code_insee__') a9
+ON      ST_Contains(a9.geometrie,way)
+WHERE   l.name IS NOT NULL;

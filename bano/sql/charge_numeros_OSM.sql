@@ -16,7 +16,7 @@ FROM
 				pt."addr:housenumber" AS hsnr,
 				pt."addr:street"      AS street_name,
 				pt."addr:place"       AS place_name,
-				null::hstore          AS tags,
+				tags,
 				pt."addr:postcode"    AS code_postal
 		FROM	(SELECT geometrie FROM polygones_insee WHERE admin_level = 8 AND code_insee = '__code_insee__') p
 		JOIN	planet_osm_point 	pt
@@ -30,7 +30,7 @@ FROM
 				w."addr:housenumber",
 				w."addr:street",
 				w."addr:place",
-				null::hstore tags,
+				tags,
 				w."addr:postcode"
 		FROM	(SELECT geometrie FROM polygones_insee WHERE admin_level = 8 AND code_insee = '__code_insee__') p
 		JOIN	planet_osm_polygon 	w

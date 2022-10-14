@@ -21,6 +21,8 @@ CREATE TABLE IF NOT EXISTS nom_fantoir (
     nom text,
     code_insee text,
     nature text,
+    code_insee_ancienne_commune text,
+    nom_ancienne_commune text,
     source text);
 
 CREATE INDEX IF NOT EXISTS idx_nom_fantoir_code_insee ON nom_fantoir (code_insee);

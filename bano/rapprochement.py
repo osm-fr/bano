@@ -9,11 +9,11 @@ def process(source,code_insee,dept,**kwargs):
     noms = Noms(code_insee,source)
 
     if source == 'OSM':
-        adresses.charge_noms_osm()
+        noms.charge_noms_osm_hors_numeros()
         adresses.charge_numeros_osm()
 
     if source == 'BAN':
-        adresses.charge_numeros_ban()
+        adresses.charge_numeros_ban(topo)
 
     adresses.noms_des_adresses(noms)
     noms.add_fantoir(topo)
