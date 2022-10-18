@@ -29,7 +29,7 @@ class Nom:
         # return hash((self.nom,self.fantoir))
 
     def _as_csv_format_bano(self):
-        return f"{self.fantoir}${hp.escape_quotes(self.nom)}${self.nature}${self.code_insee}${self.code_insee_ancienne_commune}${self.source}"
+        return f"{self.fantoir}${self.nom}${self.nature}${self.code_insee}${self.code_insee_ancienne_commune}${self.source}"
 
     def add_fantoir(self,topo):
         if not self.fantoir:
@@ -92,7 +92,7 @@ class Adresse:
         return (self.code_insee == other.code_insee and self.source == other.source and self.numero == other.numero and self.voie == other.voie and self.place == other.place and self.sous_commune_code == other.sous_commune_code)
 
     def _as_csv_format_bano(self):
-        return f"{self.fantoir if self.fantoir else ''}${self.x}${self.y}${self.numero}${hp.escape_quotes(self.voie) if self.voie else ''}${hp.escape_quotes(self.place) if self.place else ''}${self.code_postal}${self.code_insee}${self.sous_commune_code if self.sous_commune_code else ''}${self.source}"
+        return f"{self.fantoir if self.fantoir else ''}${self.x}${self.y}${self.numero}${self.voie if self.voie else ''}${self.place if self.place else ''}${self.code_postal}${self.code_insee}${self.sous_commune_code if self.sous_commune_code else ''}${self.source}"
 
     def _as_string(self):
         return (f"source : {self.source}, numero : {self.numero}, voie : {self.voie} ({self.voie_normalisee}), place : {self.place}, fantoir : {self.fantoir}, code_postal:{self.code_postal}, sous_commune : {self.sous_commune_code} - {self.sous_commune_nom}")
