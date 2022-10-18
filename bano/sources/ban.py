@@ -23,10 +23,10 @@ def process_ban(departements, **kwargs):
         raise ValueError(f"Départements inconnus : {depts_inconnus}")
     # um.set_csv_directory(um.get_directory_pathname())
     for dept in sorted(departements):
-        print(f"Processing {dept}")
+        print(f"Département {dept}")
         status = download(source, dept)
-        if status:
-            import_to_pg(source, dept)
+        # if status:
+        import_to_pg(source, dept)
 
 def download(source, departement):
     destination = get_destination(departement)
@@ -55,13 +55,29 @@ def import_to_pg(source, departement, **kwargs):
         f.readline()  # skip CSV headers
         with  bano_sources.cursor() as cur_insert:
             try:
-                cur_insert.execute(f"DELETE FROM ban_odbl WHERE code_insee LIKE '{departement+'%'}'")
-                cur_insert.copy_from(f, "ban_odbl", sep=';', null='')
-                # bano_sources.commit()
+                cur_insert.execute(f"DELETE FROM ban WHERE code_insee LIKE '{departement+'%'}'")
+                cur_insert.copy_from(f, "ban", sep=';', null='')
                 b.batch_stop_log(id_batch,True)
             except psycopg2.DataError as e:
-                b.batch_stop_log(id_batch,False)
-                # bano_sources.reset()
+                print(f"Erreur au chargement de la BAN {departement}")
+                print(e)
+                print("Essai via shell")
+                try:
+                    cur_insert.close()
+                    bano_sources.reset()
+                    ret = subprocess.run(["gzip","-cd",fichier_source],capture_output=True,text=True)
+                    tmp_filename = Path(os.environ['BAN_CACHE_DIR']) / 'tmp.csv'
+                    with open(tmp_filename,'w') as tmpfile:
+                        tmpfile.write(ret.stdout)
+
+                    subprocess.run(["psql","-d","bano_sources","-U","cadastre","-1","-c",f"COPY ban FROM '{tmp_filename}' WITH CSV HEADER NULL '' DELIMITER ';'"])
+                    tmp_filename.unlink()
+                    b.batch_stop_log(id_batch,True)
+                except e:
+                    print(f"Erreur au chargement de la BAN {departement}")
+                    print(f"Abandon du chargement de la BAN {departement}")
+                    bano_sources.reset()
+                    b.batch_stop_log(id_batch,False)
     
 def get_destination(departement):
     try:

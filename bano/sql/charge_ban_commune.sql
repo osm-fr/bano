@@ -20,7 +20,7 @@ AS
         code_postal,
         code_insee_ancienne_commune,
         nom_ancienne_commune
-FROM    ban_odbl b
+FROM    ban b
 LEFT OUTER JOIN rep_b_as_bis r
 USING   (id_fantoir,numero)
 WHERE   code_insee = '__code_insee__')
