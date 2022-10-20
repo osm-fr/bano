@@ -22,11 +22,22 @@ bano update_bis_table
 
 
 # BANO
-bano update_insee_lists
-cat insee_osm.csv      | parallel -j 4 export LANG=fr_FR.UTF-8\; bano process_commune OSM      --code_insee {1}
-cat insee_locales.csv  | parallel -j 4 export LANG=fr_FR.UTF-8\; bano process_commune BAL      --code_insee {1}
-cat deplist.txt        | parallel -j 4 export LANG=fr_FR.UTF-8\; bano process_commune BAN      --depts {1}
-cat deplist.txt        | parallel -j 4 export LANG=fr_FR.UTF-8\; bano process_commune_lieux-dits    --depts {1}
+# le dimanche, passe globale sur toutes les communes
+# le reste de la semaine, ciblage des communes ayant eu des modifs dans OSM dans les dernières 24h
+if [ `date +%u` -eq 7 ]
+then
+   bano update_insee_lists
+   cat insee_locales.csv  | parallel -j 4 export LANG=fr_FR.UTF-8\; bano process_commune BAL      --code_insee {1}
+   cat deplist.txt        | parallel -j 4 export LANG=fr_FR.UTF-8\; bano process_commune BAN           --depts {1}
+   cat deplist.csv        | parallel -j 4 export LANG=fr_FR.UTF-8\; bano process_commune OSM           --depts {1}
+   cat deplist.txt        | parallel -j 4 export LANG=fr_FR.UTF-8\; bano process_commune_lieux-dits    --depts {1}
+else
+   bano update_insee_lists
+   cat insee_locales.csv  | parallel -j 4 export LANG=fr_FR.UTF-8\; bano process_commune BAL      --code_insee {1}
+   cat insee_osm.txt      | parallel -j 4 export LANG=fr_FR.UTF-8\; bano process_commune BAN      --code_insee {1}
+   cat insee_osm.csv      | parallel -j 4 export LANG=fr_FR.UTF-8\; bano process_commune OSM      --code_insee {1}
+   cat deplist.txt        | parallel -j 4 export LANG=fr_FR.UTF-8\; bano process_commune_lieux-dits    --depts {1}
+fi
 
 # Mise à jour quotidienne dans la base cadastre des couches des polygones postaux d'OSM et des statuts admin de communes en vue des exports
 ./copy_table_from_osm_to_cadastre.sh planet_osm_postal_code
