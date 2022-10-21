@@ -104,6 +104,7 @@ def normalize(s):
     s = s.upper()                # tout en majuscules
     s = s.split(' (')[0]        # parenthèses : on coupe avant
     s = s.replace('-',' ')        # separateur espace
+    s = s.replace('.',' ')        # separateur espace
     s = s.replace('\'',' ')        # separateur espace
     s = s.replace('’',' ')        # separateur espace
     s = s.replace('/',' ')        # separateur espace
