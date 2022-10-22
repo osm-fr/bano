@@ -16,19 +16,25 @@ from .. import batch as b
 # from .. import update_manager as um
 
 def process_ban(departements, **kwargs):
-    source = 'BAN'
     departements = set(departements)
     depts_inconnus =  departements - set(DEPARTEMENTS)
     if depts_inconnus:
         raise ValueError(f"Départements inconnus : {depts_inconnus}")
-    # um.set_csv_directory(um.get_directory_pathname())
+    depts_en_echec = []
     for dept in sorted(departements):
         print(f"Département {dept}")
-        status = download(source, dept)
-        # if status:
-        import_to_pg(source, dept)
+        status = download(dept)
+        if status:
+            if not (import_to_pg(dept)):
+                depts_en_echec.append(dept)
+                print('depts_en_echec',depts_en_echec)
 
-def download(source, departement):
+    for dept in depts_en_echec:
+        print(f"Département {dept}")
+        import_to_pg_subp(dept)
+
+
+def download(departement):
     destination = get_destination(departement)
     headers = {}
     if destination.exists():
@@ -47,37 +53,39 @@ def download(source, departement):
     b.batch_stop_log(id_batch,False)
     return False
 
-
-def import_to_pg(source, departement, **kwargs):
+def import_to_pg(departement, **kwargs):
     id_batch = b.batch_start_log('import source', 'BAN',departement)
     fichier_source = get_destination(departement)
     with gzip.open(fichier_source, mode='rt') as f:
         f.readline()  # skip CSV headers
         with  bano_sources.cursor() as cur_insert:
             try:
-                cur_insert.execute(f"DELETE FROM ban WHERE code_insee LIKE '{departement+'%'}'")
+                cur_insert.execute(f"DELETE FROM ban WHERE code_insee LIKE '{departement}%'")
                 cur_insert.copy_from(f, "ban", sep=';', null='')
                 b.batch_stop_log(id_batch,True)
+                return True
             except psycopg2.DataError as e:
                 print(f"Erreur au chargement de la BAN {departement}")
                 print(e)
-                print("Essai via shell")
-                try:
-                    cur_insert.close()
-                    bano_sources.reset()
-                    ret = subprocess.run(["gzip","-cd",fichier_source],capture_output=True,text=True)
-                    tmp_filename = Path(os.environ['BAN_CACHE_DIR']) / 'tmp.csv'
-                    with open(tmp_filename,'w') as tmpfile:
-                        tmpfile.write(ret.stdout)
+                return False
 
-                    subprocess.run(["psql","-d","bano_sources","-U","cadastre","-1","-c",f"COPY ban FROM '{tmp_filename}' WITH CSV HEADER NULL '' DELIMITER ';'"])
-                    tmp_filename.unlink()
-                    b.batch_stop_log(id_batch,True)
-                except e:
-                    print(f"Erreur au chargement de la BAN {departement}")
-                    print(f"Abandon du chargement de la BAN {departement}")
-                    bano_sources.reset()
-                    b.batch_stop_log(id_batch,False)
+def import_to_pg_subp(departement, **kwargs):
+    id_batch = b.batch_start_log('import source', 'BAN',departement)
+    print("Essai via shell")
+    try:
+        fichier_source = get_destination(departement)
+        ret = subprocess.run(["gzip","-cd",fichier_source],capture_output=True,text=True)
+        tmp_filename = Path(os.environ['BAN_CACHE_DIR']) / 'tmp.csv'
+        with open(tmp_filename,'w') as tmpfile:
+            tmpfile.write(ret.stdout)
+
+        subprocess.run(["psql","-d","bano_sources","-U","cadastre","-1","-c",f"DELETE FROM ban WHERE code_insee LIKE '{departement}%';COPY ban FROM '{tmp_filename}' WITH CSV HEADER NULL '' DELIMITER ';'"])
+        tmp_filename.unlink()
+        b.batch_stop_log(id_batch,True)
+    except e:
+        print(f"Erreur au chargement de la BAN {departement}")
+        print(f"Abandon du chargement de la BAN {departement}")
+        b.batch_stop_log(id_batch,False)
     
 def get_destination(departement):
     try:
