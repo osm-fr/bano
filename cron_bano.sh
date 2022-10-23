@@ -29,7 +29,7 @@ then
    bano update_insee_lists
    cat insee_locales.csv  | parallel -j 4 export LANG=fr_FR.UTF-8\; bano process_commune BAL      --code_insee {1}
    cat deplist.txt        | parallel -j 4 export LANG=fr_FR.UTF-8\; bano process_commune BAN           --depts {1}
-   cat deplist.csv        | parallel -j 4 export LANG=fr_FR.UTF-8\; bano process_commune OSM           --depts {1}
+   cat deplist.txt        | parallel -j 4 export LANG=fr_FR.UTF-8\; bano process_commune OSM           --depts {1}
    cat deplist.txt        | parallel -j 4 export LANG=fr_FR.UTF-8\; bano process_commune_lieux-dits    --depts {1}
 else
    bano update_insee_lists
