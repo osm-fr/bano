@@ -109,6 +109,7 @@ def normalize(s):
     s = s.replace('’',' ')        # separateur espace
     s = s.replace('/',' ')        # separateur espace
     s = s.replace(':',' ')        # separateur deux points
+    s = s.replace('"','')        # suppression des guillemets
     s = ' '.join(s.split())        # separateur : 1 espace
 
     for l in iter(constants.LETTRE_A_LETTRE):

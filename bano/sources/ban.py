@@ -100,3 +100,6 @@ def get_destination(departement):
 
 def update_bis_table(**kwargs):
     dbh.process_sql(db.bano_cache,'update_table_rep_b_as_bis',dict())
+
+def remove_chars_in_ban(**kwargs):
+    dbh.process_sql(db.bano_cache,'remove_chars_in_ban',dict())

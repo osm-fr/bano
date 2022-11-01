@@ -121,6 +121,13 @@ def main():
     subparser.set_defaults(func=ban.update_bis_table)
 
     subparser = subparsers.add_parser(
+        "remove_chars_in_ban",
+        help="ménage de caractères parasites dans les noms de voie BAN",
+        description="ménage de caractères parasites dans les noms de voie BAN",
+    )
+    subparser.set_defaults(func=ban.remove_chars_in_ban)
+
+    subparser = subparsers.add_parser(
         "pre_process_suffixe",
         help="Détermine les zones où les noms dans le Cadastre sont suffixés",
         description="Détermine les zones où les noms dans le Cadastre sont suffixés",
