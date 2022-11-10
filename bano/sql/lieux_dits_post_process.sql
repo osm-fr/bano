@@ -11,7 +11,7 @@ WHERE code_insee LIKE '__dept__%' AND
 lieux_dits
 AS
 (SELECT ST_Centroid(geometrie) AS geometrie,
-        regexp_replace(regexp_replace(nom,'   ',' ','g'),'  ',' ','g') AS nom,
+        regexp_replace(regexp_replace(regexp_replace(nom,'   ',' ','g'),'  ',' ','g'),'"','','g') AS nom,
         insee_com
 FROM lieux_dits
 WHERE insee_com LIKE '__dept__%' AND
