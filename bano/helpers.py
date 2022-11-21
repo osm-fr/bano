@@ -18,6 +18,9 @@ def remove_quotes_on_null(s):
 def replace_single_quotes_with_double(s):
     return s.replace('\'','"')
 
+def replace_double_quotes_with_single(s):
+    return s.replace('"',"'")
+
 def format_toponyme(s):
     a_s = s.replace('\'',' ').split(' ')
     
