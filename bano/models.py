@@ -124,10 +124,10 @@ class Adresses:
             for v in self:
                 code_postal = ''
                 cle_fantoir = self.get_best_fantoir(v)
-                street_name_osm = self[v]['voies'].get('OSM') or fantoir.mapping.get_fantoir_name(cle_fantoir,'OSM') or ''
-                street_name_fantoir =  self[v]['voies'].get('FANTOIR') or ''
-                street_name_cadastre =  self[v]['voies'].get('CADASTRE') or ''
-                street_name_bal =  self[v]['voies'].get('BAL') or ''
+                street_name_osm = hp.replace_double_quotes_with_single(self[v]['voies'].get('OSM') or fantoir.mapping.get_fantoir_name(cle_fantoir,'OSM') or '')
+                street_name_fantoir =  hp.replace_double_quotes_with_single(self[v]['voies'].get('FANTOIR') or '')
+                street_name_cadastre =  hp.replace_double_quotes_with_single(self[v]['voies'].get('CADASTRE') or '')
+                street_name_bal =  hp.replace_double_quotes_with_single(self[v]['voies'].get('BAL') or '')
                 if source == 'CADASTRE':
                     street_name_autre =  self[v]['voies'].get('CADASTRE') or ''
                 elif source == 'BAL':
@@ -136,6 +136,7 @@ class Adresses:
                     street_name_autre =  self[v]['voies'].get('BAN') or ''
                 else:
                     street_name_autre = ''
+                street_name_autre = hp.replace_double_quotes_with_single(street_name_autre)
                 lat_point_par_rue = None
                 lon_point_par_rue = None
 
@@ -248,9 +249,9 @@ class Place:
         return f"ID {self.id} \n FANTOIR {self.fantoir.name} - FANTOIR {self.fantoir.fantoir} \nOSM {self.osm.lon} - {self.osm.lat} - {self.osm.place} - {self.osm.name} \nCADASTRE {self.cadastre.lon} - {self.cadastre.lat} - {self.cadastre.name}"
     def as_SQL_cadastre_row(self):
         if self.has_cadastre:
-            return hp.remove_quotes_on_null(f"(ST_PointFromText('POINT({self.cadastre.lon} {self.cadastre.lat})',4326),'{hp.escape_quotes(hp.format_toponyme(self.cadastre.name)) or 'null'}','{hp.escape_quotes(self.osm.name) or 'null'}','{hp.escape_quotes(self.fantoir.name) or 'null'}','{self.fantoir.fantoir or 'null'}','{self.code_insee}','{self.code_dept}','null','CADASTRE',{self.fantoir.bati or 'null'},'')")
+            return hp.remove_quotes_on_null(f"(ST_PointFromText('POINT({self.cadastre.lon} {self.cadastre.lat})',4326),'{hp.escape_quotes(hp.format_toponyme(self.cadastre.name)) or 'null'}','{hp.escape_quotes(hp.replace_double_quotes_with_single(self.osm.name)) or 'null'}','{hp.escape_quotes(self.fantoir.name) or 'null'}','{self.fantoir.fantoir or 'null'}','{self.code_insee}','{self.code_dept}','null','CADASTRE',{self.fantoir.bati or 'null'},'')")
     def as_SQL_osm_row(self):
-        return hp.remove_quotes_on_null(f"(ST_PointFromText('POINT({self.osm.lon} {self.osm.lat})',4326),null,'{hp.escape_quotes(self.osm.name) or 'null'}','{hp.escape_quotes(self.fantoir.name) or 'null'}','{self.fantoir.fantoir or 'null'}','{self.code_insee}','{self.code_dept}',null,'OSM',{self.fantoir.bati or 'null'},'{self.osm.place}')")
+        return hp.remove_quotes_on_null(f"(ST_PointFromText('POINT({self.osm.lon} {self.osm.lat})',4326),null,'{hp.escape_quotes(hp.replace_double_quotes_with_single(self.osm.name)) or 'null'}','{hp.escape_quotes(self.fantoir.name) or 'null'}','{self.fantoir.fantoir or 'null'}','{self.code_insee}','{self.code_dept}',null,'OSM',{self.fantoir.bati or 'null'},'{self.osm.place}')")
 
 class Places:
     def __init__(self):
