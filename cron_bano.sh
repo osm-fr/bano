@@ -44,14 +44,14 @@ fi
 ./copy_table_from_osm_to_cadastre.sh planet_osm_postal_code
 ./copy_table_from_osm_to_cadastre.sh infos_communes
 
-psql -d osm -U cadastre -f sql/create_table_polygones_communes.sql
+psql -d osm -U cadastre -v ON_ERROR_STOP=1 -f sql/create_table_polygones_communes.sql
 ./copy_table_from_osm_to_cadastre.sh polygones_insee
 ./copy_table_from_osm_to_cadastre.sh polygones_insee_geo
 
-psql -d osm -U cadastre -f sql/create_table_polygones_postaux.sql
+psql -d osm -U cadastre -v ON_ERROR_STOP=1 -f sql/create_table_polygones_postaux.sql
 ./copy_table_from_osm_to_cadastre.sh polygones_postaux
 ./copy_table_from_osm_to_cadastre.sh ban_odbl
-psql -d cadastre -U cadastre -f sql/post_copie_ban_odbl.sql
+psql -d cadastre -U cadastre -v ON_ERROR_STOP=1 -f sql/post_copie_ban_odbl.sql
 
 # exports
 cat deplist.txt | parallel -j 4 bano export {1}
