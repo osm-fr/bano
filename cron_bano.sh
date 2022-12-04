@@ -1,7 +1,5 @@
 #!/bin/bash
 
-source /data/work/vdct/bano_venv37/bin/activate
-
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $SCRIPT_DIR
 
