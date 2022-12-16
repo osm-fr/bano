@@ -143,6 +143,8 @@ CREATE TABLE IF NOT EXISTS communes_summary (
         com character(5),
         libelle text,
         population integer,
+        id_revision text,
+        date_revision text,
         type_composition text,
         nb_lieux_dits integer,
         nb_voies integer,

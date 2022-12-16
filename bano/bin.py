@@ -4,7 +4,7 @@ import sys
 from .constants import DEPARTEMENTS
 from . import core, core_place, pre_process_suffixe, export, publish,debug
 from . import update_manager
-from .sources import bal, cadastre_gouv, cadastre_json, ban,ban2fantoir
+from .sources import bal, cadastre_gouv, cadastre_json, ban,ban2fantoir,datagouv_commune_summary as datagouv_cs
 
 
 def main():
@@ -44,6 +44,13 @@ def main():
     group.add_argument("--depts", type=str, help="Départements à traiter (toutes les communes de chaque dept sont traitées une par une)", nargs="*")
     group.add_argument("--France", help="Raccourci pour tous les départements d'un coup", action="store_const", const=DEPARTEMENTS)
     subparser.set_defaults(func=core_place.process)
+
+    subparser = subparsers.add_parser(
+        "download_commune_summary",
+        help="Met à jour les stats de BAL",
+        description="Met à jour les stats de BAL",
+    )
+    subparser.set_defaults(func=datagouv_cs.process)
 
     subparser = subparsers.add_parser(
         "ban2fantoir",

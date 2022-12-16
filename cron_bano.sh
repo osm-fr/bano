@@ -16,7 +16,8 @@ cat deplist.txt | parallel -j 4 export LANG=fr_FR.UTF-8\; bano download_bal CADA
 cat deplist.txt | parallel -j 4 export LANG=fr_FR.UTF-8\; bano download_bal BAL {1}
 cat deplist.txt | parallel -j 4 export LANG=fr_FR.UTF-8\; bano download_ban {1}
 cat deplist.txt | parallel -j 4 export LANG=fr_FR.UTF-8\; bano download_cadastre lieux_dits {1}
-bano update_code_cadastre
+# bano update_code_cadastre
+bano download_commune_summary
 bano update_bis_table
 bano remove_chars_in_ban
 ./copy_table_from_osm_to_cadastre.sh rep_b_as_bis
