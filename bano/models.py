@@ -178,6 +178,14 @@ class Adresses:
             cur_insert.copy_from(io_in_csv, "bano_adresses",null='',columns=('fantoir','lon','lat','numero','nom_voie','nom_place','code_postal','code_insee','code_insee_ancienne_commune','source'))
 
 
+class Lieux_dits:
+    def __init__(self,code_insee):
+        self.code_insee = code_insee
+        self.points = set()
+
+    def charge_points_cadastre(self):
+        data = sql_get_data('charge_points_cadastre')
+
 class Topo:
     def __init__(self, code_insee):
         self.code_insee = code_insee

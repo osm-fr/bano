@@ -8,7 +8,7 @@ from . import pre_process_suffixe
 from . import setup_db
 from . import rapprochement
 from . import boite_a_outils
-from .sources import topo,ban,cog
+from .sources import topo,ban,cog,cadastre_ld
 from .constants import DEPARTEMENTS
 
 
@@ -54,6 +54,20 @@ def main():
         default=DEPARTEMENTS,
     )
     subparser.set_defaults(func=ban.process_ban)
+
+    subparser = subparsers.add_parser(
+        "charge_ld_cadastre",
+        help="Charge une version des lieux-dits du Cadastre JSON",
+        description="Charge une version des lieux-dits du Cadastre JSON",
+    )
+    subparser.add_argument(
+        "departements",
+        type=str,
+        help="Départements à traiter",
+        nargs="*",
+        default=DEPARTEMENTS,
+    )
+    subparser.set_defaults(func=cadastre_ld.process)
 
     subparser = subparsers.add_parser(
         "update_bis_table",

@@ -16,6 +16,7 @@ def process_unitaire(source,code_insee):
         if source == 'OSM':
             noms.charge_noms_osm_hors_numeros()
             adresses.charge_numeros_osm()
+            points_nommes.charge_points()
 
         if source == 'BAN':
             adresses.charge_numeros_ban(topo)
@@ -24,6 +25,7 @@ def process_unitaire(source,code_insee):
         noms.add_fantoir(topo)
         adresses.enregistre()
         noms.enregistre()
+
         b.batch_stop_log(id_batch,True)
     except:
         b.batch_stop_log(id_batch,False)
