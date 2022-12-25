@@ -17,8 +17,8 @@ do
 	unzip $CADASTRE_CACHE_DIR/cadastre-$dep-batiments-shp.zip
     # reconstruction du shapefile avec ogr2ogr car corrompu pour shp2pgsql
     ogr2ogr -overwrite -f 'ESRI Shapefile' batiments_ok.shp batiments.shp
-    shp2pgsql -s 2154:4326 -g geometrie -W LATIN1 batiments_ok.shp public.tmp_batiments$dep | psql -d cadastre -q
-    psql -d cadastre -v ON_ERROR_STOP=1 -f $BANO_DIR/sql/replace_batiments.sql -v schema_cible=$SCHEMA_CIBLE -v dept=$dep
+    shp2pgsql -s 2154:4326 -g geometrie -W LATIN1 batiments_ok.shp public.tmp_batiments$dep | $pgsql_CADASTRE -q
+    $pgsql_CADASTRE -f $BANO_DIR/sql/replace_batiments.sql -v schema_cible=$SCHEMA_CIBLE -v dept=$dep
 	zip -mT $CADASTRE_CACHE_DIR/cadastre-$dep-batiments-shp.zip batiments.*
     sleep 1
     cd ..

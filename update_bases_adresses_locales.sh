@@ -12,7 +12,7 @@ do
     echo 'Département '$dep
 	wget -NS https://adresse.data.gouv.fr/data/adresses-locales/latest/csv/adresses-locales-$dep.csv.gz
     quoted_dep=\'$dep'%'\'
-    psql -d osm -U cadastre -c "DELETE FROM bal_locales WHERE commune_code LIKE $quoted_dep;"
-    gunzip -c $BAL_CACHE_DIR/adresses-locales-$dep.csv.gz|psql -d osm -U cadastre -c "\copy bal_locales from stdin with csv header delimiter ';'"
+    $pgsql_OSM -c "DELETE FROM bal_locales WHERE commune_code LIKE $quoted_dep;"
+    gunzip -c $BAL_CACHE_DIR/adresses-locales-$dep.csv.gz| $pgsql_OSM -c "\copy bal_locales from stdin with csv header delimiter ';'"
     sleep 1
 done
