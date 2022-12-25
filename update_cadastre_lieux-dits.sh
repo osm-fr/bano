@@ -25,7 +25,7 @@ do
         gzip -dfk ${ZIPFILE}
         mv ${JSONFILE} lieux_dits.json
         # ls -al
-        psql -d osm -U cadastre -c "DELETE FROM lieux_dits WHERE insee_com LIKE '${DEPT}%';"
+        $pgsql_OSM -c "DELETE FROM lieux_dits WHERE insee_com LIKE '${DEPT}%';"
         ogr2ogr  -append -nln lieux_dits -fieldmap 1,0,2,3 -f PostgreSQL PG:'user=cadastre dbname=osm' lieux_dits.json
         rm lieux_dits.json
     else

@@ -22,9 +22,9 @@ mkdir -p $DOWNLOAD_DIR
 cd $DOWNLOAD_DIR
 wget -NS $PBF_URL
 imposm import -mapping $BANO_DIR/bano.yml -read $DOWNLOAD_DIR/$PBF_FILE -overwritecache -cachedir $IMPOSM_CACHE_DIR -dbschema-import public -diff -diffdir $DOWNLOAD_DIR
-imposm import -mapping $BANO_DIR/bano.yml -write -connection 'postgis://cadastre@localhost/osm'?prefix=NONE -cachedir $IMPOSM_CACHE_DIR -dbschema-import public -diff -diffdir $DOWNLOAD_DIR
+imposm import -mapping $BANO_DIR/bano.yml -write -connection "postgis://$PGCON_OSM"?prefix=NONE -cachedir $IMPOSM_CACHE_DIR -dbschema-import public -diff -diffdir $DOWNLOAD_DIR
 
-psql -d osm -U cadastre -v ON_ERROR_STOP=1 -f $BANO_DIR/sql/finalisation.sql
+$pgsql_OSM -f $BANO_DIR/sql/finalisation.sql
 
 cp $DOWNLOAD_DIR/last.state.txt $DOWNLOAD_DIR/state.txt
 rm ${lockfile}
