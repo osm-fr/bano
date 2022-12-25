@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 source config
 cd $DATA_DIR
 mkdir -p cog

@@ -1,4 +1,7 @@
 #!/bin/bash
+
+set -e
+
 source config
 
 cd $CADASTRE_CACHE_DIR

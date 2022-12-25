@@ -1,3 +1,7 @@
+#!/bin/bash
+
+set -e
+
 # script écrit et maintenu par cquest@openstreetmap.fr
 
 OUTPUT=bano-$1.json
