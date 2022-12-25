@@ -35,6 +35,7 @@ Adapter également l'URL du COG dans `load_COG.sh` si besoin.
 Pour charger les données OSM avec imposm dans la BD `osm` il faut d'abord la créer. Ça se fait en exécutant le script qui crée les 2 BD "osm" et "cadastre".
 ```
 sudo -u postgres -s "./create_base.sh"
+./init_base.sh"
 ```
 
 ## Chargement des données OSM
