@@ -1,4 +1,7 @@
 #!/bin/bash
+
+set -e
+
 source config
 
 cd $DATA_DIR/bano_cache

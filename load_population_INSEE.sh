@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 # Après téléchargement manuel d'un CSV à https://statistiques-locales.insee.fr/#c=indicator&i=pop_legales.popmun&s=2017&view=map1
 
 CSV=/data/project/bano_data/insee/population_communale_2017.csv

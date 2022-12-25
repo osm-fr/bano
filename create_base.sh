@@ -1,3 +1,7 @@
+#!/bin/bash
+
+set -e
+
 sudo -u postgres -s
 createuser -s -d cadastre
 createdb -E UTF-8 -T template0 -O cadastre cadastre
