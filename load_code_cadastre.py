@@ -7,7 +7,9 @@ import os
 from bs4 import BeautifulSoup
 
 a_depts = []
-for n in list(range(1, 20))+['2A', '2B']+list(range(21, 96))+list(range(971, 975)) + [976]:
+
+for n in open('deplist.txt').readlines():
+    n = n.strip()
     a_depts.append(str(n).rjust(2, '0'))
 a_0_depts = [a.rjust(3, '0') for a in a_depts]
 f_output = open('code_cadastre.csv', 'w')

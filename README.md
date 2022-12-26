@@ -30,6 +30,10 @@ Dans le script `load_fantoir.sh` il faut indiquer l'URL du fichier source, qui c
 
 Adapter également l'URL du COG dans `load_COG.sh` si besoin.
 
+### Liste des départements
+
+Les départements pris en compte sont listés dans `deplist.txt`. Cette liste peut être modifiée.
+
 ### Création de la base de données
 
 Pour charger les données OSM avec imposm dans la BD `osm` il faut d'abord la créer. Ça se fait en exécutant le script qui crée les 2 BD "osm" et "cadastre".

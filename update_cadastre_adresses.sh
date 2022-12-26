@@ -5,9 +5,7 @@ set -e
 source config
 
 cd $CADASTRE_CACHE_DIR
-for dep in {01..19} 2A 2B {21..95} {971..974} 976
-# for dep in {01..03} 2A
-#for dep in  {24..95} {971..974} 976
+for dep in `cat $BANO_DIR/deplist.txt`
 do
     echo 'Département '$dep
 	wget -NS https://adresse.data.gouv.fr/data/adresses-cadastre/latest/csv/adresses-cadastre-$dep.csv.gz
