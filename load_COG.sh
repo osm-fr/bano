@@ -6,7 +6,7 @@ source config
 cd $DATA_DIR
 mkdir -p cog
 cd cog
-rm *.csv
+rm -f *.csv
 wget -NS https://www.insee.fr/fr/statistiques/fichier/5057840/cog_ensemble_2021_csv.zip
 unzip -o -j cog_ensemble_2021_csv.zip
 
