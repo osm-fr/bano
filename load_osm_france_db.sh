@@ -5,12 +5,12 @@ set -e
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source $SCRIPT_DIR/config
 
-lockfile=${SCRIPT_DIR}/imposm.lock
+lockfile=${DATA_DIR}/imposm.lock
 
 if test -f ${lockfile}
 then
-  echo `date`" : Process deja en cours" >> $SCRIPT_DIR/cron.log
-  exit 0
+  echo `date`" : Process deja en cours"
+  exit 1
 fi
 
 touch ${lockfile}
