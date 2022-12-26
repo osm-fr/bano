@@ -49,14 +49,6 @@ load_osm_france_db.sh
 load_osm_france_db.sh http://download.openstreetmap.fr/extracts/europe/france/franche_comte/territoire_de_belfort.osm.pbf
 ```
 
-### Création de la base de données
-
-Pour charger les données OSM avec imposm dans la BD `osm` il faut d'abord la créer. Ça se fait en exécutant le script `create_base.sh` qui crée les 2 BD "osm" et "cadastre".
-
-Ensuite, possibilité de charger des données OSM depuis un pbf. Le script cible est `load_osm_france_db.sh`.
-
-Possible de changer l'URL dans le script pour prendre un pbf plus petit.
-
 ## Utilisation
 
 Pour connaître les commandes du module bano : `bano --help`.
