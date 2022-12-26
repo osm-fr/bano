@@ -42,6 +42,13 @@ sudo -u postgres -s "./create_base.sh"
 
 Se placer dans le répertoire `DATA_DIR`, et appeler les scripts depuis là.
 
+Charger des données OSM depuis un pbf, France entière ou un extract plus petit.
+```
+load_osm_france_db.sh
+# ou
+load_osm_france_db.sh http://download.openstreetmap.fr/extracts/europe/france/franche_comte/territoire_de_belfort.osm.pbf
+```
+
 ### Création de la base de données
 
 Pour charger les données OSM avec imposm dans la BD `osm` il faut d'abord la créer. Ça se fait en exécutant le script `create_base.sh` qui crée les 2 BD "osm" et "cadastre".
