@@ -63,8 +63,6 @@ CREATE TABLE IF NOT EXISTS bal_cadastre (
     pseudo_numero boolean,
     voie_nom text,
     voie_code text,
-    code_postal text,
-    libelle_acheminement text,
     destination_principale text,
     commune_code text,
     commune_nom text,

@@ -87,18 +87,18 @@ class Adresses:
         str_query = f"SELECT * FROM bal_cadastre WHERE commune_code = '{self.code_insee}' AND destination_principale in ('habitation','commerce','industrie','tourisme');"
         with db.bano_cache.cursor() as cur:
             cur.execute(str_query)
-            for cle_interop, ui_adresse, numero, suffixe, pseudo_adresse, name, voie_code, code_postal, libelle_acheminement, destination_principale, commune_code, commune_nom, source, lon, lat, *others in cur:
+            for cle_interop, ui_adresse, numero, suffixe, pseudo_adresse, name, voie_code, destination_principale, commune_code, commune_nom, source, lon, lat, *others in cur:
                 housenumber = numero+((' '+suffixe) if suffixe and suffixe.isalnum() else '')
                 if not name or len(name) < 2 or not lon or pseudo_adresse == 'true':
                     continue
                 self.register(name)
-                
+
                 if not cle_interop in dict_node_relations:
                     dict_node_relations[cle_interop] = []
                     dict_node_relations[cle_interop].append(hp.normalize(name))
                 if hp.is_valid_housenumber(housenumber):
                     nd = Node({'id':cle_interop,'lon':lon,'lat':lat},{})
-                    self.add_adresse(Adresse(nd,housenumber,name,'',code_postal), 'CADASTRE')
+                    self.add_adresse(Adresse(nd,housenumber,name,'',''), 'CADASTRE')
 
     def load_ban_hsnr(self):
         dict_node_relations = {}
