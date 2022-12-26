@@ -2,17 +2,17 @@
 
 export BANO_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 export LOG_DIR=$BANO_DIR/log
-export DATA_DIR=/data/project/bano_data
-export DOWNLOAD_DIR=/data/download
-export IMPOSM_CACHE_DIR=/data/bano_imposm_cache
+export DATA_DIR=${DATA_DIR:-/data/project/bano_data}
+export DOWNLOAD_DIR=${DOWNLOAD_DIR:-/data/download}
+export IMPOSM_CACHE_DIR=${IMPOSM_CACHE_DIR:-/data/bano_imposm_cache}
 export BANO_CACHE_DIR=$DATA_DIR/bano_cache
 export BAN_CACHE_DIR=$DATA_DIR/ban_cache
 export CADASTRE_CACHE_DIR=$DATA_DIR/cadastre_cache
 export BAL_CACHE_DIR=$DATA_DIR/bal_cache
 export EXPIRE_TILES_DIR=$DATA_DIR/expire_tiles
 export CSV_DIR=$DATA_DIR/csv_insee
-export EXPORT_SAS_DIR=/data/sas_web
-export EXPORT_WEB_DIR=/data/work/bano.openstreetmap.fr/www/web/data/
-export TMP_DIR=/data/tmp
+export EXPORT_SAS_DIR=${EXPORT_SAS_DIR:-/data/sas_web}
+export EXPORT_WEB_DIR=${EXPORT_WEB_DIR:-/data/work/bano.openstreetmap.fr/www/web/data/}
+export TMP_DIR=${TMP_DIR:-/data/tmp}
 export SCHEMA_CIBLE=public
 export LANG=fr_FR.UTF-8

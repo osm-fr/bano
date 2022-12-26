@@ -1,3 +1,7 @@
+#!/bin/bash
+
+set -e
+
 # ménage préparatoire...
 rm -f bano-$1*
 

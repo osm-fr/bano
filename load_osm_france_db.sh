@@ -1,17 +1,19 @@
 #!/bin/bash
 
+set -e
+
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source $SCRIPT_DIR/config
 
 PBF_URL=${1:-http://download.openstreetmap.fr/extracts/merge/france_metro_dom_com_nc.osm.pbf}
 PBF_FILE=$(basename "$PBF_URL")
 
-lockfile=${SCRIPT_DIR}/imposm.lock
+lockfile=${DATA_DIR}/imposm.lock
 
 if test -f ${lockfile}
 then
-  echo `date`" : Process deja en cours" >> $SCRIPT_DIR/cron.log
-  exit 0
+  echo `date`" : Process deja en cours"
+  exit 1
 fi
 
 touch ${lockfile}

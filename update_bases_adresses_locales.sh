@@ -1,4 +1,7 @@
 #!/bin/bash
+
+set -e
+
 source config
 
 cd $BAL_CACHE_DIR

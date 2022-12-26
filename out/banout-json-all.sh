@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 # script écrit et maintenu par cquest@openstreetmap.fr
 
 # export multi-thread de cumul_voie + cumul_adresse + cumul_place en json
