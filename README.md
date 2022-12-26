@@ -30,6 +30,14 @@ Dans le script `load_fantoir.sh` il faut indiquer l'URL du fichier source, qui c
 
 Adapter également l'URL du COG dans `load_COG.sh` si besoin.
 
+### Création de la base de données
+
+Pour charger les données OSM avec imposm dans la BD `osm` il faut d'abord la créer. Ça se fait en exécutant le script qui crée les 2 BD "osm" et "cadastre".
+```
+sudo -u postgres -s "./create_base.sh"
+./init_base.sh"
+```
+
 ## Chargement des données OSM
 
 Se placer dans le répertoire `DATA_DIR`, et appeler les scripts depuis là.
