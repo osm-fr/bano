@@ -1,6 +1,7 @@
 #!/bin/bash
 
-set -e
+# l'option set -e stoppe la màj nocture en l'état. Commentée en attendant de pouvoir investiguer
+# set -e
 
 source $1
 
