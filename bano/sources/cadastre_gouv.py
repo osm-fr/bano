@@ -39,7 +39,10 @@ def update_table_in_db():
     # print((Path(__file__)).parent.parent / 'sql' / 'load_code_cadastre.sql')
     with open((Path(__file__)).parent.parent / 'sql' / 'load_code_cadastre.sql', 'r') as sqlfile:
         cur_update = db.bano.cursor()
-        cur_update.execute(sqlfile.read().replace('./code_cadastre.csv', str(Path(os.environ['DATA_DIR']) / 'code_cadastre.csv')))
+        cur_update.copy_expert(
+            sqlfile.read().replace("'./code_cadastre.csv'", 'STDIN'),
+            open(str(Path(os.environ['DATA_DIR']) / 'code_cadastre.csv'))
+        )
 
 
 def process(**kwargs):
