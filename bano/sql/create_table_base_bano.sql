@@ -16,6 +16,21 @@ CREATE TABLE IF NOT EXISTS bano_adresses (
 CREATE INDEX IF NOT EXISTS gidx_bano_adresses ON bano_adresses USING GIST(geometrie);
 CREATE INDEX IF NOT EXISTS idx_bano_adresses_code_insee ON bano_adresses (code_insee);
 
+CREATE TABLE IF NOT EXISTS bano_points_nommes (
+    fantoir text,
+    nom text,
+    code_insee text,
+    nature text,
+    code_insee_ancienne_commune text,
+    nom_ancienne_commune text,
+    source text,
+    lon float,
+    lat float,
+    geometrie geometry (Point, 4326) GENERATED ALWAYS AS (ST_Point(lon,lat)) STORED);
+
+CREATE INDEX IF NOT EXISTS idx_bano_points_nommes_code_insee ON bano_points_nommes (code_insee);
+CREATE INDEX IF NOT EXISTS idx_bano_points_nommes_code_insee_source ON bano_points_nommes (code_insee,source);
+
 CREATE TABLE IF NOT EXISTS nom_fantoir (
     fantoir text,
     nom text,

@@ -42,14 +42,16 @@ CREATE TABLE IF NOT EXISTS ban (
 CREATE INDEX IF NOT EXISTS idx_ban_code_insee ON ban(code_insee);
 
 CREATE TABLE IF NOT EXISTS lieux_dits (
-    insee_com character(5),
+    code_insee character(5),
     nom text,
     created date,
     updated date,
-    geometrie geometry(Polygon,4326));
+    geometrie geometry(Polygon,4326),
+    geom_centroid geometry (Point, 4326) GENERATED ALWAYS AS (ST_Centroid(geometrie)) STORED);
+);
 
-CREATE INDEX IF NOT EXISTS gidx_lieux_dits ON lieux_dits USING gist(geometrie);
-CREATE INDEX IF NOT EXISTS lieux_dits_insee_com ON lieux_dits (insee_com);
+CREATE INDEX IF NOT EXISTS gidx__centroid_lieux_dits ON lieux_dits USING gist(geom_centroid);
+CREATE INDEX IF NOT EXISTS lieux_dits_code_insee ON lieux_dits (code_insee);
 
 CREATE TABLE IF NOT EXISTS suffixe (
                 geometrie               geometry,
