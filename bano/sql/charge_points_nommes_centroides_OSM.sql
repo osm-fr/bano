@@ -3,7 +3,8 @@ lignes_brutes
 AS
 (SELECT l.way,
         unnest(array[l.name,l.tags->'alt_name',l.tags->'old_name']) AS name,
-        a9.code_insee as insee_ac,
+        COALESCE(a9.code_insee,'xxxxx') as insee_jointure,
+        a9.code_insee insee_ac,
         unnest(array["ref:FR:FANTOIR","ref:FR:FANTOIR:left","ref:FR:FANTOIR:right"]) AS fantoir,
         ST_Within(l.way,p.way)::integer as within
 FROM    (SELECT way FROM planet_osm_polygon WHERE "ref:INSEE" = '__code_insee__') p
@@ -30,19 +31,21 @@ AS
 (SELECT ST_LineMerge(ST_Collect(way)) way,
         name,
         insee_ac,
+        insee_jointure,
         fantoir
 FROM    lignes_noms_rang
 WHERE   rang = 1
-GROUP BY 2,3,4),
+GROUP BY 2,3,4,5),
 centroide_lignes_agregees
 AS
 (SELECT ST_Centroid(ST_LineMerge(ST_Collect(way))) way,
         name,
         insee_ac,
+        insee_jointure,
         fantoir
 FROM    lignes_noms_rang
 WHERE   rang = 1
-GROUP BY 2,3,4),
+GROUP BY 2,3,4,5),
 resultat
 AS
 (SELECT ST_SetSRID(ST_ClosestPoint(lignes_agregees.way,centroide_lignes_agregees.way),4326) point,
@@ -51,7 +54,7 @@ AS
         lignes_agregees.fantoir
 FROM    lignes_agregees
 JOIN    centroide_lignes_agregees
-USING   (name,insee_ac))
+USING   (name,insee_jointure))
 SELECT  ST_x(point),
         ST_y(point),
         name,

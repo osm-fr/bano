@@ -25,7 +25,7 @@ class Nom:
         lat=None,
     ):
         self.code_insee = code_insee
-        self.code_insee_ancienne_commune = str(code_insee_ancienne_commune)
+        self.code_insee_ancienne_commune = code_insee_ancienne_commune
         self.nom = nom
         self.fantoir = fantoir
         self.nature = nature
@@ -438,8 +438,8 @@ class Adresses:
 
     def enregistre(self):
         sql_process(
-            "suppression_adresses_commune_source",
-            dict(code_insee=self.code_insee, source=self.source),
+            "suppression_adresses_commune",
+            dict(code_insee=self.code_insee),
             db.bano,
         )
         io_in_csv = io.StringIO()
@@ -614,7 +614,7 @@ class Points_nommes:
 
     def complete_fantoir(self, noms):
         for a in self:
-            if a.fantoir:
+            if a.fantoir and a.fantoir[0:5] == self.code_insee:
                 continue
             if a.code_insee_ancienne_commune:
                 a.fantoir = noms.fantoir_par_nom_sous_commune.get(
