@@ -15,4 +15,4 @@ export EXPORT_SAS_DIR=${EXPORT_SAS_DIR:-/data/sas_web}
 export EXPORT_WEB_DIR=${EXPORT_WEB_DIR:-/data/work/bano.openstreetmap.fr/www/web/data/}
 export TMP_DIR=${TMP_DIR:-/data/tmp}
 export SCHEMA_CIBLE=public
-export LANG=fr_FR.UTF-8
+export LANG=${LANG:-fr_FR.UTF-8}
