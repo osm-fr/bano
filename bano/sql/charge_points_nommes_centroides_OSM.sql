@@ -54,10 +54,46 @@ AS
         lignes_agregees.fantoir
 FROM    lignes_agregees
 JOIN    centroide_lignes_agregees
-USING   (name,insee_jointure))
+USING   (name,insee_jointure)),
+complement
+AS
+(SELECT c.*,
+        a9.code_insee AS insee_ac
+FROM    (SELECT pl.way point,
+                pl.name,
+                pl."ref:FR:FANTOIR" fantoir
+        FROM    (SELECT way FROM planet_osm_polygon WHERE "ref:INSEE" = '__code_insee__') p
+        JOIN    planet_osm_point    pl
+        ON      pl.way && p.way                 AND
+                ST_Intersects(pl.way, p.way)
+        WHERE   (pl."ref:FR:FANTOIR" != ''  OR
+                pl.junction != '') AND
+                pl.name != ''
+        UNION
+        SELECT  ST_Centroid(pl.way),
+                pl.name,
+                pl."ref:FR:FANTOIR" f
+        FROM    (SELECT way FROM planet_osm_polygon WHERE "ref:INSEE" = '__code_insee__') p
+        JOIN    planet_osm_polygon  pl
+        ON      pl.way && p.way                 AND
+                ST_Intersects(pl.way, p.way)
+        WHERE   (   pl.highway||pl."ref:FR:FANTOIR" != ''   OR
+                    pl.landuse = 'residential' OR
+                    pl.place = 'square' OR
+                    pl.amenity = 'school')  AND
+                    pl.name != '')c
+LEFT OUTER JOIN (SELECT * FROM polygones_insee_a9 WHERE insee_a8 = '__code_insee__') a9
+ON      ST_Intersects(c.point, a9.geometrie))
 SELECT  ST_x(point),
         ST_y(point),
         name,
         insee_ac,
         fantoir
-FROM    resultat;
+FROM    resultat
+UNION ALL
+SELECT  ST_x(point),
+        ST_y(point),
+        name,
+        insee_ac,
+        fantoir
+FROM    complement;
