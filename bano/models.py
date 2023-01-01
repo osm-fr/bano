@@ -65,11 +65,18 @@ class Nom:
 
 
 class Noms:
-    def __init__(self, code_insee, source):
+    def __init__(self, code_insee):
         self.code_insee = code_insee
-        self.source = source
         self.triplets_nom_fantoir_source = []
         self.fantoir_par_nom_sous_commune = {"RACINE": defaultdict(list)}
+
+    def __iter__(self):
+        return iter(self.triplets_nom_fantoir_source)
+
+    def _print(self, pattern=None):
+        for a in self:
+            if not pattern or pattern in a._as_csv_format_bano():
+                print(a._as_csv_format_bano())
 
     # On ne charge pas les noms des numeros OSM. Ils sont ajoutés via Adresses.nom_des_adresses
     def charge_noms_osm_hors_numeros(self):
@@ -158,7 +165,7 @@ class Noms:
     def enregistre(self):
         sql_process(
             "suppression_noms_commune",
-            dict(code_insee=self.code_insee, source=self.source),
+            dict(code_insee=self.code_insee),
             db.bano,
         )
         io_in_csv = io.StringIO()
@@ -241,9 +248,8 @@ class Adresse:
 
 
 class Adresses:
-    def __init__(self, code_insee, source):
+    def __init__(self, code_insee):
         self.code_insee = code_insee
-        self.source = source
         self.liste = set()
         self.index_voie = defaultdict(list)
         self.noms_de_voies = set()
@@ -539,7 +545,7 @@ class Points_nommes:
                     "lieu-dit",
                     x,
                     y,
-                    nom,
+                    hp.format_toponyme(nom),
                     code_insee_ancienne_commune=code_insee_ac,
                 )
             )
@@ -592,7 +598,7 @@ class Points_nommes:
             if a.source == "CADASTRE":
                 noms.add_nom(
                     Nom(
-                        hp.format_toponyme(a.nom),
+                        a.nom,
                         a.fantoir,
                         a.nature,
                         a.source,

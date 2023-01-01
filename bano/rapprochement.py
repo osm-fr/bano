@@ -6,13 +6,13 @@ from . import batch as b
 from .models import Noms, Adresses, Topo, Points_nommes
 
 
-def process_unitaire(source, code_insee):
-    id_batch = b.batch_start_log("rapprochement", source, code_insee)
+def process_unitaire(code_insee):
+    id_batch = b.batch_start_log("rapprochement", 'toutes', code_insee)
     try:
         topo = Topo(code_insee)
-        adresses = Adresses(code_insee, source)
+        adresses = Adresses(code_insee)
         points_nommes = Points_nommes(code_insee)
-        noms = Noms(code_insee, source)
+        noms = Noms(code_insee)
 
         noms.charge_noms_osm_hors_numeros()
         adresses.charge_numeros_osm()
@@ -26,7 +26,6 @@ def process_unitaire(source, code_insee):
 
         noms.add_fantoir(topo)
         noms.remplit_fantoir_par_nom_sous_commune()
-
         points_nommes.complete_fantoir(noms)
         adresses.complete_fantoir(noms)
 
@@ -39,7 +38,7 @@ def process_unitaire(source, code_insee):
         b.batch_stop_log(id_batch, False)
 
 
-def process(source, code_insee, dept, **kwargs):
+def process(code_insee, dept, **kwargs):
     if dept:
         liste_insee = h.liste_communes_par_dept(dept)
     else:
@@ -47,4 +46,4 @@ def process(source, code_insee, dept, **kwargs):
     for code_insee, nom in liste_insee:
         if dept:
             print(f"{code_insee} - {nom}")
-        process_unitaire(source, code_insee)
+        process_unitaire(code_insee)
