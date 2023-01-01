@@ -6,7 +6,7 @@ import io
 
 from ..constants import get_const_code_dir,CODE_VOIE_FANTOIR
 
-from ..db import bano_sources
+from ..db import bano_db
 from .. import helpers as h
 from .. import batch as b
 
@@ -65,10 +65,10 @@ def import_to_pg():
             # if i > 20:
             #     break
         io_in_csv.seek(0)
-        with bano_sources.cursor() as cur_insert:
+        with bano_db.cursor() as cur_insert:
             cur_insert.execute("TRUNCATE topo")
             cur_insert.copy_from(io_in_csv, "topo", sep='$',null='')
-            bano_sources.commit()
+            bano_db.commit()
 
 def process_topo(**kwargs):
     id_batch = b.batch_start_log('import source', 'TOPO','France','France')

@@ -9,13 +9,12 @@ from pathlib import Path
 import requests
 # import psycopg2
 
-from ..db import bano
+from ..db import bano_db
 from ..sql import sql_process
 from .. import batch as b
-# from .. import update_manager as um
 
 def process_cog(**kwargs):
-    sql_process('create_table_cog',dict(),bano)
+    sql_process('create_table_cog',dict(),bano_db)
     zip = get_destination('cog_2022.zip')
     status = download(zip)
     if status:
@@ -46,7 +45,7 @@ def import_to_pg(fichier_zip):
     with ZipFile(fichier_zip) as f:
         with f.open('commune_2022.csv') as csv:
             csv.readline()  # skip CSV headers
-            with bano.cursor() as cur_insert:
+            with bano_db.cursor() as cur_insert:
                 try:
                     cur_insert.execute(f"TRUNCATE {table}")
                     cur_insert.copy_from(csv,table, sep=',', null='')

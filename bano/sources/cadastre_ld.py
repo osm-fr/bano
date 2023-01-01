@@ -51,7 +51,7 @@ def import_to_pg(departement, **kwargs):
     fichier_source = get_destination(departement)
     with gzip.open(fichier_source, mode="rt") as f:
         json_source = json.load(f)
-        with db.bano_sources.cursor() as cur_insert:
+        with db.bano_db.cursor() as cur_insert:
             try:
                 cur_insert.execute(
                     f"DELETE FROM lieux_dits WHERE code_insee LIKE '{departement+'%'}';COMMIT;"
@@ -66,14 +66,14 @@ def import_to_pg(departement, **kwargs):
                     cur_insert.execute(str_query + ",".join(a_values) + ";COMMIT;")
             except psycopg2.DataError as e:
                 print(e)
-                db.bano_sources.reset()
+                db.bano_db.reset()
 
 
 def post_process(departement, **kwargs):
     sqlfile = Path(__file__).parent.parent / "sql" / "lieux_dits_post_process.sql"
     if sqlfile.exists():
         with open(sqlfile, "r") as fq:
-            with db.bano_sources.cursor() as cur_post_process:
+            with db.bano_db.cursor() as cur_post_process:
                 str_query = fq.read().replace("__dept__", departement)
                 cur_post_process.execute(str_query)
 

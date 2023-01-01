@@ -10,7 +10,7 @@ import requests
 import psycopg2
 
 from ..constants import DEPARTEMENTS
-from ..db import bano_sources
+from ..db import bano_db
 from ..sql import sql_process
 from .. import batch as b
 # from .. import update_manager as um
@@ -58,7 +58,7 @@ def import_to_pg(departement, **kwargs):
     fichier_source = get_destination(departement)
     with gzip.open(fichier_source, mode='rt') as f:
         f.readline()  # skip CSV headers
-        with  bano_sources.cursor() as cur_insert:
+        with  bano_db.cursor() as cur_insert:
             try:
                 cur_insert.execute(f"DELETE FROM ban WHERE code_insee LIKE '{departement}%'")
                 cur_insert.copy_from(f, "ban", sep=';', null='')
@@ -79,7 +79,7 @@ def import_to_pg_subp(departement, **kwargs):
         with open(tmp_filename,'w') as tmpfile:
             tmpfile.write(ret.stdout)
 
-        subprocess.run(["psql","-d","bano_sources","-U","cadastre","-1","-c",f"DELETE FROM ban WHERE code_insee LIKE '{departement}%';COPY ban FROM '{tmp_filename}' WITH CSV HEADER NULL '' DELIMITER ';'"])
+        subprocess.run(["psql","-d","bano_db","-U","cadastre","-1","-c",f"DELETE FROM ban WHERE code_insee LIKE '{departement}%';COPY ban FROM '{tmp_filename}' WITH CSV HEADER NULL '' DELIMITER ';'"])
         tmp_filename.unlink()
         b.batch_stop_log(id_batch,True)
     except e:
@@ -97,4 +97,4 @@ def get_destination(departement):
     return cwd / f'adresses-{departement}.csv.gz'
 
 def update_bis_table(**kwargs):
-    sql_process('update_table_rep_b_as_bis',dict(),bano_sources)
+    sql_process('update_table_rep_b_as_bis',dict(),bano_db)

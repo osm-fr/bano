@@ -7,7 +7,7 @@ from .models import Noms, Adresses, Topo, Points_nommes
 
 
 def process_unitaire(code_insee):
-    id_batch = b.batch_start_log("rapprochement", 'toutes', code_insee)
+    id_batch = b.batch_start_log("rapprochement", "toutes", code_insee)
     try:
         topo = Topo(code_insee)
         adresses = Adresses(code_insee)

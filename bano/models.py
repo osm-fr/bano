@@ -5,7 +5,7 @@ import io
 import json
 from collections import defaultdict, OrderedDict
 
-from . import db
+from .db import bano_db
 from . import helpers as hp
 
 # from .sources import fantoir
@@ -84,17 +84,14 @@ class Noms:
             sql_get_data(
                 "charge_noms_voies_lieux-dits_OSM",
                 dict(code_insee=self.code_insee),
-                db.bano_sources,
             )
             + sql_get_data(
                 "charge_noms_voies_relation_bbox_OSM",
                 dict(code_insee=self.code_insee),
-                db.bano_sources,
             )
             + sql_get_data(
                 "charge_noms_voies_relation_OSM",
                 dict(code_insee=self.code_insee),
-                db.bano_sources,
             )
         )
         for (
@@ -166,14 +163,13 @@ class Noms:
         sql_process(
             "suppression_noms_commune",
             dict(code_insee=self.code_insee),
-            db.bano,
         )
         io_in_csv = io.StringIO()
         for t in set(self.triplets_nom_fantoir_source):
             if t.fantoir:
                 io_in_csv.write(t._as_csv_format_bano() + "\n")
         io_in_csv.seek(0)
-        with db.bano.cursor() as cur_insert:
+        with bano_db.cursor() as cur_insert:
             cur_insert.copy_from(
                 io_in_csv,
                 "nom_fantoir",
@@ -283,9 +279,7 @@ class Adresses:
     #         fantoir = topo.topo.get(a.voie_normalisee)
 
     def charge_numeros_ban(self, topo):
-        data = sql_get_data(
-            "charge_ban_commune", dict(code_insee=self.code_insee), db.bano_sources
-        )
+        data = sql_get_data("charge_ban_commune", dict(code_insee=self.code_insee))
         for (
             id_fantoir,
             numero,
@@ -318,10 +312,8 @@ class Adresses:
 
     def charge_numeros_osm(self):
         data = sql_get_data(
-            "charge_numeros_OSM", dict(code_insee=self.code_insee), db.bano_sources
-        ) + sql_get_data(
-            "charge_numeros_bbox_OSM", dict(code_insee=self.code_insee), db.bano_sources
-        )
+            "charge_numeros_OSM", dict(code_insee=self.code_insee)
+        ) + sql_get_data("charge_numeros_bbox_OSM", dict(code_insee=self.code_insee))
 
         for (
             lon,
@@ -446,7 +438,6 @@ class Adresses:
         sql_process(
             "suppression_adresses_commune",
             dict(code_insee=self.code_insee),
-            db.bano,
         )
         io_in_csv = io.StringIO()
         for a in self:
@@ -454,7 +445,7 @@ class Adresses:
                 a._as_csv_format_bano() + "\n"
             )  # separateur $ car on trouve des virgules dans le contenu
         io_in_csv.seek(0)
-        with db.bano.cursor() as cur_insert:
+        with bano_db.cursor() as cur_insert:
             cur_insert.copy_from(
                 io_in_csv,
                 "bano_adresses",
@@ -535,7 +526,6 @@ class Points_nommes:
         data = sql_get_data(
             "charge_points_nommes_lieux-dits_CADASTRE",
             dict(code_insee=self.code_insee),
-            db.bano_sources,
         )
         for x, y, nom, code_insee_ac in data:
             self.add_point_nomme(
@@ -554,7 +544,6 @@ class Points_nommes:
         data = sql_get_data(
             "charge_points_nommes_centroides_OSM",
             dict(code_insee=self.code_insee),
-            db.bano_sources,
         )
         for x, y, nom, code_insee_ac, fantoir in data:
             self.add_point_nomme(
@@ -574,7 +563,6 @@ class Points_nommes:
         data = sql_get_data(
             "charge_points_nommes_places_OSM",
             dict(code_insee=self.code_insee),
-            db.bano_sources,
         )
         for x, y, nom, code_insee_ac, fantoir in data:
             self.add_point_nomme(
@@ -633,13 +621,12 @@ class Points_nommes:
         sql_process(
             "suppression_points_nommes_commune",
             dict(code_insee=self.code_insee),
-            db.bano,
         )
         io_in_csv = io.StringIO()
         for t in self:
             io_in_csv.write(t._as_csv_format_bano() + "\n")
         io_in_csv.seek(0)
-        with db.bano.cursor() as cur_insert:
+        with bano_db.cursor() as cur_insert:
             cur_insert.copy_from(
                 io_in_csv,
                 "bano_points_nommes",
@@ -682,9 +669,7 @@ class Topo:
                 print(f"{k} : {v}")
 
     def charge_topo(self):
-        data = sql_get_data(
-            "charge_topo_commune", dict(code_insee=self.code_insee), db.bano_sources
-        )
+        data = sql_get_data("charge_topo_commune", dict(code_insee=self.code_insee))
         for fantoir, nom in data:
             nom = hp.normalize(" ".join(nom.replace("-", " ").split()))
             self.topo[fantoir] = nom

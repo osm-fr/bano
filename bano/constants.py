@@ -9,22 +9,25 @@ def load_pairs_from_file(basename):
     with (Path(__file__).parent / "dictionnaires" / f"{basename}.txt").open() as f:
         return [l[:-1].split("\t") for l in f.readlines() if not l.startswith("#")]
 
+
 def load_json_from_file(json_filename):
     with (Path(__file__).parent / "data" / json_filename).open() as f:
         return json.loads(f.read())
 
+
 def get_const_code_dir():
-    return load_json_from_file('code_dir.json')
+    return load_json_from_file("code_dir.json")
+
 
 DEPARTEMENTS = [
     f"{n:>02}"
     for n in [*range(1, 20), "2A", "2B", *range(21, 96), *range(971, 975), "976"]
 ]
 
-DEPARTEMENTS_3CHAR = [('0'+s)[-3:] for s in DEPARTEMENTS]
+DEPARTEMENTS_3CHAR = [("0" + s)[-3:] for s in DEPARTEMENTS]
 
 LETTRE_A_LETTRE = {
-    "A": ["Â", "À", "Á","Ã"],
+    "A": ["Â", "À", "Á", "Ã"],
     "C": ["Ç"],
     "E": ["È", "Ê", "É", "Ë"],
     "I": ["Ï", "Î", "Í"],
@@ -81,6 +84,6 @@ HIGHWAY_TYPES = [
     "trunk",
     "motorway",
 ]
-HIGHWAY_TYPES_INDEX = {e: 2 ** i for i, e in enumerate(HIGHWAY_TYPES)}
+HIGHWAY_TYPES_INDEX = {e: 2**i for i, e in enumerate(HIGHWAY_TYPES)}
 
 CODE_VOIE_FANTOIR = "0123456789ABCDEFGHIJKLMNOPQRSTVWXYZ"

@@ -3,27 +3,30 @@
 
 from pathlib import Path
 
-SQLDIR = Path(__file__).parent / 'sql'
+from .db import bano_db
+
+SQLDIR = Path(__file__).parent / "sql"
 
 
-def sql_process(sqlfile,args,conn):
-    sqlfile = (Path(SQLDIR) / sqlfile).with_suffix('.sql')
-    with open (sqlfile) as s:
+def sql_process(sqlfile, args):
+    sqlfile = (Path(SQLDIR) / sqlfile).with_suffix(".sql")
+    with open(sqlfile) as s:
         q = s.read()
-        for k,v in args.items():
-            q=q.replace(f'__{k}__',v)
+        for k, v in args.items():
+            q = q.replace(f"__{k}__", v)
 
-    with conn.cursor() as cur:
+    with bano_db.cursor() as cur:
         cur.execute(q)
 
-def sql_get_data(sqlfile,args,conn):
-    sqlfile = (Path(SQLDIR) / sqlfile).with_suffix('.sql')
-    with open (sqlfile) as s:
-        q = s.read()
-        for k,v in args.items():
-            q=q.replace(f'__{k}__',v)
 
-    with conn.cursor() as cur:
+def sql_get_data(sqlfile, args):
+    sqlfile = (Path(SQLDIR) / sqlfile).with_suffix(".sql")
+    with open(sqlfile) as s:
+        q = s.read()
+        for k, v in args.items():
+            q = q.replace(f"__{k}__", v)
+
+    with bano_db.cursor() as cur:
         cur.execute(q)
 
         return cur.fetchall()

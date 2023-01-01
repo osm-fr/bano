@@ -19,13 +19,7 @@ def main():
     subparsers = parser.add_subparsers(help="Commandes disponibles")
 
     subparser = subparsers.add_parser(
-        "setup_db_bano_sources",
-        help="Initialisation de la BD des sources : OSM, BAN, TOPO",
-    )
-    subparser.set_defaults(func=setup_db.setup_bano_sources)
-
-    subparser = subparsers.add_parser(
-        "setup_db_bano",
+        "setup_db",
         help="Initialisation de la BD BANO",
     )
     subparser.set_defaults(func=setup_db.setup_bano)
