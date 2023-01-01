@@ -37,8 +37,9 @@ CREATE TABLE IF NOT EXISTS ban (
     source_position text,
     source_nom_voie text,
     certification_commune integer,
-    cad_parcelles text);
---    geometrie geometry (Point, 4326) DEFAULT (ST_Point(lon,lat)));
+    cad_parcelles text,
+    geometrie geometry (Point, 4326) GENERATED ALWAYS AS (ST_Point(lon,lat)) STORED);
+
 CREATE INDEX IF NOT EXISTS idx_ban_code_insee ON ban(code_insee);
 
 CREATE TABLE IF NOT EXISTS lieux_dits (
@@ -48,7 +49,6 @@ CREATE TABLE IF NOT EXISTS lieux_dits (
     updated date,
     geometrie geometry(Polygon,4326),
     geom_centroid geometry (Point, 4326) GENERATED ALWAYS AS (ST_Centroid(geometrie)) STORED);
-);
 
 CREATE INDEX IF NOT EXISTS gidx__centroid_lieux_dits ON lieux_dits USING gist(geom_centroid);
 CREATE INDEX IF NOT EXISTS lieux_dits_code_insee ON lieux_dits (code_insee);
