@@ -103,7 +103,7 @@ class Adresses:
     def load_ban_hsnr(self):
         dict_node_relations = {}
         data = c.get_data_from_pg_direct('ban_hsnr',self.code_insee)
-        for id, housenumber, name, lon, lat in data:
+        for id, housenumber, name, lon, lat,cp,fantoir_ban in data:
             if not name or len(name) < 2 or not lon:
                 continue
             self.register(name)
