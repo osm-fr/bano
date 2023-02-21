@@ -2,5 +2,7 @@
 
 set -e
 
+source config
+
 python load_code_cadastre.py
-psql -d cadastre -U cadastre -v ON_ERROR_STOP=1 -f bano/sql/load_code_cadastre.sql
+$pgsql_CADASTRE -f bano/sql/load_code_cadastre.sql

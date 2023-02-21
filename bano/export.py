@@ -146,7 +146,7 @@ locn:geometry [a gsp:Geometry; gsp:asWKT "POINT({lon} {lat})"^^gsp:wktLiteral ] 
 
 
     def save_as_shp(self):
-        subprocess.run(['ogr2ogr', '-f',"ESRI Shapefile", '-lco', 'ENCODING=UTF-8', '-s_srs', 'EPSG:4326', '-t_srs', 'EPSG:4326', '-overwrite', self.get_sas_full_filename('shp'), 'PG:dbname=cadastre user=cadastre', '-sql', f'{self.csv_query}'])
+        subprocess.run(['ogr2ogr', '-f',"ESRI Shapefile", '-lco', 'ENCODING=UTF-8', '-s_srs', 'EPSG:4326', '-t_srs', 'EPSG:4326', '-overwrite', self.get_sas_full_filename('shp'), 'PG:' + os.environ['PG_CADASTRE'], '-sql', f'{self.csv_query}'])
 
     def save_as_json(self):
         with open(self.get_sas_full_filename('json'),'w') as jsonfile:
