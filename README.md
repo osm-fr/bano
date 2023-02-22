@@ -44,8 +44,6 @@ sudo -u postgres -s "./create_base.sh"
 
 ## Chargement des données OSM
 
-Se placer dans le répertoire `DATA_DIR`, et appeler les scripts depuis là.
-
 Charger des données OSM depuis un pbf, France entière ou un extract plus petit.
 ```
 load_osm_france_db.sh
