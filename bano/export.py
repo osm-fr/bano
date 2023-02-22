@@ -182,7 +182,7 @@ locn:geometry [a gsp:Geometry; gsp:asWKT "POINT({lon} {lat})"^^gsp:wktLiteral ] 
                     if ';' in postcode:
                         postcode = postcode.split(';')
                     jsonfile.write(f'{{"id":"{fantoir}","citycode":"{citycode}","type":"{type}","name":"{name}","postcode":{json.dumps(postcode)},"lat":"{lat}","lon":"{lon}","city":"{cityname}","departement":"{departement}","region":"{region}","importance":{importance}}}\n')
-               
+
 def process(departements, **kwargs):
     for dept in departements:
         if not hp.is_valid_dept(dept):

@@ -47,7 +47,7 @@ for i, d in enumerate(a_0_depts):
         commune_cp = e.strong.string
         nom_commune = commune_cp[:-9]
         cp = commune_cp[-7:-2]
-        # try: 
+        # try:
         f_output.write('{:s},{:s},{:s},{:s},{:s},{:s}\n'.format(
                 a_depts[i], d, nom_commune, cp, code_commune, format_type))
         # except:
