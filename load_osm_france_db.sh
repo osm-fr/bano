@@ -2,8 +2,7 @@
 
 set -e
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-source $SCRIPT_DIR/config
+source config
 
 PBF_URL=${1:-http://download.openstreetmap.fr/extracts/merge/france_metro_dom_com_nc.osm.pbf}
 PBF_FILE=$(basename "$PBF_URL")
@@ -19,9 +18,14 @@ fi
 touch ${lockfile}
 
 mkdir -p $DOWNLOAD_DIR
-cd $DOWNLOAD_DIR
-wget -NS $PBF_URL
-imposm import -config $SCRIPT_DIR/imposm.config -read $DOWNLOAD_DIR/$PBF_FILE -overwritecache -diff -write -dbschema-import osm
+wget --directory-prefix=$DOWNLOAD_DIR -NS $PBF_URL
+imposm import \
+  -config imposm.config \
+  -read $DOWNLOAD_DIR/$PBF_FILE \
+  -overwritecache \
+  -diff \
+  -write \
+  -dbschema-import osm
 
 psql -d bano -U cadastre -v ON_ERROR_STOP=1 -f $SCRIPT_DIR/sql/finalisation.sql
 

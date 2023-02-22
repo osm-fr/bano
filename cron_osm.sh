@@ -4,14 +4,11 @@ set -e
 
 source /data/project/bano_v3/venv_v3/bin/activate
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
-cd $SCRIPT_DIR
 pip install -e .
 
-source $SCRIPT_DIR/config
+source config
 
-lockfile=${SCRIPT_DIR}/imposm.lock
+lockfile=imposm.lock
 
 echo `date`>> $SCRIPT_DIR/cron.log
 echo debut >> $SCRIPT_DIR/cron.log
@@ -32,7 +29,7 @@ fi
 touch ${lockfile}
 
 osmosis --rri workingDirectory=${DOWNLOAD_DIR} --wxc ${DOWNLOAD_DIR}/changes.osc.gz
-imposm diff -config $SCRIPT_DIR/imposm.config -dbschema-production osm ${DOWNLOAD_DIR}/changes.osc.gz
+imposm diff -config imposm.config -dbschema-production osm ${DOWNLOAD_DIR}/changes.osc.gz
 
 rm ${lockfile}
 
