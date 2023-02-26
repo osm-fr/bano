@@ -26,4 +26,3 @@ SELECT  id_fantoir,
         numero
 FROM    ban
 WHERE   rep = 'd');
-COMMIT;
