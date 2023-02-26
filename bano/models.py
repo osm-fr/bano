@@ -246,7 +246,7 @@ class Adresse:
 class Adresses:
     def __init__(self, code_insee):
         self.code_insee = code_insee
-        self.liste = set()
+        self.liste = []
         self.index_voie = defaultdict(list)
         self.noms_de_voies = set()
 
@@ -270,7 +270,7 @@ class Adresses:
     def add_adresse(self, ad):
         """une adresses est considérée dans la commune si sans Fantoir ou avec un Fantoir de la commune"""
         # if (ad.fantoir == None or hp.is_valid_fantoir(ad.fantoir, self.code_insee)) and hp.is_valid_housenumber(ad.numero):
-        self.liste.add(ad)
+        self.liste.append(ad)
         self.index_voie[ad.voie].append(len(self.liste) - 1)
         self.noms_de_voies.add(ad.voie)
 

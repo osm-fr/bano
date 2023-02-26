@@ -7,36 +7,55 @@ import time
 import os, os.path
 
 from . import batch as b
-from .db import bano_db
+from . import db
 from . import helpers as hp
 from . import db_helpers as dh
-from .models import Adresses
+from .models import Adresses, Topo
 
 
 def name_frequency(adresses):
     freq = {}
     noms_hors_1ere_passe = set()
+    # for nom in ['rue du Pont - Pont Augan']: # adresses.noms_de_voies:
     for nom in adresses.noms_de_voies:
         s = nom.split()
         # noms avec suffixe entre () quelle que soit leur longueur
         if "(" in nom and nom[-1] == ")":
             k = f"({nom.split('(')[1]}"
             if k not in freq:
-                freq[k] = {"nombre": 1, "liste": set(nom)}
+                freq[k] = {"nombre": 1, "liste": {nom}}
+            else:
+                freq[k]["nombre"] += 1
+                freq[k]["liste"].add(nom)
+        # noms avec suffixe après un trait d'union quelle que soit leur longueur
+        elif "-" in nom:
+            k = f"{nom.split('-')[-1]}"
+            # print(k)
+            if k not in freq:
+                freq[k] = {"nombre": 1, "liste": {nom}}
+            else:
+                freq[k]["nombre"] += 1
+                freq[k]["liste"].add(nom)
+        # noms avec suffixe après une virgule quelle que soit leur longueur
+        elif "," in nom:
+            k = f"{nom.split(',')[-1]}"
+            # print(k)
+            if k not in freq:
+                freq[k] = {"nombre": 1, "liste": {nom}}
             else:
                 freq[k]["nombre"] += 1
                 freq[k]["liste"].add(nom)
         elif len(s) > 4:
             k = " ".join(s[-2:])
             if k not in freq:
-                freq[k] = {"nombre": 1, "liste": set(nom)}
+                freq[k] = {"nombre": 1, "liste": {nom}}
             else:
                 freq[k]["nombre"] += 1
                 freq[k]["liste"].add(nom)
         elif len(s) > 3:
             k = nom.split()[-1]
             if k not in freq:
-                freq[k] = {"nombre": 1, "liste": set(nom)}
+                freq[k] = {"nombre": 1, "liste": {nom}}
             else:
                 freq[k]["nombre"] += 1
                 freq[k]["liste"].add(nom)
@@ -92,12 +111,12 @@ def collect_adresses_points(selection, adresses):
 
 
 def load_suffixe_2_db(adds, code_insee, nom_commune):
-    with bano_db.cursor() as cur:
+    with db.bano_db.cursor() as cur:
         for h in adds:
             # Agde (34003): detection de 'Mer' abusif, pas d'autres suffixes dans la commune
             if code_insee == "34003":
                 continue
-            print(f"{code_insee} - {nom_commune}......... {h}")
+            print(f"......... {h}")
             str_query = f"INSERT INTO suffixe SELECT ST_SetSRID((ST_Dump(gu)).geom,4326),code_insee,libelle_suffixe FROM (SELECT ST_Union(g) gu,code_insee,libelle_suffixe FROM({' UNION ALL '.join(adds[h])})a GROUP BY 2,3)a;"
             cur.execute(str_query)
 
@@ -106,17 +125,19 @@ def process(departements, **kwargs):
     for dept in departements:
         if hp.is_valid_dept(dept):
             print(f"Traitement du dept {dept}")
-            with bano_db.cursor() as cur:
-                str_query = f"DELETE FROM suffixe WHERE insee_com LIKE '{dept}%';"
+            with db.bano_db.cursor() as cur:
+                str_query = f"DELETE FROM suffixe WHERE code_insee LIKE '{dept}%';"
                 cur.execute(str_query)
-            for code_insee, nom_commune in dh.get_insee_name_list_by_dept(dept):
+            for code_insee, nom_commune in dh.liste_communes_par_dept(dept):
+                # for code_insee, nom_commune in [['56188','Quistinic']]:
                 # for code_insee, nom_commune in [['49244','Mauges']]:
                 debut_total = time.time()
-                # hp.display_insee_commune(code_insee, nom_commune)
+                print(code_insee, nom_commune)
                 adresses = Adresses(code_insee)
+                topo = Topo(code_insee)
                 batch_id = b.batch_start_log("detecte suffixe", code_insee, nom_commune)
                 try:
-                    adresses.charge_numeros_ban()
+                    adresses.charge_numeros_ban(topo)
                     freq = name_frequency(adresses)
                     selection = select_street_names_by_name(freq)
                     adds = collect_adresses_points(selection, adresses)
