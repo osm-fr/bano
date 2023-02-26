@@ -6,8 +6,7 @@ from .sql import sql_process
 
 
 def setup_bano(**kwargs):
-    sql_process("create_base", {}, bano_db)
-    sql_process("create_table_base_bano_outils", {}, bano_db)
-    sql_process("create_table_base_bano_sources", {}, bano_db)
-    sql_process("create_table_base_bano_cog", {}, bano_db)
-    sql_process("create_table_base_bano_cibles", {}, bano_db)
+    sql_process("create_table_base_bano_outils", {})
+    sql_process("create_table_base_bano_sources", {})
+    sql_process("create_table_base_bano_cog", {})
+    sql_process("create_table_base_bano_cibles", {})
