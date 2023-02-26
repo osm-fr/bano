@@ -34,7 +34,7 @@ def main():
 
     subparser = subparsers.add_parser(
         "process_commune_lieux-dits",
-        help="Traite unitairement les lieux-dits d'une commune", 
+        help="Traite unitairement les lieux-dits d'une commune",
         description="Traite unitairement les lieux-dits d'une commune"
     )
     group = subparser.add_mutually_exclusive_group(required=True)
@@ -54,7 +54,7 @@ def main():
 
     subparser = subparsers.add_parser(
         "ban2fantoir",
-        help="Ajoute dans FANTOIR des libellés BAN", 
+        help="Ajoute dans FANTOIR des libellés BAN",
         description="Ajoute dans FANTOIR des libellés BAN"
     )
     subparser.add_argument(
