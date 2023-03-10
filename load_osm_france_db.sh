@@ -1,23 +1,29 @@
 #!/bin/bash
 
+set -e
+
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source $SCRIPT_DIR/config
 
-lockfile=${SCRIPT_DIR}/imposm.lock
+PBF_URL=${1:-http://download.openstreetmap.fr/extracts/merge/france_metro_dom_com_nc.osm.pbf}
+PBF_FILE=$(basename "$PBF_URL")
+
+lockfile=${DATA_DIR}/imposm.lock
 
 if test -f ${lockfile}
 then
-  echo `date`" : Process deja en cours" >> $SCRIPT_DIR/cron.log
-  exit 0
+  echo `date`" : Process deja en cours"
+  exit 1
 fi
 
 touch ${lockfile}
 
+mkdir -p $DOWNLOAD_DIR
 cd $DOWNLOAD_DIR
-wget -NS http://download.openstreetmap.fr/extracts/merge/france_metro_dom_com_nc.osm.pbf
-imposm import -config $SCRIPT_DIR/imposm.config -read $DOWNLOAD_DIR/france_metro_dom_com_nc.osm.pbf -overwritecache -diff -write -dbschema-import public
+wget -NS $PBF_URL
+imposm import -config $SCRIPT_DIR/imposm.config -read $DOWNLOAD_DIR/france_metro_dom_com_nc.osm.pbf -overwritecache -diff -write -dbschema-import osm
 
-psql -d bano_sources -U cadastre -f $BANO_DIR/sql/finalisation.sql
+psql -d bano -U cadastre -f $SCRIPT_DIR/sql/finalisation.sql
 
-#cp $DOWNLOAD_DIR/last.state.txt $DOWNLOAD_DIR/state.txt
+cp $DOWNLOAD_DIR/last.state.txt $DOWNLOAD_DIR/state.txt
 rm ${lockfile}
