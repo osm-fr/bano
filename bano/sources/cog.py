@@ -14,8 +14,7 @@ from ..sql import sql_process
 from .. import batch as b
 
 def process_cog(**kwargs):
-    sql_process('create_table_cog',dict(),bano_db)
-    zip = get_destination('cog_2022.zip')
+    zip = get_destination('cog.zip')
     status = download(zip)
     if status:
         import_to_pg(zip)
@@ -25,7 +24,7 @@ def download(destination):
     if destination.exists():
         headers['If-Modified-Since'] = formatdate(destination.stat().st_mtime)
 
-    resp = requests.get(f'https://www.insee.fr/fr/statistiques/fichier/6051727/cog_ensemble_2022_csv.zip', headers=headers)
+    resp = requests.get(get_COG_URL(), headers=headers)
     id_batch = b.batch_start_log('download source', 'COG ZIP','France')
     if resp.status_code == 200:
         with destination.open('wb') as f:
@@ -43,7 +42,7 @@ def import_to_pg(fichier_zip):
     table = 'cog_commune'
     id_batch = b.batch_start_log('import source', f'COG {table}','France')
     with ZipFile(fichier_zip) as f:
-        with f.open('commune_2022.csv') as csv:
+        with f.open(get_COG_CSV()) as csv:
             csv.readline()  # skip CSV headers
             with bano_db.cursor() as cur_insert:
                 try:
@@ -61,3 +60,17 @@ def get_destination(fichier_cog):
     if not cwd.exists():
         raise ValueError(f"Le répertoire {cwd} n'existe pas")
     return cwd / f'{fichier_cog}'
+
+def get_COG_URL():
+    try:
+        url = os.environ['COG_URL']
+    except KeyError:
+        raise ValueError(f"La variable COG_URL n'est pas définie")
+    return url
+
+def get_COG_CSV():
+    try:
+        csv = os.environ['COG_CSV_COMMUNE']
+    except KeyError:
+        raise ValueError(f"La variable COG_CSV_COMMUNE n'est pas définie")
+    return csv
