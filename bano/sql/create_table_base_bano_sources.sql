@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS topo (
                             code_dep         character(3),
                             code_insee       character(5),
-                            fantoir10        character(10),
+                            fantoir          character(9),
                             nature_voie      text,
                             libelle_voie     text,
                             caractere_voie   character(1),

@@ -45,7 +45,7 @@ def topo_voie_to_csv(ligne_brute):
     # code dept
     champs.insert(0,h.get_code_dept_from_insee(champs[0]))
     # fantoir
-    champs[2] = fantoir9_vers_fantoir10(champs[2])
+    # champs[2] = fantoir9_vers_fantoir10(champs[2])
 
     return champs
 
