@@ -43,6 +43,16 @@ CREATE TABLE IF NOT EXISTS nom_fantoir (
 CREATE INDEX IF NOT EXISTS idx_nom_fantoir_code_insee ON nom_fantoir (code_insee);
 CREATE INDEX IF NOT EXISTS idx_nom_fantoir_code_insee_source ON nom_fantoir (code_insee,source);
 
+
+CREATE TABLE IF NOT EXISTS statut_fantoir (
+    fantoir character varying(9),
+    id_statut integer,
+    timestamp_statut double precision,
+    insee_com character(5));
+
+CREATE INDEX IF NOT EXISTS idx_statut_fantoir_fantoir ON statut_fantoir (fantoir);
+CREATE INDEX IF NOT EXISTS idx_statut_fantoir_insee ON statut_fantoir (insee_com);
+
 CREATE TABLE IF NOT EXISTS statut_numero (
     numero text ,
     fantoir character(9) ,
