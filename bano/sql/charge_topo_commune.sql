@@ -1,18 +1,18 @@
 WITH
 t
 AS
-(SELECT fantoir10,
+(SELECT fantoir,
         TRIM (BOTH FROM (COALESCE(nature_voie,'')||' '||libelle_voie)) AS nom
 FROM    topo
 WHERE   code_insee = '__code_insee__' AND
         caractere_annul IS NULL),
 tr
 AS
-(SELECT  fantoir10,
+(SELECT  fantoir,
         nom,
-        rank() OVER (PARTITION BY nom ORDER BY fantoir10) rang
+        rank() OVER (PARTITION BY nom ORDER BY fantoir) rang
 FROM    t)
-SELECT  fantoir10,
+SELECT  fantoir,
         nom
 FROM    tr
 WHERE   rang = 1

@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS topo (
                             mot_classant     character varying(8));
 CREATE INDEX IF NOT EXISTS idx_topo_dep  ON topo(code_dep);
 CREATE INDEX IF NOT EXISTS idx_topo_code_insee ON topo(code_insee);
-CREATE INDEX IF NOT EXISTS idx_topo_fantoir10  ON topo(fantoir10);
+CREATE INDEX IF NOT EXISTS idx_topo_fantoir  ON topo(fantoir);
 
 CREATE TABLE IF NOT EXISTS ban (
     id text,
