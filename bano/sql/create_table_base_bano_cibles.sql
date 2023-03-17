@@ -48,10 +48,10 @@ CREATE TABLE IF NOT EXISTS statut_fantoir (
     fantoir character varying(9),
     id_statut integer,
     timestamp_statut double precision,
-    insee_com character(5));
+    code_insee character(5));
 
 CREATE INDEX IF NOT EXISTS idx_statut_fantoir_fantoir ON statut_fantoir (fantoir);
-CREATE INDEX IF NOT EXISTS idx_statut_fantoir_insee ON statut_fantoir (insee_com);
+CREATE INDEX IF NOT EXISTS idx_statut_fantoir_insee ON statut_fantoir (code_insee);
 
 CREATE TABLE IF NOT EXISTS statut_numero (
     numero text ,
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS statut_numero (
     source text ,
     id_statut integer,
     timestamp_statut double precision,
-    insee_com character(5));
+    code_insee character(5));
 
 CREATE INDEX IF NOT EXISTS idx_statut_numero_fantoir ON statut_numero (fantoir, numero);
 
