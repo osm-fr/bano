@@ -11,3 +11,4 @@ def setup_bano(**kwargs):
     sql_process("create_table_base_bano_sources", {})
     sql_process("create_table_base_bano_cog", {})
     sql_process("create_table_base_bano_cibles", {})
+    sql_process("create_table_base_bano_pifometre", {})
