@@ -12,6 +12,8 @@ CREATE TABLE IF NOT EXISTS batch (
     ok              boolean,
     CONSTRAINT batch_pkey PRIMARY KEY (id_batch));
 
+CREATE INDEX IF NOT EXISTS idx_batch_zone ON batch (code_zone);
+
 CREATE TABLE IF NOT EXISTS batch_historique(
     id_batch        integer,
     etape           text,
