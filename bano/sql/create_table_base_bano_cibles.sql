@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS bano_points_nommes (
     geometrie geometry (Point, 4326) GENERATED ALWAYS AS (ST_Point(lon,lat)) STORED);
 
 CREATE INDEX IF NOT EXISTS idx_bano_points_nommes_code_insee ON bano_points_nommes (code_insee);
+CREATE INDEX IF NOT EXISTS idx_bano_points_nommes_fantoir ON bano_points_nommes (fantoir);
 CREATE INDEX IF NOT EXISTS idx_bano_points_nommes_code_insee_source ON bano_points_nommes (code_insee,source);
 
 CREATE TABLE IF NOT EXISTS nom_fantoir (
