@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source $SCRIPT_DIR/config
 
@@ -16,9 +18,9 @@ echo debut >> $SCRIPT_DIR/cron.log
 
 touch ${lockfile}
 
-osmosis --rri workingDirectory=/data/download --wxc /data/download/changes.osc.gz
-imposm diff -mapping $SCRIPT_DIR/bano.yml -cachedir /data/bano_imposm_cache -dbschema-production public -diffdir /data/bano_imposm_diff -connection 'postgis://cadastre@localhost/osm'?prefix=NONE -expiretiles-dir $EXPIRE_TILES_DIR -expiretiles-zoom 16 /data/download/changes.osc.gz
-$SCRIPT_DIR/update_table_infos_communes.sh
+osmosis --rri workingDirectory=${DOWNLOAD_DIR} --wxc ${DOWNLOAD_DIR}/changes.osc.gz
+imposm diff -config $SCRIPT_DIR/imposm.config -dbschema-production osm -expiretiles-dir $EXPIRE_TILES_DIR -expiretiles-zoom 16 ${DOWNLOAD_DIR}/changes.osc.gz
+#$SCRIPT_DIR/update_table_infos_communes.sh
 
 rm ${lockfile}
 
