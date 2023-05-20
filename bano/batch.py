@@ -21,7 +21,7 @@ def batch_start_log(etape, source=None, code_zone=None, nom_zone=None):
     if nom_zone:
         champs = f"{champs},nom_zone"
         values = f"{values},'{nom_zone}'"
-    return sql_get_data("batch_start_log", dict(champs=champs, values=values))[0][0]
+    return sql_get_data("batch_start_log", dict(etape=etape, code_zone=code_zone, champs=champs, values=values))[0][0]
 
 
 def batch_stop_log(id_batch, status):
