@@ -21,17 +21,15 @@ class Nom:
         source,
         code_insee,
         code_insee_ancienne_commune,
-        lon=None,
-        lat=None,
+        nom_ancienne_commune,
     ):
         self.code_insee = code_insee
         self.code_insee_ancienne_commune = code_insee_ancienne_commune
         self.nom = nom
-        self.fantoir = fantoir
+        self.nom_ancienne_commune = nom_ancienne_commune
+        self.fantoir = fantoir[0:9] if fantoir else None
         self.nature = nature
         self.source = source
-        self.lon = lon
-        self.lat = lat
         self.nom_normalise = hp.normalize(nom)
 
     def __eq__(self, other):
@@ -57,12 +55,11 @@ class Nom:
         )
 
     def _as_csv_format_bano(self):
-        return f"{self.fantoir}\t{self.nom}\t{self.nature}\t{self.code_insee}\t{self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else ''}\t{self.source}"
+        return f"{self.fantoir}\t{self.nom}\t{self.nature}\t{self.code_insee}\t{self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else ''}\t{self.nom_ancienne_commune if self.nom_ancienne_commune else ''}\t{self.source}"
 
     def add_fantoir(self, topo):
         if not self.fantoir:
             self.fantoir = topo.topo.get(self.nom_normalise)
-
 
 class Noms:
     def __init__(self, code_insee):
@@ -99,8 +96,8 @@ class Noms:
             name,
             tags,
             libelle_suffixe,
-            ac_code_insee,
-            ac_nom,
+            code_insee_ancienne_commune,
+            nom_ancienne_commune,
             nature,
         ) in data:
             if provenance in (1, 2, 3, 4, 5):
@@ -111,7 +108,8 @@ class Noms:
                         nature,
                         "OSM",
                         self.code_insee,
-                        ac_code_insee,
+                        code_insee_ancienne_commune,
+                        nom_ancienne_commune,
                     )
                 )
             if provenance in (6, 7) and tags.get("ref:FR:FANTOIR"):
@@ -122,7 +120,8 @@ class Noms:
                         nature,
                         "OSM",
                         self.code_insee,
-                        ac_code_insee,
+                        code_insee_ancienne_commune,
+                        nom_ancienne_commune,
                     )
                 )
 
@@ -180,6 +179,7 @@ class Noms:
                     "nature",
                     "code_insee",
                     "code_insee_ancienne_commune",
+                    "nom_ancienne_commune",
                     "source",
                 ),
             )
@@ -198,7 +198,7 @@ class Adresse:
         fantoir=None,
         code_postal=None,
         code_insee_ancienne_commune=None,
-        sous_commune_nom=None,
+        nom_ancienne_commune=None,
     ):
         self.code_insee = code_insee
         self.x = round(x, 6)
@@ -207,10 +207,10 @@ class Adresse:
         self.numero = num
         self.voie = voie
         self.place = place
-        self.fantoir = fantoir
+        self.fantoir = fantoir[0:9] if fantoir else None
         self.code_postal = code_postal
         self.code_insee_ancienne_commune = code_insee_ancienne_commune
-        self.sous_commune_nom = sous_commune_nom
+        self.nom_ancienne_commune = nom_ancienne_commune
         self.voie_normalisee = hp.normalize(self.voie) if self.voie else None
         self.place_normalisee = hp.format_toponyme(self.place) if self.place else None
 
@@ -237,10 +237,10 @@ class Adresse:
         )
 
     def _as_csv_format_bano(self):
-        return f"{self.fantoir if self.fantoir else ''}\t{self.x}\t{self.y}\t{self.numero}\t{self.voie if self.voie else ''}\t{self.place if self.place else ''}\t{self.code_postal}\t{self.code_insee}\t{self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else ''}\t{self.source}"
+        return f"{self.fantoir if self.fantoir else ''}\t{self.x}\t{self.y}\t{self.numero}\t{self.voie if self.voie else ''}\t{self.place if self.place else ''}\t{self.code_postal}\t{self.code_insee}\t{self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else ''}\t{self.nom_ancienne_commune if self.nom_ancienne_commune else ''}\t{self.source}"
 
     def _as_string(self):
-        return f"source : {self.source}, numero : {self.numero}, voie : {self.voie} ({self.voie_normalisee}), place : {self.place}, fantoir : {self.fantoir}, code_postal:{self.code_postal}, sous_commune : {self.code_insee_ancienne_commune} - {self.sous_commune_nom}"
+        return f"source : {self.source}, numero : {self.numero}, voie : {self.voie} ({self.voie_normalisee}), place : {self.place}, fantoir : {self.fantoir}, code_postal:{self.code_postal}, sous_commune : {self.code_insee_ancienne_commune} - {self.nom_ancienne_commune}"
 
 
 class Adresses:
@@ -287,12 +287,12 @@ class Adresses:
             lon,
             lat,
             code_postal,
-            code_insee_ac,
-            nom_ac,
+            code_insee_ancienne_commune,
+            nom_ancienne_commune,
         ) in data:
             if id_fantoir:
-                fantoir9 = f"{id_fantoir[0:5]}{id_fantoir[6:10]}"
-                fantoir = topo.code_fantoir9_vers_fantoir10.get(fantoir9)
+                fantoir = f"{id_fantoir[0:5]}{id_fantoir[6:10]}"
+                # fantoir = topo.code_fantoir9_vers_fantoir10.get(fantoir9)
             else:
                 fantoir = None
             self.add_adresse(
@@ -305,8 +305,8 @@ class Adresses:
                     voie=voie,
                     fantoir=fantoir,
                     code_postal=code_postal,
-                    code_insee_ancienne_commune=code_insee_ac,
-                    sous_commune_nom=nom_ac,
+                    code_insee_ancienne_commune=code_insee_ancienne_commune,
+                    nom_ancienne_commune=nom_ancienne_commune,
                 )
             )
 
@@ -325,11 +325,13 @@ class Adresses:
             tags,
             suffixe,
             code_postal,
-            code_insee_ac,
-            nom_ac,
+            code_insee_ancienne_commune,
+            nom_ancienne_commune,
         ) in data:
 
             fantoir = tags.get("ref:FR:FANTOIR")
+            if fantoir :
+                fantoir = fantoir[0:9]
             if fantoir and not hp.fantoir_valide(fantoir, self.code_insee):
                 continue
 
@@ -348,8 +350,8 @@ class Adresses:
                         place=place,
                         fantoir=fantoir,
                         code_postal=code_postal,
-                        code_insee_ancienne_commune=code_insee_ac,
-                        sous_commune_nom=nom_ac,
+                        code_insee_ancienne_commune=code_insee_ancienne_commune,
+                        nom_ancienne_commune=nom_ancienne_commune,
                     )
                 )
             if provenance in (
@@ -367,8 +369,8 @@ class Adresses:
                         place=None,
                         fantoir=fantoir,
                         code_postal=code_postal,
-                        code_insee_ancienne_commune=code_insee_ac,
-                        sous_commune_nom=nom_ac,
+                        code_insee_ancienne_commune=code_insee_ancienne_commune,
+                        nom_ancienne_commune=nom_ancienne_commune,
                     )
                 )
             if (
@@ -392,8 +394,8 @@ class Adresses:
                             place=None,
                             fantoir=tags["ref:FR:FANTOIR"],
                             code_postal=code_postal,
-                            code_insee_ancienne_commune=code_insee_ac,
-                            sous_commune_nom=nom_ac,
+                            code_insee_ancienne_commune=code_insee_ancienne_commune,
+                            nom_ancienne_commune=nom_ancienne_commune,
                         )
                     )
 
@@ -408,6 +410,7 @@ class Adresses:
                         a.source,
                         self.code_insee,
                         a.code_insee_ancienne_commune,
+                        a.nom_ancienne_commune,
                     )
                 )
             if a.place:
@@ -419,6 +422,7 @@ class Adresses:
                         a.source,
                         self.code_insee,
                         a.code_insee_ancienne_commune,
+                        a.nom_ancienne_commune,
                     )
                 )
 
@@ -460,6 +464,7 @@ class Adresses:
                     "code_postal",
                     "code_insee",
                     "code_insee_ancienne_commune",
+                    "nom_ancienne_commune",
                     "source",
                 ),
             )
@@ -476,6 +481,7 @@ class Point_nomme:
         nom,
         fantoir=None,
         code_insee_ancienne_commune=None,
+        nom_ancienne_commune=None,
     ):
         self.code_insee = code_insee
         self.source = source
@@ -483,8 +489,9 @@ class Point_nomme:
         self.lat = round(lat, 6)
         self.nature = nature
         self.nom = nom
-        self.fantoir = fantoir
+        self.fantoir = fantoir[0:9] if fantoir else None
         self.code_insee_ancienne_commune = code_insee_ancienne_commune
+        self.nom_ancienne_commune = nom_ancienne_commune
 
     def __hash__(self):
         return hash(
@@ -503,7 +510,7 @@ class Point_nomme:
         return f"source : {self.source}, nom : {self.nom}, nature : {self.nature}, sous_commune : {self.code_insee_ancienne_commune}"
 
     def _as_csv_format_bano(self):
-        return f"{self.fantoir if self.fantoir else ''}\t{self.nom}\t{self.code_insee}\t{self.nature}\t{self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else ''}\t{self.source}\t{self.lon}\t{self.lat}"
+        return f"{self.fantoir if self.fantoir else ''}\t{self.nom}\t{self.code_insee}\t{self.nature}\t{self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else ''}\t{self.nom_ancienne_commune if self.nom_ancienne_commune else ''}\t{self.source}\t{self.lon}\t{self.lat}"
 
 
 class Points_nommes:
@@ -527,7 +534,7 @@ class Points_nommes:
             "charge_points_nommes_lieux-dits_CADASTRE",
             dict(code_insee=self.code_insee),
         )
-        for x, y, nom, code_insee_ac in data:
+        for x, y, nom, code_insee_ancienne_commune,nom_ancienne_commune in data:
             self.add_point_nomme(
                 Point_nomme(
                     self.code_insee,
@@ -536,7 +543,8 @@ class Points_nommes:
                     x,
                     y,
                     hp.format_toponyme(nom),
-                    code_insee_ancienne_commune=code_insee_ac,
+                    code_insee_ancienne_commune=code_insee_ancienne_commune,
+                    nom_ancienne_commune=nom_ancienne_commune,
                 )
             )
 
@@ -545,7 +553,7 @@ class Points_nommes:
             "charge_points_nommes_centroides_OSM",
             dict(code_insee=self.code_insee),
         )
-        for x, y, nom, code_insee_ac, fantoir in data:
+        for x, y, nom, code_insee_ancienne_commune, fantoir, nom_ancienne_commune in data:
             self.add_point_nomme(
                 Point_nomme(
                     self.code_insee,
@@ -554,8 +562,9 @@ class Points_nommes:
                     x,
                     y,
                     nom,
-                    code_insee_ancienne_commune=code_insee_ac,
+                    code_insee_ancienne_commune=code_insee_ancienne_commune,
                     fantoir=fantoir,
+                    nom_ancienne_commune=nom_ancienne_commune,
                 )
             )
 
@@ -564,7 +573,7 @@ class Points_nommes:
             "charge_points_nommes_places_OSM",
             dict(code_insee=self.code_insee),
         )
-        for x, y, nom, code_insee_ac, fantoir in data:
+        for x, y, nom, code_insee_ancienne_commune, fantoir, nom_ancienne_commune in data:
             self.add_point_nomme(
                 Point_nomme(
                     self.code_insee,
@@ -573,8 +582,9 @@ class Points_nommes:
                     x,
                     y,
                     nom,
-                    code_insee_ancienne_commune=code_insee_ac,
+                    code_insee_ancienne_commune=code_insee_ancienne_commune,
                     fantoir=fantoir,
+                    nom_ancienne_commune=nom_ancienne_commune,
                 )
             )
 
@@ -592,6 +602,7 @@ class Points_nommes:
                         a.source,
                         self.code_insee,
                         a.code_insee_ancienne_commune,
+                        a.nom_ancienne_commune,
                     )
                 )
             if a.source == "OSM":
@@ -603,6 +614,7 @@ class Points_nommes:
                         a.source,
                         self.code_insee,
                         a.code_insee_ancienne_commune,
+                        a.nom_ancienne_commune,
                     )
                 )
 
@@ -637,6 +649,7 @@ class Points_nommes:
                     "code_insee",
                     "nature",
                     "code_insee_ancienne_commune",
+                    "nom_ancienne_commune",
                     "source",
                     "lon",
                     "lat",
@@ -648,7 +661,7 @@ class Topo:
     def __init__(self, code_insee):
         self.code_insee = code_insee
         self.topo = OrderedDict()
-        self.code_fantoir9_vers_fantoir10 = {}
+        # self.code_fantoir9_vers_fantoir10 = {}
 
         # self.index_by_nom_normalise = defaultdict(list)
 
@@ -673,5 +686,5 @@ class Topo:
         for fantoir, nom in data:
             nom = hp.normalize(" ".join(nom.replace("-", " ").split()))
             self.topo[fantoir] = nom
-            self.code_fantoir9_vers_fantoir10[fantoir[0:9]] = fantoir
+            # self.code_fantoir9_vers_fantoir10[fantoir[0:9]] = fantoir
             self.topo[nom] = fantoir

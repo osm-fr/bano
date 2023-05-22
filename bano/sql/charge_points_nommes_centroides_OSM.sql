@@ -6,7 +6,8 @@ AS
         COALESCE(a9.code_insee,'xxxxx') as insee_jointure,
         a9.code_insee insee_ac,
         unnest(array["ref:FR:FANTOIR","ref:FR:FANTOIR:left","ref:FR:FANTOIR:right"]) AS fantoir,
-        ST_Within(l.way,p.way)::integer as within
+        ST_Within(l.way,p.way)::integer as within,
+        a9.nom AS nom_ac
 FROM    (SELECT way FROM planet_osm_polygon WHERE "ref:INSEE" = '__code_insee__') p
 JOIN    planet_osm_line l
 ON      ST_Intersects(l.way, p.way)
@@ -21,7 +22,8 @@ SELECT  ST_PointOnSurface(l.way),
         COALESCE(a9.code_insee,'xxxxx') as insee_jointure,
         a9.code_insee insee_ac,
         "ref:FR:FANTOIR" AS fantoir,
-        ST_Within(l.way,p.geometrie)::integer as within
+        ST_Within(l.way,p.geometrie)::integer as within,
+        a9.nom AS nom_ac
 FROM    (SELECT geometrie FROM polygones_insee WHERE code_insee = '__code_insee__') p
 JOIN    planet_osm_polygon l
 ON      ST_Intersects(l.way, p.geometrie)
@@ -35,7 +37,8 @@ SELECT l.way,
         COALESCE(a9.code_insee,'xxxxx') as insee_jointure,
         a9.code_insee insee_ac,
         "ref:FR:FANTOIR" AS fantoir,
-        ST_Within(l.way,p.way)::integer as within
+        ST_Within(l.way,p.way)::integer as within,
+        a9.nom AS nom_ac
 FROM    (SELECT way FROM planet_osm_polygon WHERE "ref:INSEE" = '__code_insee__') p
 JOIN    planet_osm_rels l
 ON      ST_Intersects(l.way, p.way)
@@ -65,33 +68,37 @@ AS
         name,
         insee_ac,
         insee_jointure,
-        fantoir
+        fantoir,
+        nom_ac
 FROM    lignes_noms_rang
 WHERE   rang = 1
-GROUP BY 2,3,4,5),
+GROUP BY 2,3,4,5,6),
 centroide_lignes_agregees
 AS
 (SELECT ST_Centroid(ST_LineMerge(ST_Collect(way_line))) way,
         name,
         insee_ac,
         insee_jointure,
-        fantoir
+        fantoir,
+        nom_ac
 FROM    lignes_noms_rang
 WHERE   rang = 1
-GROUP BY 2,3,4,5),
+GROUP BY 2,3,4,5,6),
 resultat
 AS
 (SELECT ST_SetSRID(ST_ClosestPoint(lignes_agregees.way,centroide_lignes_agregees.way),4326) point,
         lignes_agregees.name,
         lignes_agregees.insee_ac,
-        lignes_agregees.fantoir
+        lignes_agregees.fantoir,
+        lignes_agregees.nom_ac
 FROM    lignes_agregees
 JOIN    centroide_lignes_agregees
 USING   (name,insee_jointure)),
 complement
 AS
 (SELECT c.*,
-        a9.code_insee AS insee_ac
+        a9.code_insee AS insee_ac,
+        a9.nom AS nom_ac
 FROM    (SELECT pl.way point,
                 pl.name,
                 pl."ref:FR:FANTOIR" fantoir
@@ -121,12 +128,14 @@ SELECT  ST_x(point),
         ST_y(point),
         name,
         insee_ac,
-        fantoir
+        fantoir,
+        nom_ac
 FROM    resultat
 UNION ALL
 SELECT  ST_x(point),
         ST_y(point),
         name,
         insee_ac,
-        fantoir
+        fantoir,
+        nom_ac
 FROM    complement;

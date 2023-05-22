@@ -6,7 +6,8 @@ AS
         tags,
         place,
         a9.code_insee AS insee_ac,
-        "ref:FR:FANTOIR" AS fantoir
+        "ref:FR:FANTOIR" AS fantoir,
+        a9.nom AS nom_ac 
 FROM    (SELECT way FROM planet_osm_polygon WHERE "ref:INSEE" = '__code_insee__')                    p
 JOIN    (SELECT * FROM planet_osm_point WHERE place != '' AND name != '') pt
 ON      pt.way && p.way                 AND
@@ -17,6 +18,7 @@ SELECT  ST_x(way),
         ST_y(way),
         name,
         insee_ac,
-        fantoir
+        fantoir,
+        nom_ac
 FROM    pts
 WHERE   name IS NOT NULL;
