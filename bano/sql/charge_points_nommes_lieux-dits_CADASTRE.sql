@@ -1,6 +1,6 @@
 SELECT  ST_X(geom_centroid),
         ST_Y(geom_centroid),
-        regexp_replace(regexp_replace(ld.nom,'   ',' ','g'),'  ',' ','g') AS nom,
+        regexp_replace(regexp_replace(regexp_replace(regexp_replace(ld.nom,'     ',' ','g'),'    ',' ','g'),'   ',' ','g'),'  ',' ','g') AS nom,
         a9.code_insee,
         a9.nom
 FROM    (SELECT *
