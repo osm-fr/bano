@@ -28,6 +28,5 @@ def process(code_insee,**kwargs):
             nom_norm = normalize(n[0])
             if not nom_norm in topo.topo:
                 noms_ban_norm.add(f"'{dept}','{code_insee}','{pseudo_fantoir(i,code_insee)}',' ','{nom_norm}','B','B','0000000'")
-                print(f"'{dept}','{code_insee}','{pseudo_fantoir(i,code_insee)}',' ','{nom_norm}','B','B','0000000'")
         if len(noms_ban_norm)>0:
             add_noms_ban_dans_topo(code_insee, f"({'),('.join(noms_ban_norm)})")
