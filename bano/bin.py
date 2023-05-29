@@ -8,7 +8,7 @@ from . import pre_process_suffixe
 from . import setup_db
 from . import rapprochement
 from . import boite_a_outils
-from .sources import topo, ban, cog, cadastre_ld
+from .sources import topo, ban, cog, cadastre_ld, ban2topo
 from .constants import DEPARTEMENTS
 
 
@@ -103,6 +103,15 @@ def main():
     )
     subparser.set_defaults(func=rapprochement.process)
 
+    subparser = subparsers.add_parser(
+        "ban2topo",
+        help="Ajoute dans TOPO des libellés BAN",
+        description="Ajoute dans TOPO des libellés BAN"
+    )
+    subparser.add_argument(
+        "--code_insee", type=str, help="Code INSEE de la commune à traiter"
+    )
+    subparser.set_defaults(func=ban2topo.process)
     args = parser.parse_args()
 
     try:

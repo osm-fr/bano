@@ -5,7 +5,7 @@ AS
         TRIM (BOTH FROM (COALESCE(nature_voie,'')||' '||libelle_voie)) AS nom
 FROM    topo
 WHERE   code_insee = '__code_insee__' AND
-        caractere_annul IS NULL),
+        COALESCE(caractere_annul,'x') NOT IN ('O','Q')),
 tr
 AS
 (SELECT  fantoir,
