@@ -125,7 +125,7 @@ class Noms:
                     )
                 )
 
-    # On ajoute un nom s'il n'a pas de FANTOIR ou si son FANTOIR appartient à la commune
+    # On ajoute un triplet nom s'il n'a pas de FANTOIR ou si son FANTOIR appartient à la commune
     def add_nom(self, nom=Nom):
         if not nom.fantoir or nom.fantoir[0:5] == self.code_insee:
             self.triplets_nom_fantoir_source.append(nom)
@@ -444,7 +444,8 @@ class Adresses:
             dict(code_insee=self.code_insee),
         )
         io_in_csv = io.StringIO()
-        for a in self:
+
+        for a in set(self.liste): #passage en set pour dedoublonner les adresses de provenances multiples
             io_in_csv.write(
                 a._as_csv_format_bano() + "\n"
             )  # separateur $ car on trouve des virgules dans le contenu
@@ -489,25 +490,26 @@ class Point_nomme:
         self.lat = round(lat, 6)
         self.nature = nature
         self.nom = nom
+        self.nom_normalise = hp.normalize(nom)
         self.fantoir = fantoir[0:9] if fantoir else None
         self.code_insee_ancienne_commune = code_insee_ancienne_commune
         self.nom_ancienne_commune = nom_ancienne_commune
 
     def __hash__(self):
         return hash(
-            (self.code_insee, self.source, self.nom, self.code_insee_ancienne_commune)
+            (self.code_insee, self.source, self.nom_normalise, self.code_insee_ancienne_commune)
         )
 
     def __eq__(self, other):
         return (
             self.code_insee == other.code_insee
             and self.source == other.source
-            and self.nom == other.nom
+            and self.nom_normalise == other.nom_normalise
             and self.code_insee_ancienne_commune == other.code_insee_ancienne_commune
         )
 
     def _as_string(self):
-        return f"source : {self.source}, nom : {self.nom}, nature : {self.nature}, sous_commune : {self.code_insee_ancienne_commune}"
+        return f"source : {self.source}, nom : {self.nom} ({self.nom_normalise}), nature : {self.nature}, sous_commune : {self.code_insee_ancienne_commune}"
 
     def _as_csv_format_bano(self):
         return f"{self.fantoir if self.fantoir else ''}\t{self.nom}\t{self.code_insee}\t{self.nature}\t{self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else ''}\t{self.nom_ancienne_commune if self.nom_ancienne_commune else ''}\t{self.source}\t{self.lon}\t{self.lat}"
