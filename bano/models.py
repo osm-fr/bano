@@ -24,8 +24,9 @@ class Nom:
         nom_ancienne_commune,
     ):
         self.code_insee = code_insee
+        self.code_dept = hp.get_code_dept_from_insee(code_insee)
         self.code_insee_ancienne_commune = code_insee_ancienne_commune
-        self.nom = nom
+        self.nom = nom.replace('\t',' ')
         self.nom_ancienne_commune = nom_ancienne_commune
         self.fantoir = fantoir[0:9] if fantoir else None
         self.nature = nature
@@ -55,7 +56,7 @@ class Nom:
         )
 
     def _as_csv_format_bano(self):
-        return f"{self.fantoir}\t{self.nom}\t{self.nature}\t{self.code_insee}\t{self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else ''}\t{self.nom_ancienne_commune if self.nom_ancienne_commune else ''}\t{self.source}"
+        return f"{self.fantoir}\t{self.nom}\t{self.nature}\t{self.code_insee}\t{self.code_dept}\t{self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else ''}\t{self.nom_ancienne_commune if self.nom_ancienne_commune else ''}\t{self.source}"
 
     def add_fantoir(self, topo):
         if not self.fantoir:
@@ -178,6 +179,7 @@ class Noms:
                     "nom",
                     "nature",
                     "code_insee",
+                    "code_dept",
                     "code_insee_ancienne_commune",
                     "nom_ancienne_commune",
                     "source",
@@ -201,6 +203,7 @@ class Adresse:
         nom_ancienne_commune=None,
     ):
         self.code_insee = code_insee
+        self.code_dept = hp.get_code_dept_from_insee(code_insee)
         self.x = round(x, 6)
         self.y = round(y, 6)
         self.source = source
@@ -237,7 +240,7 @@ class Adresse:
         )
 
     def _as_csv_format_bano(self):
-        return f"{self.fantoir if self.fantoir else ''}\t{self.x}\t{self.y}\t{self.numero}\t{self.voie if self.voie else ''}\t{self.place if self.place else ''}\t{self.code_postal}\t{self.code_insee}\t{self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else ''}\t{self.nom_ancienne_commune if self.nom_ancienne_commune else ''}\t{self.source}"
+        return f"{self.fantoir if self.fantoir else ''}\t{self.x}\t{self.y}\t{self.numero}\t{self.voie if self.voie else ''}\t{self.place if self.place else ''}\t{self.code_postal}\t{self.code_insee}\t{self.code_dept}\t{self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else ''}\t{self.nom_ancienne_commune if self.nom_ancienne_commune else ''}\t{self.source}"
 
     def _as_string(self):
         return f"source : {self.source}, numero : {self.numero}, voie : {self.voie} ({self.voie_normalisee}), place : {self.place}, fantoir : {self.fantoir}, code_postal:{self.code_postal}, sous_commune : {self.code_insee_ancienne_commune} - {self.nom_ancienne_commune}"
@@ -464,6 +467,7 @@ class Adresses:
                     "nom_place",
                     "code_postal",
                     "code_insee",
+                    "code_dept",
                     "code_insee_ancienne_commune",
                     "nom_ancienne_commune",
                     "source",
@@ -485,11 +489,12 @@ class Point_nomme:
         nom_ancienne_commune=None,
     ):
         self.code_insee = code_insee
+        self.code_dept = hp.get_code_dept_from_insee(code_insee)
         self.source = source
         self.lon = round(lon, 6)
         self.lat = round(lat, 6)
         self.nature = nature
-        self.nom = nom
+        self.nom = nom.replace('\t',' ')
         self.nom_normalise = hp.normalize(nom)
         self.fantoir = fantoir[0:9] if fantoir else None
         self.code_insee_ancienne_commune = code_insee_ancienne_commune
@@ -512,7 +517,7 @@ class Point_nomme:
         return f"source : {self.source}, nom : {self.nom} ({self.nom_normalise}), nature : {self.nature}, sous_commune : {self.code_insee_ancienne_commune}"
 
     def _as_csv_format_bano(self):
-        return f"{self.fantoir if self.fantoir else ''}\t{self.nom}\t{self.code_insee}\t{self.nature}\t{self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else ''}\t{self.nom_ancienne_commune if self.nom_ancienne_commune else ''}\t{self.source}\t{self.lon}\t{self.lat}"
+        return f"{self.fantoir if self.fantoir else ''}\t{self.nom}\t{self.code_insee}\t{self.code_dept}\t{self.nature}\t{self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else ''}\t{self.nom_ancienne_commune if self.nom_ancienne_commune else ''}\t{self.source}\t{self.lon}\t{self.lat}"
 
 
 class Points_nommes:
@@ -649,6 +654,7 @@ class Points_nommes:
                     "fantoir",
                     "nom",
                     "code_insee",
+                    "code_dept",
                     "nature",
                     "code_insee_ancienne_commune",
                     "nom_ancienne_commune",
