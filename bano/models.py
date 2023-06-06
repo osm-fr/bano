@@ -8,9 +8,7 @@ from collections import defaultdict, OrderedDict
 from .db import bano_db
 from . import helpers as hp
 
-# from .sources import fantoir
 from .sql import sql_get_data, sql_process
-
 
 class Nom:
     def __init__(
@@ -55,8 +53,8 @@ class Nom:
             )
         )
 
-    def _as_csv_format_bano(self):
-        return f"{self.fantoir}\t{self.nom}\t{self.nature}\t{self.code_insee}\t{self.code_dept}\t{self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else ''}\t{self.nom_ancienne_commune if self.nom_ancienne_commune else ''}\t{self.source}"
+    def _as_csv_format_bano(self,correspondance):
+        return f"{correspondance.get(self.fantoir,self.fantoir)}\t{self.nom}\t{self.nature}\t{self.code_insee}\t{self.code_dept}\t{self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else ''}\t{self.nom_ancienne_commune if self.nom_ancienne_commune else ''}\t{self.source}"
 
     def add_fantoir(self, topo):
         if not self.fantoir:
@@ -159,7 +157,7 @@ class Noms:
     #         # print(f"{branche} - {nom}")
     #         # print(f"{branche} - {nom} > {self.fantoir_par_nom_sous_commune[branche][nom]}")
 
-    def enregistre(self):
+    def enregistre(self,correspondance):
         sql_process(
             "suppression_noms_commune",
             dict(code_insee=self.code_insee),
@@ -167,7 +165,7 @@ class Noms:
         io_in_csv = io.StringIO()
         for t in set(self.triplets_nom_fantoir_source):
             if t.fantoir:
-                io_in_csv.write(t._as_csv_format_bano() + "\n")
+                io_in_csv.write(t._as_csv_format_bano(correspondance) + "\n")
         io_in_csv.seek(0)
         with bano_db.cursor() as cur_insert:
             cur_insert.copy_from(
@@ -239,8 +237,8 @@ class Adresse:
             and self.code_insee_ancienne_commune == other.code_insee_ancienne_commune
         )
 
-    def _as_csv_format_bano(self):
-        return f"{self.fantoir if self.fantoir else ''}\t{self.x}\t{self.y}\t{self.numero}\t{self.voie if self.voie else ''}\t{self.place if self.place else ''}\t{self.code_postal}\t{self.code_insee}\t{self.code_dept}\t{self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else ''}\t{self.nom_ancienne_commune if self.nom_ancienne_commune else ''}\t{self.source}"
+    def _as_csv_format_bano(self,correspondance):
+        return f"{correspondance.get(self.fantoir,self.fantoir) if self.fantoir else ''}\t{self.x}\t{self.y}\t{self.numero}\t{self.voie if self.voie else ''}\t{self.place if self.place else ''}\t{self.code_postal}\t{self.code_insee}\t{self.code_dept}\t{self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else ''}\t{self.nom_ancienne_commune if self.nom_ancienne_commune else ''}\t{self.source}"
 
     def _as_string(self):
         return f"source : {self.source}, numero : {self.numero}, voie : {self.voie} ({self.voie_normalisee}), place : {self.place}, fantoir : {self.fantoir}, code_postal:{self.code_postal}, sous_commune : {self.code_insee_ancienne_commune} - {self.nom_ancienne_commune}"
@@ -441,7 +439,7 @@ class Adresses:
             else:
                 a.fantoir = noms.fantoir_par_nom_sous_commune.get(nom)
 
-    def enregistre(self):
+    def enregistre(self,correspondance):
         sql_process(
             "suppression_adresses_commune",
             dict(code_insee=self.code_insee),
@@ -450,7 +448,7 @@ class Adresses:
 
         for a in set(self.liste): #passage en set pour dedoublonner les adresses de provenances multiples
             io_in_csv.write(
-                a._as_csv_format_bano() + "\n"
+                a._as_csv_format_bano(correspondance) + "\n"
             )  # separateur $ car on trouve des virgules dans le contenu
         io_in_csv.seek(0)
         with bano_db.cursor() as cur_insert:
@@ -516,8 +514,8 @@ class Point_nomme:
     def _as_string(self):
         return f"source : {self.source}, nom : {self.nom} ({self.nom_normalise}), nature : {self.nature}, sous_commune : {self.code_insee_ancienne_commune}"
 
-    def _as_csv_format_bano(self):
-        return f"{self.fantoir if self.fantoir else ''}\t{self.nom}\t{self.code_insee}\t{self.code_dept}\t{self.nature}\t{self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else ''}\t{self.nom_ancienne_commune if self.nom_ancienne_commune else ''}\t{self.source}\t{self.lon}\t{self.lat}"
+    def _as_csv_format_bano(self,correspondance):
+        return f"{correspondance.get(self.fantoir,self.fantoir) if self.fantoir else ''}\t{self.nom}\t{self.code_insee}\t{self.code_dept}\t{self.nature}\t{self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else ''}\t{self.nom_ancienne_commune if self.nom_ancienne_commune else ''}\t{self.source}\t{self.lon}\t{self.lat}"
 
 
 class Points_nommes:
@@ -636,14 +634,14 @@ class Points_nommes:
             else:
                 a.fantoir = noms.fantoir_par_nom_sous_commune.get(a.nom)
 
-    def enregistre(self):
+    def enregistre(self,correspondance):
         sql_process(
             "suppression_points_nommes_commune",
             dict(code_insee=self.code_insee),
         )
         io_in_csv = io.StringIO()
         for t in self:
-            io_in_csv.write(t._as_csv_format_bano() + "\n")
+            io_in_csv.write(t._as_csv_format_bano(correspondance) + "\n")
         io_in_csv.seek(0)
         with bano_db.cursor() as cur_insert:
             cur_insert.copy_from(
@@ -696,3 +694,30 @@ class Topo:
             self.topo[fantoir] = nom
             # self.code_fantoir9_vers_fantoir10[fantoir[0:9]] = fantoir
             self.topo[nom] = fantoir
+
+class Correspondance_fantoir_ban_osm:
+    def __init__(self,code_insee):
+        self.dic_fantoir = {}
+        self.correspondance = {}
+        self.code_insee = code_insee
+
+    def process(self,noms):
+        for n in noms:
+            niveau = n.code_insee_ancienne_commune if n.code_insee_ancienne_commune else 'RACINE'
+            cle = f"{niveau} - {n.nom_normalise}"
+            if n.fantoir and n.source in ('BAN','OSM'):
+                if not cle in self.dic_fantoir:
+                    self.dic_fantoir[cle] = {}
+                if not n.source in self.dic_fantoir[cle]:
+                    self.dic_fantoir[cle][n.source] = {}
+                self.dic_fantoir[cle][n.source] = n.fantoir
+
+                    # [n.code_insee_ancienne_commune if n.code_insee_ancienne_commune else 'RACINE'] = n.fantoir
+        for f in self.dic_fantoir:
+            if 'BAN' in self.dic_fantoir[f] and 'OSM' in self.dic_fantoir[f] and self.dic_fantoir[f]['BAN'] != self.dic_fantoir[f]['OSM']:
+                self.correspondance[self.dic_fantoir[f]['BAN']] = self.dic_fantoir[f]['OSM']
+
+    def enregistre(self):
+        return 0
+
+        # print(n.nom_normalise)

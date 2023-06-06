@@ -3,7 +3,7 @@
 
 from . import db_helpers as h
 from . import batch as b
-from .models import Noms, Adresses, Topo, Points_nommes
+from .models import Noms, Adresses, Topo, Points_nommes, Correspondance_fantoir_ban_osm
 from .sources import ban2topo
 
 
@@ -15,6 +15,7 @@ def process_unitaire(code_insee):
         adresses = Adresses(code_insee)
         points_nommes = Points_nommes(code_insee)
         noms = Noms(code_insee)
+        correspondance_fantoir_ban_osm = Correspondance_fantoir_ban_osm(code_insee)
 
         noms.charge_noms_osm_hors_numeros()
         adresses.charge_numeros_osm()
@@ -31,9 +32,11 @@ def process_unitaire(code_insee):
         points_nommes.complete_fantoir(noms)
         adresses.complete_fantoir(noms)
 
-        adresses.enregistre()
-        noms.enregistre()
-        points_nommes.enregistre()
+        correspondance_fantoir_ban_osm.process(noms)
+
+        adresses.enregistre(correspondance_fantoir_ban_osm.correspondance)
+        noms.enregistre(correspondance_fantoir_ban_osm.correspondance)
+        points_nommes.enregistre(correspondance_fantoir_ban_osm.correspondance)
 
         b.batch_stop_log(id_batch, True)
     except:

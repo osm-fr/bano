@@ -55,6 +55,13 @@ CREATE INDEX IF NOT EXISTS idx_nom_fantoir_code_dept ON nom_fantoir (code_dept);
 CREATE INDEX IF NOT EXISTS idx_nom_fantoir_fantoir ON nom_fantoir (fantoir);
 CREATE INDEX IF NOT EXISTS idx_nom_fantoir_code_insee_source ON nom_fantoir (code_insee,source);
 
+CREATE TABLE IF NOT EXISTS correspondance_fantoir_ban_osm(
+    code_insee text,
+    fantoir_ban text,
+    fantoir_osm text);
+
+CREATE INDEX IF NOT EXISTS idx_correspondance_fantoir_ban_osm_code_insee ON correspondance_fantoir_ban_osm (code_insee);
+CREATE INDEX IF NOT EXISTS idx_correspondance_fantoir_ban_osm_fantoir_ban ON correspondance_fantoir_ban_osm (fantoir_ban);
 
 CREATE TABLE IF NOT EXISTS statut_fantoir (
     fantoir character varying(9),
