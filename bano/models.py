@@ -30,6 +30,8 @@ class Nom:
         self.nature = nature
         self.source = source
         self.nom_normalise = hp.normalize(nom)
+        self.niveau = self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else 'RACINE'
+
 
     def __eq__(self, other):
         return (
@@ -54,7 +56,13 @@ class Nom:
         )
 
     def _as_csv_format_bano(self,correspondance):
-        return f"{correspondance.get(self.fantoir,self.fantoir)}\t{self.nom}\t{self.nature}\t{self.code_insee}\t{self.code_dept}\t{self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else ''}\t{self.nom_ancienne_commune if self.nom_ancienne_commune else ''}\t{self.source}"
+        if self.source == 'BAN':
+            fantoir = remplace_fantoir_ban(correspondance,self.niveau,self.fantoir)
+        else:
+            fantoir = self.fantoir
+        if self.fantoir == '593507469' and self.code_insee_ancienne_commune == '59298':
+            print('test',self.fantoir,fantoir,self.source)
+        return f"{fantoir}\t{self.nom}\t{self.nature}\t{self.code_insee}\t{self.code_dept}\t{self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else ''}\t{self.nom_ancienne_commune if self.nom_ancienne_commune else ''}\t{self.source}"
 
     def add_fantoir(self, topo):
         if not self.fantoir:
@@ -149,14 +157,6 @@ class Noms:
             else:
                 self.fantoir_par_nom_sous_commune[t.nom] = t.fantoir
 
-    # def affiche_fantoir_par_nom_sous_commune(self):
-    #     for branche,noms_fantoir in self.fantoir_par_nom_sous_commune.items():
-    #         for nom,fantoir in noms_fantoir.items():
-    #             print(f"{branche} - {nom} : {fantoir}")
-
-    #         # print(f"{branche} - {nom}")
-    #         # print(f"{branche} - {nom} > {self.fantoir_par_nom_sous_commune[branche][nom]}")
-
     def enregistre(self,correspondance):
         sql_process(
             "suppression_noms_commune",
@@ -214,6 +214,7 @@ class Adresse:
         self.nom_ancienne_commune = nom_ancienne_commune
         self.voie_normalisee = hp.normalize(self.voie) if self.voie else None
         self.place_normalisee = hp.format_toponyme(self.place) if self.place else None
+        self.niveau = self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else 'RACINE'
 
     def __hash__(self):
         return hash(
@@ -238,7 +239,11 @@ class Adresse:
         )
 
     def _as_csv_format_bano(self,correspondance):
-        return f"{correspondance.get(self.fantoir,self.fantoir) if self.fantoir else ''}\t{self.x}\t{self.y}\t{self.numero}\t{self.voie if self.voie else ''}\t{self.place if self.place else ''}\t{self.code_postal}\t{self.code_insee}\t{self.code_dept}\t{self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else ''}\t{self.nom_ancienne_commune if self.nom_ancienne_commune else ''}\t{self.source}"
+        if self.source == 'BAN':
+            fantoir = remplace_fantoir_ban(correspondance,self.niveau,self.fantoir)
+        else:
+            fantoir = self.fantoir
+        return f"{fantoir if fantoir else ''}\t{self.x}\t{self.y}\t{self.numero}\t{self.voie if self.voie else ''}\t{self.place if self.place else ''}\t{self.code_postal}\t{self.code_insee}\t{self.code_dept}\t{self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else ''}\t{self.nom_ancienne_commune if self.nom_ancienne_commune else ''}\t{self.source}"
 
     def _as_string(self):
         return f"source : {self.source}, numero : {self.numero}, voie : {self.voie} ({self.voie_normalisee}), place : {self.place}, fantoir : {self.fantoir}, code_postal:{self.code_postal}, sous_commune : {self.code_insee_ancienne_commune} - {self.nom_ancienne_commune}"
@@ -702,22 +707,25 @@ class Correspondance_fantoir_ban_osm:
         self.code_insee = code_insee
 
     def process(self,noms):
+        niveaux = set()
         for n in noms:
-            niveau = n.code_insee_ancienne_commune if n.code_insee_ancienne_commune else 'RACINE'
-            cle = f"{niveau} - {n.nom_normalise}"
+            niveaux.add(n.niveau)
             if n.fantoir and n.source in ('BAN','OSM'):
-                if not cle in self.dic_fantoir:
-                    self.dic_fantoir[cle] = {}
-                if not n.source in self.dic_fantoir[cle]:
-                    self.dic_fantoir[cle][n.source] = {}
-                self.dic_fantoir[cle][n.source] = n.fantoir
+                if not n.niveau in self.dic_fantoir:
+                    self.dic_fantoir[n.niveau] = {}
+                if not n.nom_normalise in self.dic_fantoir[n.niveau]:
+                    self.dic_fantoir[n.niveau][n.nom_normalise] = {}
+                self.dic_fantoir[n.niveau][n.nom_normalise][n.source] = n.fantoir
+        for n in niveaux:
+            self.correspondance[n] = {}
 
-                    # [n.code_insee_ancienne_commune if n.code_insee_ancienne_commune else 'RACINE'] = n.fantoir
-        for f in self.dic_fantoir:
-            if 'BAN' in self.dic_fantoir[f] and 'OSM' in self.dic_fantoir[f] and self.dic_fantoir[f]['BAN'] != self.dic_fantoir[f]['OSM']:
-                self.correspondance[self.dic_fantoir[f]['BAN']] = self.dic_fantoir[f]['OSM']
+            for f in self.dic_fantoir[n]:
+                if 'BAN' in self.dic_fantoir[n][f] and 'OSM' in self.dic_fantoir[n][f] and self.dic_fantoir[n][f]['BAN'] != self.dic_fantoir[n][f]['OSM']:
+                    self.correspondance[f"{n} {self.dic_fantoir[n][f]['BAN']}"] = self.dic_fantoir[n][f]['OSM']
 
     def enregistre(self):
         return 0
 
-        # print(n.nom_normalise)
+def remplace_fantoir_ban(correspondance,niveau,fantoir):
+    cle = f"{niveau} {fantoir}"
+    return correspondance.get(cle,fantoir)
