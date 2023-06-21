@@ -62,4 +62,24 @@ CREATE TABLE IF NOT EXISTS suffixe (
 CREATE INDEX IF NOT EXISTS gidx_suffixe ON suffixe USING GIST(geometrie);
 CREATE INDEX IF NOT EXISTS idx_suffixe ON suffixe(code_insee);
 
+CREATE TABLE IF NOT EXISTS communes_summary (
+        reg character varying(3),
+        dep character varying(3),
+        code_insee character(5),
+        libelle text,
+        population integer,
+        id_revision text,
+        date_revision text,
+        type_composition text,
+        nb_lieux_dits integer,
+        nb_voies integer,
+        nb_numeros integer,
+        nb_numeros_certifies integer,
+        analyse_adressage_nb_adresses_attendues integer,
+        analyse_adressage_ratio float,
+        analyse_adressage_deficit_adresses float,
+        composed_at text);
+
+CREATE INDEX IF NOT EXISTS communes_summary_code_insee ON communes_summary (code_insee);
+
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO public;

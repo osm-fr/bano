@@ -8,7 +8,7 @@ from . import pre_process_suffixe
 from . import setup_db
 from . import rapprochement
 from . import boite_a_outils
-from .sources import topo, ban, cog, cadastre_ld, ban2topo
+from .sources import topo, ban, cog, cadastre_ld, ban2topo, datagouv_commune_summary as datagouv_cs
 from .constants import DEPARTEMENTS
 
 
@@ -62,6 +62,13 @@ def main():
         default=DEPARTEMENTS,
     )
     subparser.set_defaults(func=cadastre_ld.process)
+
+    subparser = subparsers.add_parser(
+        "download_commune_summary",
+        help="Met à jour les stats de BAL",
+        description="Met à jour les stats de BAL",
+    )
+    subparser.set_defaults(func=datagouv_cs.process)
 
     subparser = subparsers.add_parser(
         "update_bis_table",
