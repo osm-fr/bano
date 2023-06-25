@@ -60,4 +60,5 @@ VALUES (0,0,'Ok'),
 (4,4,'Emplacement sur une autre voie'),
 (5,5,'Adresse en dehors de la commune'),
 (6,6,'Adresse doublon'),
-(7,7,'Adresse aussi associée à une voie');
+(7,7,'Adresse de lieu-dit aussi associée à une voie'),
+(8,8,'Emplacement manifestement incohérent');
