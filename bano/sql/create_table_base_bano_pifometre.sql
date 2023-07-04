@@ -61,4 +61,5 @@ VALUES (0,0,'Ok'),
 (5,5,'Adresse en dehors de la commune'),
 (6,6,'Adresse doublon'),
 (7,7,'Adresse de lieu-dit aussi associée à une voie'),
-(8,8,'Emplacement manifestement incohérent');
+(8,8,'Emplacement manifestement incohérent'),
+(9,9,'Ancienne numérotation plus en vigueur');
