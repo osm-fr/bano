@@ -19,7 +19,7 @@ echo debut >> $SCRIPT_DIR/cron.log
 touch ${lockfile}
 
 osmosis --rri workingDirectory=${DOWNLOAD_DIR} --wxc ${DOWNLOAD_DIR}/changes.osc.gz
-imposm diff -config $SCRIPT_DIR/imposm.config -dbschema-production osm -expiretiles-dir $EXPIRE_TILES_DIR -expiretiles-zoom 16 ${DOWNLOAD_DIR}/changes.osc.gz
+imposm diff -config $SCRIPT_DIR/imposm.config -dbschema-production osm ${DOWNLOAD_DIR}/changes.osc.gz
 #$SCRIPT_DIR/update_table_infos_communes.sh
 
 rm ${lockfile}
