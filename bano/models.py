@@ -10,6 +10,7 @@ from . import helpers as hp
 
 from .sql import sql_get_data, sql_process
 
+
 class Nom:
     def __init__(
         self,
@@ -24,14 +25,17 @@ class Nom:
         self.code_insee = code_insee
         self.code_dept = hp.get_code_dept_from_insee(code_insee)
         self.code_insee_ancienne_commune = code_insee_ancienne_commune
-        self.nom = nom.replace('\t',' ')
+        self.nom = nom.replace("\t", " ")
         self.nom_ancienne_commune = nom_ancienne_commune
         self.fantoir = fantoir[0:9] if fantoir else None
         self.nature = nature
         self.source = source
         self.nom_normalise = hp.normalize(nom)
-        self.niveau = self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else 'RACINE'
-
+        self.niveau = (
+            self.code_insee_ancienne_commune
+            if self.code_insee_ancienne_commune
+            else "RACINE"
+        )
 
     def __eq__(self, other):
         return (
@@ -55,18 +59,19 @@ class Nom:
             )
         )
 
-    def _as_csv_format_bano(self,correspondance):
-        if self.source == 'BAN':
-            fantoir = remplace_fantoir_ban(correspondance,self.niveau,self.fantoir)
+    def _as_csv_format_bano(self, correspondance):
+        if self.source == "BAN":
+            fantoir = remplace_fantoir_ban(correspondance, self.niveau, self.fantoir)
         else:
             fantoir = self.fantoir
-        if self.fantoir == '593507469' and self.code_insee_ancienne_commune == '59298':
-            print('test',self.fantoir,fantoir,self.source)
+        if self.fantoir == "593507469" and self.code_insee_ancienne_commune == "59298":
+            print("test", self.fantoir, fantoir, self.source)
         return f"{fantoir}\t{self.nom}\t{self.nature}\t{self.code_insee}\t{self.code_dept}\t{self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else ''}\t{self.nom_ancienne_commune if self.nom_ancienne_commune else ''}\t{self.source}"
 
     def add_fantoir(self, topo):
         if not self.fantoir:
             self.fantoir = topo.topo.get(self.nom_normalise)
+
 
 class Noms:
     def __init__(self, code_insee):
@@ -157,7 +162,7 @@ class Noms:
             else:
                 self.fantoir_par_nom_sous_commune[t.nom] = t.fantoir
 
-    def enregistre(self,correspondance):
+    def enregistre(self, correspondance):
         sql_process(
             "suppression_noms_commune",
             dict(code_insee=self.code_insee),
@@ -214,7 +219,11 @@ class Adresse:
         self.nom_ancienne_commune = nom_ancienne_commune
         self.voie_normalisee = hp.normalize(self.voie) if self.voie else None
         self.place_normalisee = hp.format_toponyme(self.place) if self.place else None
-        self.niveau = self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else 'RACINE'
+        self.niveau = (
+            self.code_insee_ancienne_commune
+            if self.code_insee_ancienne_commune
+            else "RACINE"
+        )
 
     def __hash__(self):
         return hash(
@@ -238,9 +247,9 @@ class Adresse:
             and self.code_insee_ancienne_commune == other.code_insee_ancienne_commune
         )
 
-    def _as_csv_format_bano(self,correspondance):
-        if self.source == 'BAN':
-            fantoir = remplace_fantoir_ban(correspondance,self.niveau,self.fantoir)
+    def _as_csv_format_bano(self, correspondance):
+        if self.source == "BAN":
+            fantoir = remplace_fantoir_ban(correspondance, self.niveau, self.fantoir)
         else:
             fantoir = self.fantoir
         return f"{fantoir if fantoir else ''}\t{self.x}\t{self.y}\t{self.numero}\t{self.voie if self.voie else ''}\t{self.place if self.place else ''}\t{self.code_postal}\t{self.code_insee}\t{self.code_dept}\t{self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else ''}\t{self.nom_ancienne_commune if self.nom_ancienne_commune else ''}\t{self.source}"
@@ -336,7 +345,7 @@ class Adresses:
         ) in data:
 
             fantoir = tags.get("ref:FR:FANTOIR")
-            if fantoir :
+            if fantoir:
                 fantoir = fantoir[0:9]
             if fantoir and not hp.fantoir_valide(fantoir, self.code_insee):
                 continue
@@ -444,14 +453,16 @@ class Adresses:
             else:
                 a.fantoir = noms.fantoir_par_nom_sous_commune.get(nom)
 
-    def enregistre(self,correspondance):
+    def enregistre(self, correspondance):
         sql_process(
             "suppression_adresses_commune",
             dict(code_insee=self.code_insee),
         )
         io_in_csv = io.StringIO()
 
-        for a in set(self.liste): #passage en set pour dedoublonner les adresses de provenances multiples
+        for a in set(
+            self.liste
+        ):  # passage en set pour dedoublonner les adresses de provenances multiples
             io_in_csv.write(
                 a._as_csv_format_bano(correspondance) + "\n"
             )  # separateur $ car on trouve des virgules dans le contenu
@@ -497,7 +508,7 @@ class Point_nomme:
         self.lon = round(lon, 6)
         self.lat = round(lat, 6)
         self.nature = nature
-        self.nom = nom.replace('\t',' ')
+        self.nom = nom.replace("\t", " ")
         self.nom_normalise = hp.normalize(nom)
         self.fantoir = fantoir[0:9] if fantoir else None
         self.code_insee_ancienne_commune = code_insee_ancienne_commune
@@ -505,7 +516,12 @@ class Point_nomme:
 
     def __hash__(self):
         return hash(
-            (self.code_insee, self.source, self.nom_normalise, self.code_insee_ancienne_commune)
+            (
+                self.code_insee,
+                self.source,
+                self.nom_normalise,
+                self.code_insee_ancienne_commune,
+            )
         )
 
     def __eq__(self, other):
@@ -519,7 +535,7 @@ class Point_nomme:
     def _as_string(self):
         return f"source : {self.source}, nom : {self.nom} ({self.nom_normalise}), nature : {self.nature}, sous_commune : {self.code_insee_ancienne_commune}"
 
-    def _as_csv_format_bano(self,correspondance):
+    def _as_csv_format_bano(self, correspondance):
         return f"{correspondance.get(self.fantoir,self.fantoir) if self.fantoir else ''}\t{self.nom}\t{self.code_insee}\t{self.code_dept}\t{self.nature}\t{self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else ''}\t{self.nom_ancienne_commune if self.nom_ancienne_commune else ''}\t{self.source}\t{self.lon}\t{self.lat}"
 
 
@@ -544,7 +560,7 @@ class Points_nommes:
             "charge_points_nommes_lieux-dits_CADASTRE",
             dict(code_insee=self.code_insee),
         )
-        for x, y, nom, code_insee_ancienne_commune,nom_ancienne_commune in data:
+        for x, y, nom, code_insee_ancienne_commune, nom_ancienne_commune in data:
             self.add_point_nomme(
                 Point_nomme(
                     self.code_insee,
@@ -563,7 +579,14 @@ class Points_nommes:
             "charge_points_nommes_centroides_OSM",
             dict(code_insee=self.code_insee),
         )
-        for x, y, nom, code_insee_ancienne_commune, fantoir, nom_ancienne_commune in data:
+        for (
+            x,
+            y,
+            nom,
+            code_insee_ancienne_commune,
+            fantoir,
+            nom_ancienne_commune,
+        ) in data:
             self.add_point_nomme(
                 Point_nomme(
                     self.code_insee,
@@ -583,7 +606,14 @@ class Points_nommes:
             "charge_points_nommes_places_OSM",
             dict(code_insee=self.code_insee),
         )
-        for x, y, nom, code_insee_ancienne_commune, fantoir, nom_ancienne_commune in data:
+        for (
+            x,
+            y,
+            nom,
+            code_insee_ancienne_commune,
+            fantoir,
+            nom_ancienne_commune,
+        ) in data:
             self.add_point_nomme(
                 Point_nomme(
                     self.code_insee,
@@ -639,7 +669,7 @@ class Points_nommes:
             else:
                 a.fantoir = noms.fantoir_par_nom_sous_commune.get(a.nom)
 
-    def enregistre(self,correspondance):
+    def enregistre(self, correspondance):
         sql_process(
             "suppression_points_nommes_commune",
             dict(code_insee=self.code_insee),
@@ -666,6 +696,10 @@ class Points_nommes:
                     "lat",
                 ),
             )
+        sql_process(
+            "complement_points_nommes_numeros_OSM",
+            dict(code_insee=self.code_insee),
+        )
 
 
 class Topo:
@@ -700,17 +734,18 @@ class Topo:
             # self.code_fantoir9_vers_fantoir10[fantoir[0:9]] = fantoir
             self.topo[nom] = fantoir
 
+
 class Correspondance_fantoir_ban_osm:
-    def __init__(self,code_insee):
+    def __init__(self, code_insee):
         self.dic_fantoir = {}
         self.correspondance = {}
         self.code_insee = code_insee
 
-    def process(self,noms):
+    def process(self, noms):
         niveaux = set()
         for n in noms:
             niveaux.add(n.niveau)
-            if n.fantoir and n.source in ('BAN','OSM'):
+            if n.fantoir and n.source in ("BAN", "OSM"):
                 if not n.niveau in self.dic_fantoir:
                     self.dic_fantoir[n.niveau] = {}
                 if not n.nom_normalise in self.dic_fantoir[n.niveau]:
@@ -720,12 +755,19 @@ class Correspondance_fantoir_ban_osm:
             self.correspondance[n] = {}
 
             for f in self.dic_fantoir[n]:
-                if 'BAN' in self.dic_fantoir[n][f] and 'OSM' in self.dic_fantoir[n][f] and self.dic_fantoir[n][f]['BAN'] != self.dic_fantoir[n][f]['OSM']:
-                    self.correspondance[f"{n} {self.dic_fantoir[n][f]['BAN']}"] = self.dic_fantoir[n][f]['OSM']
+                if (
+                    "BAN" in self.dic_fantoir[n][f]
+                    and "OSM" in self.dic_fantoir[n][f]
+                    and self.dic_fantoir[n][f]["BAN"] != self.dic_fantoir[n][f]["OSM"]
+                ):
+                    self.correspondance[
+                        f"{n} {self.dic_fantoir[n][f]['BAN']}"
+                    ] = self.dic_fantoir[n][f]["OSM"]
 
     def enregistre(self):
         return 0
 
-def remplace_fantoir_ban(correspondance,niveau,fantoir):
+
+def remplace_fantoir_ban(correspondance, niveau, fantoir):
     cle = f"{niveau} {fantoir}"
-    return correspondance.get(cle,fantoir)
+    return correspondance.get(cle, fantoir)
