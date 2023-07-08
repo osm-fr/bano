@@ -31,10 +31,12 @@ def process_ban(departements, **kwargs):
             if not (import_to_pg(dept)):
                 depts_en_echec.append(dept)
                 print("depts_en_echec", depts_en_echec)
+            else:
+                pre_process_suffixe.process(dept)
     for dept in depts_en_echec:
         print(f"Département {dept}")
         import_to_pg_subp(dept)
-    pre_process_suffixe.process(departements)
+        pre_process_suffixe.process(dept)
 
 
 def download(departement):
@@ -55,6 +57,9 @@ def download(departement):
         os.utime(destination, (mtime, mtime))
         b.batch_stop_log(id_batch, True)
         return True
+    if resp.status_code == 304:
+        b.batch_stop_log(id_batch, True)
+        return False
     print(resp.status_code)
     b.batch_stop_log(id_batch, False)
     return False
