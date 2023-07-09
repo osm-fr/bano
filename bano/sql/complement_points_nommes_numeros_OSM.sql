@@ -1,6 +1,6 @@
 INSERT INTO bano_points_nommes (fantoir,nom,code_insee,code_dept,nature,code_insee_ancienne_commune,nom_ancienne_commune,source,lon,lat)
 SELECT fantoir,
-       nom_voie,
+       COALESCE(nom_voie,nom_place),
 	   code_insee,
 	   code_dept,
 	   'numero',
