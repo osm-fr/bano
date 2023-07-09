@@ -39,6 +39,7 @@ CREATE INDEX IF NOT EXISTS idx_bano_points_nommes_fantoir ON bano_points_nommes 
 CREATE INDEX IF NOT EXISTS idx_bano_points_nommes_fantoir_source ON bano_points_nommes (fantoir,source);
 CREATE INDEX IF NOT EXISTS idx_bano_points_nommes_code_insee_source ON bano_points_nommes (code_insee,source);
 CREATE INDEX IF NOT EXISTS idx_bano_points_nommes_code_insee_nature ON bano_points_nommes (code_insee,nature);
+CREATE INDEX IF NOT EXISTS idx_bano_points_nommes_code_dept_nature ON bano_points_nommes (code_dept,nature);
 
 CREATE TABLE IF NOT EXISTS nom_fantoir (
     fantoir text,
