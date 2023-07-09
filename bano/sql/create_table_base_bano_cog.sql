@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS cog_commune (
         can character(5),
         comparent character(5));
 CREATE INDEX IF NOT EXISTS idx_cog_commune_com ON cog_commune(com);
+CREATE INDEX IF NOT EXISTS idx_cog_commune_dep ON cog_commune(dep);
 
 CREATE TABLE IF NOT EXISTS cog_canton (
         can character(5),
