@@ -305,11 +305,11 @@ class Adresses:
             code_insee_ancienne_commune,
             nom_ancienne_commune,
         ) in data:
-            if id_fantoir:
+            if id_fantoir and f"{id_fantoir[0:5]}{id_fantoir[6:10]}" in topo.topo:
                 fantoir = f"{id_fantoir[0:5]}{id_fantoir[6:10]}"
-                # fantoir = topo.code_fantoir9_vers_fantoir10.get(fantoir9)
             else:
                 fantoir = None
+
             self.add_adresse(
                 Adresse(
                     self.code_insee,
@@ -733,7 +733,6 @@ class Topo:
             self.topo[fantoir] = nom
             # self.code_fantoir9_vers_fantoir10[fantoir[0:9]] = fantoir
             self.topo[nom] = fantoir
-
 
 class Correspondance_fantoir_ban_osm:
     def __init__(self, code_insee):
