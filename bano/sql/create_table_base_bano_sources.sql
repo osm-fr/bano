@@ -17,6 +17,7 @@ CREATE INDEX IF NOT EXISTS idx_topo_fantoir  ON topo(fantoir);
 CREATE TABLE IF NOT EXISTS ban (
     id text,
     id_fantoir text,
+    fantoir text GENERATED ALWAYS AS (substr(id_fantoir,0,6)||substr(id_fantoir,7,10)) STORED,
     numero  text,
     rep text,
     nom_voie text,
