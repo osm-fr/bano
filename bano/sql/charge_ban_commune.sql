@@ -1,7 +1,7 @@
 WITH
 j
 AS
-(SELECT id_fantoir,
+(SELECT fantoir,
 	    numero,
 	    nom_voie,
 	    lon,
@@ -22,9 +22,9 @@ AS
         nom_ancienne_commune
 FROM    ban b
 LEFT OUTER JOIN rep_b_as_bis r
-USING   (id_fantoir,numero)
+USING   (fantoir,numero)
 WHERE   code_insee = '__code_insee__')
-SELECT  id_fantoir,
+SELECT  fantoir,
         TRIM (BOTH FROM (numero||' '||COALESCE(rep_bis,rep,''))),
         nom_voie,
         lon,

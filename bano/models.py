@@ -296,7 +296,7 @@ class Adresses:
     def charge_numeros_ban(self, topo):
         data = sql_get_data("charge_ban_commune", dict(code_insee=self.code_insee))
         for (
-            id_fantoir,
+            fantoir,
             numero,
             voie,
             lon,
@@ -305,9 +305,7 @@ class Adresses:
             code_insee_ancienne_commune,
             nom_ancienne_commune,
         ) in data:
-            if id_fantoir and f"{id_fantoir[0:5]}{id_fantoir[6:10]}" in topo.topo:
-                fantoir = f"{id_fantoir[0:5]}{id_fantoir[6:10]}"
-            else:
+            if not (fantoir and fantoir in topo.topo):
                 fantoir = None
 
             self.add_adresse(
