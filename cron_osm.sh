@@ -9,8 +9,14 @@ lockfile=${SCRIPT_DIR}/imposm.lock
 
 if test -f ${lockfile}
 then
-  echo `date`" : Process deja en cours" >> $SCRIPT_DIR/cron.log
-  exit 0
+  diff_age=$((`date +%s` - `stat -c %Y $lockfile`))
+  # echo $diff_age
+  if [ $diff_age -gt 14400 ];then
+    rm imposm.lock
+  else
+    echo `date`" : Process deja en cours"
+    exit 0
+  fi
 fi
 
 echo `date` > $SCRIPT_DIR/cron.log
