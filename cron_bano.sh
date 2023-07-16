@@ -14,10 +14,7 @@ pip install -e .
 # Sources
 cat deplist.txt | parallel -j 4 export LANG=fr_FR.UTF-8\; bano charge_ban {1}
 cat deplist.txt | parallel -j 4 export LANG=fr_FR.UTF-8\; bano charge_ld_cadastre {1}
-
-# bano update_bis_table
-# ./copy_table_from_osm_to_cadastre.sh rep_b_as_bis
-
+bano update_bis_table
 
 # BANO
 # bano update_insee_lists
@@ -37,7 +34,7 @@ cat deplist.txt        | parallel -j 4 export LANG=fr_FR.UTF-8\; bano rapprochem
 # bano publish_aggregate
 
 # ménage PostgreSQL
-psql -d cadastre -U cadastre -c "VACUUM bano_adresses;"
-psql -d cadastre -U cadastre -c "VACUUM bano_points_nommes;"
-psql -d cadastre -U cadastre -c "VACUUM nom_fantoir;"
-psql -d cadastre -U cadastre -c "GRANT SELECT ON ALL TABLES IN SCHEMA PUBLIC TO PUBLIC";
+psql -d bano -U cadastre -c "VACUUM bano_adresses;"
+psql -d bano -U cadastre -c "VACUUM bano_points_nommes;"
+psql -d bano -U cadastre -c "VACUUM nom_fantoir;"
+psql -d bano -U cadastre -c "GRANT SELECT ON ALL TABLES IN SCHEMA PUBLIC TO PUBLIC";
