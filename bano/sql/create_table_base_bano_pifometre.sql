@@ -35,7 +35,8 @@ VALUES (0,0,'Ok'),
 (18,17,'FANTOIR annulé non remplacé'),
 (19,18,'Point cardinal superflu'),
 (20,19,'Voie en projet'),
-(21,20,'Lieu-dit sur plusieurs communes');
+(21,20,'Lieu-dit sur plusieurs communes'),
+(22,21,'Chaussée hors commune');
 
 CREATE TABLE IF NOT EXISTS statut_numero (
     numero text,

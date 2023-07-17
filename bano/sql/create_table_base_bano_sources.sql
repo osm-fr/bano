@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS ban (
     geometrie geometry (Point, 4326) GENERATED ALWAYS AS (ST_Point(lon,lat)) STORED);
 
 CREATE INDEX IF NOT EXISTS idx_ban_code_insee ON ban(code_insee);
+CREATE INDEX IF NOT EXISTS idx_ban_fantoir ON ban(fantoir);
 CREATE INDEX IF NOT EXISTS gidx_ban ON ban(geometrie);
 
 CREATE TABLE IF NOT EXISTS lieux_dits (
