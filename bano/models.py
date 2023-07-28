@@ -64,8 +64,6 @@ class Nom:
             fantoir = remplace_fantoir_ban(correspondance, self.niveau, self.fantoir)
         else:
             fantoir = self.fantoir
-        if self.fantoir == "593507469" and self.code_insee_ancienne_commune == "59298":
-            print("test", self.fantoir, fantoir, self.source)
         return f"{fantoir}\t{self.nom}\t{self.nature}\t{self.code_insee}\t{self.code_dept}\t{self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else ''}\t{self.nom_ancienne_commune if self.nom_ancienne_commune else ''}\t{self.source}"
 
     def add_fantoir(self, topo):
