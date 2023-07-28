@@ -7,20 +7,21 @@ source $SCRIPT_DIR/config
 
 lockfile=${SCRIPT_DIR}/imposm.lock
 
+echo `date`>> $SCRIPT_DIR/cron.log
+echo debut >> $SCRIPT_DIR/cron.log
+
 if test -f ${lockfile}
 then
   diff_age=$((`date +%s` - `stat -c %Y $lockfile`))
-  # echo $diff_age
   if [ $diff_age -gt 14400 ];then
-    rm imposm.lock
+    echo "Effacement du lock" >> $SCRIPT_DIR/cron.log
+    rm ${lockfile}
   else
-    echo `date`" : Process deja en cours"
+    echo `date`" : Process deja en cours" >> $SCRIPT_DIR/cron.log
     exit 0
   fi
 fi
 
-echo `date` > $SCRIPT_DIR/cron.log
-echo debut >> $SCRIPT_DIR/cron.log
 
 touch ${lockfile}
 
