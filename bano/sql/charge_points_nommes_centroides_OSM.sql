@@ -15,7 +15,7 @@ LEFT OUTER JOIN (SELECT * FROM polygones_insee_a9 WHERE insee_a8 = '__code_insee
 ON      ST_Intersects(l.way, a9.geometrie)
 WHERE   (l.highway != '' OR
         l.waterway = 'dam')     AND
-        l.highway != 'bus_stop' AND
+        l.highway NOT IN ('bus_stop','platform') AND
         l.name != ''
 UNION ALL
 SELECT  ST_PointOnSurface(l.way),
@@ -31,7 +31,7 @@ ON      ST_Intersects(l.way, p.geometrie)
 LEFT OUTER JOIN (SELECT * FROM polygones_insee_a9 WHERE insee_a8 = '__code_insee__') a9
 ON      ST_Intersects(l.way, a9.geometrie)
 WHERE   (l.highway||"ref:FR:FANTOIR" != '' OR l.landuse = 'residential' OR l.amenity = 'parking') AND
-        l.highway != 'bus_stop' AND
+        l.highway NOT IN ('bus_stop','platform') AND
         l.name != ''
 UNION ALL
 SELECT l.way,
@@ -110,7 +110,7 @@ FROM    (SELECT pl.way point,
                 ST_Intersects(pl.way, p.way)
         WHERE   (pl."ref:FR:FANTOIR" != ''  OR
                 pl.junction != '') AND
-                pl.highway != 'bus_stop' AND
+                pl.highway NOT IN ('bus_stop','platform') AND
                 pl.name != ''
         UNION
         SELECT  ST_Centroid(pl.way),
@@ -124,7 +124,7 @@ FROM    (SELECT pl.way point,
                     pl.landuse = 'residential' OR
                     pl.place = 'square' OR
                     pl.amenity = 'school')  AND
-                    pl.highway != 'bus_stop' AND
+                    pl.highway NOT IN ('bus_stop','platform') AND
                     pl.name != '')c
 LEFT OUTER JOIN (SELECT * FROM polygones_insee_a9 WHERE insee_a8 = '__code_insee__') a9
 ON      ST_Intersects(c.point, a9.geometrie))
