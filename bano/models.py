@@ -202,6 +202,7 @@ class Adresse:
         code_postal=None,
         code_insee_ancienne_commune=None,
         nom_ancienne_commune=None,
+        id_ban=None
     ):
         self.code_insee = code_insee
         self.code_dept = hp.get_code_dept_from_insee(code_insee)
@@ -222,6 +223,7 @@ class Adresse:
             if self.code_insee_ancienne_commune
             else "RACINE"
         )
+        self.id_ban = id_ban
 
     def __hash__(self):
         return hash(
@@ -250,7 +252,7 @@ class Adresse:
             fantoir = remplace_fantoir_ban(correspondance, self.niveau, self.fantoir)
         else:
             fantoir = self.fantoir
-        return f"{fantoir if fantoir else ''}\t{self.x}\t{self.y}\t{self.numero}\t{self.voie if self.voie else ''}\t{self.place if self.place else ''}\t{self.code_postal}\t{self.code_insee}\t{self.code_dept}\t{self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else ''}\t{self.nom_ancienne_commune if self.nom_ancienne_commune else ''}\t{self.source}"
+        return f"{fantoir if fantoir else ''}\t{self.x}\t{self.y}\t{self.numero}\t{self.voie if self.voie else ''}\t{self.place if self.place else ''}\t{self.code_postal}\t{self.code_insee}\t{self.code_dept}\t{self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else ''}\t{self.nom_ancienne_commune if self.nom_ancienne_commune else ''}\t{self.source}\t{self.id_ban if self.id_ban else ''}"
 
     def _as_string(self):
         return f"source : {self.source}, numero : {self.numero}, voie : {self.voie} ({self.voie_normalisee}), place : {self.place}, fantoir : {self.fantoir}, code_postal:{self.code_postal}, sous_commune : {self.code_insee_ancienne_commune} - {self.nom_ancienne_commune}"
@@ -302,6 +304,7 @@ class Adresses:
             code_postal,
             code_insee_ancienne_commune,
             nom_ancienne_commune,
+            id_ban
         ) in data:
             if not (fantoir and fantoir in topo.topo):
                 fantoir = None
@@ -318,6 +321,7 @@ class Adresses:
                     code_postal=code_postal,
                     code_insee_ancienne_commune=code_insee_ancienne_commune,
                     nom_ancienne_commune=nom_ancienne_commune,
+                    id_ban=id_ban
                 )
             )
 
@@ -481,6 +485,7 @@ class Adresses:
                     "code_insee_ancienne_commune",
                     "nom_ancienne_commune",
                     "source",
+                    "id_ban"
                 ),
             )
 
@@ -739,6 +744,8 @@ class Correspondance_fantoir_ban_osm:
     def process(self, noms):
         niveaux = set()
         for n in noms:
+            if n.source not in ("BAN", "OSM") or not n.fantoir:
+                continue
             niveaux.add(n.niveau)
             if n.fantoir and n.source in ("BAN", "OSM"):
                 if not n.niveau in self.dic_fantoir:

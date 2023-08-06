@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS bano_adresses (
     nom_ancienne_commune text,
     source text,
     certification_commune integer,
+    id_ban text,
     geometrie geometry (Point, 4326) GENERATED ALWAYS AS (ST_Point(lon,lat)) STORED);
 
 CREATE INDEX IF NOT EXISTS gidx_bano_adresses ON bano_adresses USING GIST(geometrie);
