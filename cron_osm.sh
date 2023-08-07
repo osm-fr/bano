@@ -27,7 +27,8 @@ touch ${lockfile}
 
 osmosis --rri workingDirectory=${DOWNLOAD_DIR} --wxc ${DOWNLOAD_DIR}/changes.osc.gz
 imposm diff -config $SCRIPT_DIR/imposm.config -dbschema-production osm ${DOWNLOAD_DIR}/changes.osc.gz
-#$SCRIPT_DIR/update_table_infos_communes.sh
+
+bano update_table_communes
 
 rm ${lockfile}
 
