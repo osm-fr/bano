@@ -2,7 +2,13 @@
 
 set -e
 
+source /data/project/bano_v3/venv_v3/bin/activate
+
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+cd $SCRIPT_DIR
+pip install -e .
+
 source $SCRIPT_DIR/config
 
 lockfile=${SCRIPT_DIR}/imposm.lock
@@ -13,7 +19,7 @@ echo debut >> $SCRIPT_DIR/cron.log
 if test -f ${lockfile}
 then
   diff_age=$((`date +%s` - `stat -c %Y $lockfile`))
-  if [ $diff_age -gt 14400 ];then
+  if [ $diff_age -gt 7200 ];then
     echo "Effacement du lock" >> $SCRIPT_DIR/cron.log
     rm ${lockfile}
   else
@@ -27,7 +33,6 @@ touch ${lockfile}
 
 osmosis --rri workingDirectory=${DOWNLOAD_DIR} --wxc ${DOWNLOAD_DIR}/changes.osc.gz
 imposm diff -config $SCRIPT_DIR/imposm.config -dbschema-production osm ${DOWNLOAD_DIR}/changes.osc.gz
-
 bano update_table_communes
 
 rm ${lockfile}
