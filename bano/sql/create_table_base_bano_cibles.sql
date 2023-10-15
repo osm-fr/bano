@@ -85,3 +85,14 @@ CREATE TABLE IF NOT EXISTS statut_numero (
 CREATE INDEX IF NOT EXISTS idx_statut_numero_fantoir ON statut_numero (fantoir, numero);
 
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO public;
+
+CREATE TABLE IF NOT EXISTS bano_stats_communales(
+    code_insee text,
+    nb_adresses_osm integer,
+    nb_adresses_ban integer,
+    nb_nom_osm integer,
+    nb_nom_ban integer,
+    nb_nom_cadastre integer,
+    nb_nom_topo integer);
+
+CREATE INDEX IF NOT EXISTS idx_bano_stats_communales_code_insee ON bano_stats_communales (code_insee);

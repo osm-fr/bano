@@ -187,6 +187,17 @@ class Noms:
                 ),
             )
 
+    def stats_sources(self):
+        par_source = {"BAN": set(), "OSM": set(), "CADASTRE": set()}
+        for t in self:
+            if t.fantoir:
+                par_source[t.source].add(t.fantoir)
+        return [
+            len(par_source["BAN"]),
+            len(par_source["CADASTRE"]),
+            len(par_source["OSM"]),
+        ]
+
 
 class Adresse:
     def __init__(
@@ -202,7 +213,7 @@ class Adresse:
         code_postal=None,
         code_insee_ancienne_commune=None,
         nom_ancienne_commune=None,
-        id_ban=None
+        id_ban=None,
     ):
         self.code_insee = code_insee
         self.code_dept = hp.get_code_dept_from_insee(code_insee)
@@ -304,7 +315,7 @@ class Adresses:
             code_postal,
             code_insee_ancienne_commune,
             nom_ancienne_commune,
-            id_ban
+            id_ban,
         ) in data:
             if not (fantoir and fantoir in topo.topo):
                 fantoir = None
@@ -321,7 +332,7 @@ class Adresses:
                     code_postal=code_postal,
                     code_insee_ancienne_commune=code_insee_ancienne_commune,
                     nom_ancienne_commune=nom_ancienne_commune,
-                    id_ban=id_ban
+                    id_ban=id_ban,
                 )
             )
 
@@ -485,9 +496,16 @@ class Adresses:
                     "code_insee_ancienne_commune",
                     "nom_ancienne_commune",
                     "source",
-                    "id_ban"
+                    "id_ban",
                 ),
             )
+
+    def stats_sources(self):
+        par_source = {"BAN": set(), "OSM": set()}
+        for t in self:
+            if t.fantoir:
+                par_source[t.source].add(f"{t.numero}{t.fantoir}")
+        return [len(par_source["BAN"]), len(par_source["OSM"])]
 
 
 class Point_nomme:
@@ -707,6 +725,7 @@ class Topo:
     def __init__(self, code_insee):
         self.code_insee = code_insee
         self.topo = OrderedDict()
+        self.nb_fantoirs = 0
         # self.code_fantoir9_vers_fantoir10 = {}
 
         # self.index_by_nom_normalise = defaultdict(list)
@@ -732,8 +751,10 @@ class Topo:
         for fantoir, nom in data:
             nom = hp.normalize(" ".join(nom.replace("-", " ").split()))
             self.topo[fantoir] = nom
-            # self.code_fantoir9_vers_fantoir10[fantoir[0:9]] = fantoir
             self.topo[nom] = fantoir
+            if not "b" in fantoir:
+                self.nb_fantoirs += 1
+
 
 class Correspondance_fantoir_ban_osm:
     def __init__(self, code_insee):

@@ -3,6 +3,7 @@
 
 from . import db_helpers as h
 from . import batch as b
+from .sql import sql_process
 from .models import Noms, Adresses, Topo, Points_nommes, Correspondance_fantoir_ban_osm
 from .sources import ban2topo
 
@@ -37,6 +38,22 @@ def process_unitaire(code_insee):
         adresses.enregistre(correspondance_fantoir_ban_osm.correspondance)
         noms.enregistre(correspondance_fantoir_ban_osm.correspondance)
         points_nommes.enregistre(correspondance_fantoir_ban_osm.correspondance)
+
+        nb_addr_ban, nb_addr_osm = adresses.stats_sources()
+        nb_noms_ban, nb_noms_cadastre, nb_noms_osm = noms.stats_sources()
+        nb_noms_topo = topo.nb_fantoirs
+        sql_process(
+            "update_table_bano_stats_communales",
+            dict(
+                code_insee=code_insee,
+                nb_adresses_osm=str(nb_addr_osm),
+                nb_adresses_ban=str(nb_addr_ban),
+                nb_noms_osm=str(nb_noms_osm),
+                nb_noms_ban=str(nb_noms_ban),
+                nb_noms_topo=str(nb_noms_topo),
+                nb_noms_cadastre=str(nb_noms_cadastre),
+            ),
+        )
 
         b.batch_stop_log(id_batch, True)
     except:
