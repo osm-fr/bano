@@ -145,20 +145,26 @@ class Noms:
             t.add_fantoir(topo)
 
     def remplit_fantoir_par_nom_sous_commune(self):
-        for t in self.triplets_nom_fantoir_source:
-            if t.code_insee_ancienne_commune:
-                if (
-                    not t.code_insee_ancienne_commune
-                    in self.fantoir_par_nom_sous_commune
-                ):
-                    self.fantoir_par_nom_sous_commune[
-                        t.code_insee_ancienne_commune
-                    ] = {}
-                self.fantoir_par_nom_sous_commune[t.code_insee_ancienne_commune][
-                    t.nom
-                ] = t.fantoir
-            else:
-                self.fantoir_par_nom_sous_commune[t.nom] = t.fantoir
+        # privilège pour la source OSM
+        for source in ['OSM','BAN','CADASTRE']:
+            for t in self.triplets_nom_fantoir_source:
+                if t.source != source:
+                    continue
+                if t.code_insee_ancienne_commune:
+                    if (
+                        not t.code_insee_ancienne_commune
+                        in self.fantoir_par_nom_sous_commune
+                    ):
+                        self.fantoir_par_nom_sous_commune[
+                            t.code_insee_ancienne_commune
+                        ] = {}
+                    if not t.nom in self.fantoir_par_nom_sous_commune[t.code_insee_ancienne_commune]:
+                        self.fantoir_par_nom_sous_commune[t.code_insee_ancienne_commune][
+                            t.nom
+                        ] = t.fantoir
+                else:
+                    if not t.nom in self.fantoir_par_nom_sous_commune:
+                        self.fantoir_par_nom_sous_commune[t.nom] = t.fantoir
 
     def enregistre(self, correspondance):
         sql_process(
