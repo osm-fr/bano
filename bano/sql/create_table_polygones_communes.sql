@@ -2,8 +2,10 @@ CREATE TABLE IF NOT EXISTS polygones_insee (
         geometrie geometry (Geometry, 4326),
         code_insee character(5),
         nom text,
-        admin_level integer);
+        admin_level integer,
+        geom_centroide_3857 geometry(Point,3857) GENERATED ALWAYS AS (ST_Transform(ST_Pointonsurface(geometrie),3857)) STORED);
 CREATE INDEX IF NOT EXISTS gidx_polygones_insee ON polygones_insee USING GIST (geometrie);
+CREATE INDEX IF NOT EXISTS gidx_polygones_insee_centroide_3857 ON polygones_insee USING GIST (geom_centroide_3857);
 CREATE INDEX IF NOT EXISTS idx_polygones_insee_code_insee ON polygones_insee(code_insee);
 
 TRUNCATE TABLE polygones_insee;
