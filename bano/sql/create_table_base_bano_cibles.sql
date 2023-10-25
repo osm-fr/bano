@@ -93,6 +93,7 @@ CREATE TABLE IF NOT EXISTS bano_stats_communales(
     nb_nom_osm integer,
     nb_nom_ban integer,
     nb_nom_cadastre integer,
-    nb_nom_topo integer);
+    nb_nom_topo integer,
+    maj timestamp DEFAULT now());
 
 CREATE INDEX IF NOT EXISTS idx_bano_stats_communales_code_insee ON bano_stats_communales (code_insee);
