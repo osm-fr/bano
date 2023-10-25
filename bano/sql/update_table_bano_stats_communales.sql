@@ -1,3 +1,10 @@
+INSERT INTO bano_stats_communales_cumul
+SELECT *
+FROM   bano_stats_communales
+WHERE  code_insee = '__code_insee__';
+DELETE
+FROM   bano_stats_communales
+WHERE  code_insee = '__code_insee__';
 INSERT INTO bano_stats_communales (code_insee,
 	                               nb_adresses_osm,
 	                               nb_adresses_ban,
