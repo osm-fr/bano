@@ -29,6 +29,9 @@ CREATE INDEX IF NOT EXISTS idx_fantoir_fantoir10  ON fantoir_voie(fantoir10);
 
 CREATE TABLE IF NOT EXISTS ban_odbl (
     id text,
+    id_ban_adresse text,
+    id_ban_toponyme text,
+    id_ban_district text,
     id_fantoir text,
     numero  text,
     rep text,
