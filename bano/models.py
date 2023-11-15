@@ -80,10 +80,10 @@ class Noms:
     def __iter__(self):
         return iter(self.triplets_nom_fantoir_source)
 
-    def _print(self, pattern=None):
+    def _print(self, correspondance, pattern=None):
         for a in self:
-            if not pattern or pattern in a._as_csv_format_bano():
-                print(a._as_csv_format_bano())
+            if not pattern or pattern in a._as_csv_format_bano(correspondance):
+                print(a._as_csv_format_bano(correspondance))
 
     # On ne charge pas les noms des numeros OSM. Ils sont ajoutés via Adresses.nom_des_adresses
     def charge_noms_osm_hors_numeros(self):
@@ -148,7 +148,7 @@ class Noms:
         # privilège pour la source OSM
         for source in ['OSM','BAN','CADASTRE']:
             for t in self.triplets_nom_fantoir_source:
-                if t.source != source:
+                if t.source != source or not t.fantoir:
                     continue
                 if t.code_insee_ancienne_commune:
                     if (
