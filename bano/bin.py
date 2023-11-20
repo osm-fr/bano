@@ -119,6 +119,13 @@ def main():
         "--code_insee", type=str, help="Code INSEE de la commune à traiter"
     )
     subparser.set_defaults(func=ban2topo.process)
+
+    subparser = subparsers.add_parser(
+        "update_infos_communes",
+        help="Màj de la table infos_communes pour les exports JSON",
+    )
+    subparser.set_defaults(func=boite_a_outils.update_infos_communes)
+
     args = parser.parse_args()
 
     try:

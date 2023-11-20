@@ -12,3 +12,11 @@ def maj_table_communes(**kwargs):
         b.batch_stop_log(batch_id, True)
     except:
         b.batch_stop_log(batch_id, False)
+
+def update_infos_communes(**kwargs):
+    batch_id = b.batch_start_log("maj_table_infos_communes", "France", "France")
+    try:
+        sql_process("update_table_infos_communes", dict())
+        b.batch_stop_log(batch_id, True)
+    except:
+        b.batch_stop_log(batch_id, False)

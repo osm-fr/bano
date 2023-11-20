@@ -109,3 +109,19 @@ CREATE TABLE IF NOT EXISTS bano_stats_communales_cumul(
     maj timestamp);
 
 CREATE INDEX IF NOT EXISTS idx_bano_stats_communales_cumul_code_insee ON bano_stats_communales_cumul (code_insee);
+
+CREATE TABLE IF NOT EXISTS infos_communes (
+  dep character varying(3),
+  code_insee character(5),
+  name text,
+  adm_weight integer,
+  population integer,
+  population_milliers numeric,
+  type text,
+  lon numeric,
+  lat numeric,
+  geometrie geometry(Point, 4326)
+);
+
+CREATE INDEX IF NOT EXISTS idx_infos_communes_insee ON infos_communes(code_insee);
+CREATE INDEX IF NOT EXISTS gidx_infos_communes ON infos_communes USING GIST(geometrie);

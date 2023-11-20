@@ -22,13 +22,13 @@ echo 'sources ok' >> $SCRIPT_DIR/cron.log
 
 # Mise à jour quotidienne dans la base cadastre des couches des polygones postaux d'OSM et des statuts admin de communes en vue des exports
 bano update_table_communes
+bano update_infos_communes
 
 # psql -d osm -U cadastre -f sql/create_table_polygones_postaux.sql
 # psql -d cadastre -U cadastre -f sql/post_copie_ban.sql
 echo 'màj polygones ok' >> $SCRIPT_DIR/cron.log
 
 # BANO
-# bano update_insee_lists
 cat deplist.txt        | parallel -j 4 export LANG=fr_FR.UTF-8\; bano rapprochement --dept {1}
 
 echo 'rapprochement ok' >> $SCRIPT_DIR/cron.log
