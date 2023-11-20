@@ -17,6 +17,10 @@ DICT_COG = {
         "cog_canton",
         "https://www.data.gouv.fr/fr/datasets/r/716922e8-2ab7-4806-94eb-21933c266ebf",
     ],
+    "arrondissement": [
+        "cog_arrondissement",
+        "https://www.data.gouv.fr/fr/datasets/r/9fdf41d6-2452-4f7c-a1e2-a7b104b38b77",
+    ],
     "departement": [
         "cog_departement",
         "https://www.data.gouv.fr/fr/datasets/r/c691a0b0-6e22-4d6f-9496-3406b017d709",
