@@ -8,7 +8,7 @@ from . import pre_process_suffixe
 from . import setup_db
 from . import rapprochement
 from . import boite_a_outils
-from .sources import topo, ban, cog, cadastre_ld, ban2topo, datagouv_commune_summary as datagouv_cs
+from .sources import topo, ban, cog, cadastre_ld, ban2topo, datagouv_commune_summary as datagouv_cs,datagouv_cp
 from .constants import DEPARTEMENTS
 
 
@@ -35,6 +35,12 @@ def main():
         help="Charge une version des fichiers COG",
     )
     subparser.set_defaults(func=cog.process_cog)
+
+    subparser = subparsers.add_parser(
+        "charge_cp",
+        help="Charge une version du fichier Codes Postaux",
+    )
+    subparser.set_defaults(func=datagouv_cp.process)
 
     subparser = subparsers.add_parser(
         "charge_ban",

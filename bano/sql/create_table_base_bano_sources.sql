@@ -16,9 +16,9 @@ CREATE INDEX IF NOT EXISTS idx_topo_fantoir  ON topo(fantoir);
 
 CREATE TABLE IF NOT EXISTS ban (
     id text,
-    id_ban_adresse text,
-    id_ban_toponyme text,
-    id_ban_district text,
+    -- id_ban_adresse text,
+    -- id_ban_toponyme text,
+    -- id_ban_district text,
     id_fantoir text,
     fantoir text GENERATED ALWAYS AS (substr(id_fantoir,0,6)||substr(id_fantoir,7,10)) STORED,
     numero  text,
@@ -86,5 +86,15 @@ CREATE TABLE IF NOT EXISTS communes_summary (
         composed_at text);
 
 CREATE INDEX IF NOT EXISTS communes_summary_code_insee ON communes_summary (code_insee);
+
+CREATE TABLE IF NOT EXISTS codes_postaux (
+        insee text,
+        commune text,
+        cp text,
+        libelle text,
+        ligne_5 text);
+
+CREATE INDEX IF NOT EXISTS idx_codes_postaux_cp ON codes_postaux (cp);
+CREATE INDEX IF NOT EXISTS idx_codes_postaux_insee ON codes_postaux (insee);
 
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO public;
