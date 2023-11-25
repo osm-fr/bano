@@ -8,6 +8,7 @@ from . import pre_process_suffixe
 from . import setup_db
 from . import rapprochement
 from . import boite_a_outils
+from . import export
 from .sources import topo, ban, cog, cadastre_ld, ban2topo, datagouv_commune_summary as datagouv_cs,datagouv_cp
 from .constants import DEPARTEMENTS
 
@@ -131,6 +132,20 @@ def main():
         help="Màj de la table infos_communes pour les exports JSON",
     )
     subparser.set_defaults(func=boite_a_outils.update_infos_communes)
+
+    subparser = subparsers.add_parser(
+        "export",
+        help="Export par département dans différents formats",
+        description="Export par département dans différents formats",
+    )
+    subparser.add_argument(
+        "departements",
+        type=str,
+        help="Départements à traiter",
+        nargs="*",
+        default=DEPARTEMENTS,
+    )
+    subparser.set_defaults(func=export.process)
 
     args = parser.parse_args()
 
