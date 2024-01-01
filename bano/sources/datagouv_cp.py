@@ -6,12 +6,14 @@ from pathlib import Path
 import requests
 
 from ..db import bano_db
+from ..sql import sql_process
 from .. import batch as b
 
 DICT_SOURCES = {
     "codes_postaux": [
         "codes_postaux",
         "https://www.data.gouv.fr/fr/datasets/r/5ed9b092-a25d-49e7-bdae-0152797c7577",
+        "table_insee_cps",
     ],
 }
 
@@ -19,11 +21,12 @@ DICT_SOURCES = {
 def process(**kwargs):
     for k,v in DICT_SOURCES.items():
         print(f"Chargement de la source {k}")
-        table,url = v
+        table,url,script_post_process = v
         csv = get_destination(f"{k}.csv")
         status = download(csv,url)
         if status:
             import_to_pg(csv,table)
+        sql_process(script_post_process,dict())
 
 
 def download(destination,url):
