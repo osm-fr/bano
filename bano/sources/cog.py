@@ -6,6 +6,7 @@ from pathlib import Path
 import requests
 
 from ..db import bano_db
+from ..sql import sql_process
 from .. import batch as b
 
 DICT_COG = {
@@ -40,7 +41,7 @@ def process_cog(**kwargs):
         status = download(csv,url)
         if status:
             import_to_pg(csv,table)
-
+    sql_process('cog_pyramide_admin',dict())
 
 def download(destination,url):
     headers = {}
