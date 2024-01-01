@@ -9,7 +9,7 @@ import subprocess
 
 from pathlib import Path
 
-from .sql import sql_get_data,sql_get_dict_data
+from .sql import sql_get_data,sql_get_dict_data,sql_process
 from . import constants
 from . import helpers as hp
 
@@ -30,14 +30,19 @@ class Dataset:
         self.json_commune_data = sql_get_dict_data('export_json_dept_communes',dict(dept=self.dept))
         # print(json.dumps(self.json_commune_data))
 
-    def get_json_voies_non_rapprochees_data(self):
-        return sql_get_data('export_json_dept_voies_non_rapprochees',dict(dept=self.dept))
+    # def get_json_voies_non_rapprochees_data(self):
+    #     return sql_get_data('export_json_dept_voies_non_rapprochees',dict(dept=self.dept))
 
-    def get_json_voies_rapprochees_data(self):
-        return sql_get_data('export_json_dept_voies_rapprochees',dict(dept=self.dept))
+    # def get_json_voies_rapprochees_data(self):
+    #     return sql_get_data('export_json_dept_voies_rapprochees',dict(dept=self.dept))
 
-    def get_json_voies_rapprochees_sans_adresses_data(self):
-        return sql_get_data('export_json_dept_voies_rapprochees_sans_adresses',dict(dept=self.dept))
+    def get_json_voies_avec_adresses_data(self):
+        self.json_voies_avec_adresses_data = sql_get_dict_data('export_json_dept_voies_avec_adresses',dict(dept=self.dept))
+        # for j in self.json_voies_avec_adresses_data:
+        #     j['housenumbers'] = [{p.split('$')[0]:{'lat':p.split('$')[1],'lon':p.split('$')[2]}} for p in j['housenumbers'].split('@')]
+        #     jl = json.dumps(j)
+        #     print(jl)
+        # print(json.dumps(self.json_voies_avec_adresses_data))
 
     def get_json_lieux_dits_data(self):
         return sql_get_data('export_json_dept_lieux_dits',dict(dept=self.dept))
@@ -110,32 +115,16 @@ locn:geometry [a gsp:Geometry; gsp:asWKT "POINT({lon} {lat})"^^gsp:wktLiteral ] 
 
     def save_as_json(self):
         with open(self.get_sas_full_filename('json'),'w') as jsonfile:
-            # if not self.json_commune_data :
-            #     self.json_commune_data = se
             for l in self.json_commune_data:
                 jsonfile.write(f"{json.dumps(l,ensure_ascii=False,separators=(',',':'))}\n")
-                # print(json.dumps(l))
-            # for id,type,name,postcode,lat,lon,cityname,departement,region,population,adm_weight,importance,*others in self.json_commune_data:
-                    # if ';' in postcode:
-                    #     print(postcode)
-            #             postcode = postcode.split(';')
-                    # jsonfile.write(f'{{"id":"{id}","type":"{type}", "name":"{name}", "postcode":{json.dumps(postcode)}, "lat":{lat}, "lon":{lon}, "city":"{cityname}", "departement":"{departement}", "region":"{region}", "population":{population}, "adm_weight":{adm_weight}, "importance":{importance}}}\n')
-            # if not self.json_voies_non_rapprochees_data :
-            #     self.json_voies_non_rapprochees_data = self.get_json_voies_non_rapprochees_data()
-            # for fantoir,citycode,type,name,postcode,lat,lon,cityname,departement,region,importance,housenumbers,*others in self.json_voies_non_rapprochees_data:
-            #         s_housenumbers = ','.join([f'"{s.split("$")[0]}":{{"lat":{s.split("$")[1]},"lon":{s.split("$")[2]}}}' for s in housenumbers.split('#') ])
-            #         if ';' in postcode:
-            #             postcode = postcode.split(';')
-            #         jsonfile.write(f'{{"id":"{fantoir}","citycode":"{citycode}","type":"{type}","name":"{name}","postcode":{json.dumps(postcode)},"lat":"{lat}","lon":"{lon}","city":"{cityname}","departement":"{departement}","region":"{region}","importance":{importance},"housenumbers":{{{s_housenumbers}}}}}\n')
-            # if not self.json_voies_rapprochees_data :
-            #     self.json_voies_rapprochees_data = self.get_json_voies_rapprochees_data()
-            # for fantoir,citycode,type,name,postcode,lat,lon,cityname,departement,region,importance,housenumbers,*others in self.json_voies_rapprochees_data:
-            #         s_housenumbers = ','.join([f'"{s.split("$")[0]}":{{"lat":{s.split("$")[1]},"lon":{s.split("$")[2]}}}' for s in housenumbers.split('#') ])
-            #         if ';' in postcode:
-            #             postcode = postcode.split(';')
-            #         jsonfile.write(f'{{"id":"{fantoir}","citycode":"{citycode}","type":"{type}","name":"{name}","postcode":{json.dumps(postcode)},"lat":"{lat}","lon":"{lon}","city":"{cityname}","departement":"{departement}","region":"{region}","importance":{importance},"housenumbers":{{{s_housenumbers}}}}}\n')
-            # if not self.json_voies_rapprochees_sans_adresses_data :
-            #     self.json_voies_rapprochees_sans_adresses_data = self.get_json_voies_rapprochees_sans_adresses_data()
+            for l in self.json_voies_avec_adresses_data:
+                dict_hsnr = {}
+                for p in l['housenumbers'].split('@'):
+                    numero,lat,lon = p.split('$')
+                    dict_hsnr[numero] = dict(lat=float(lat),lon=float(lon))
+                l['housenumbers'] = dict_hsnr
+                jsonfile.write(f"{json.dumps(l,ensure_ascii=False,separators=(',',':'))}\n")
+
             # for fantoir,citycode,type,name,postcode,lat,lon,cityname,departement,region,importance in self.json_voies_rapprochees_sans_adresses_data:
             #         if ';' in postcode:
             #             postcode = postcode.split(';')
@@ -148,13 +137,16 @@ locn:geometry [a gsp:Geometry; gsp:asWKT "POINT({lon} {lat})"^^gsp:wktLiteral ] 
             #         jsonfile.write(f'{{"id":"{fantoir}","citycode":"{citycode}","type":"{type}","name":"{name}","postcode":{json.dumps(postcode)},"lat":"{lat}","lon":"{lon}","city":"{cityname}","departement":"{departement}","region":"{region}","importance":{importance}}}\n')
                
 def process(departements, **kwargs):
+    sql_process('table_polygones_postaux',dict())
+    sql_process('tables_export',dict())
     for dept in departements:
         if not hp.is_valid_dept(dept):
             print(f"Code {dept} invalide pour un département - abandon")
             continue
         d = Dataset(dept)
-        d.get_json_commune_data()
         # d.save_as_shp()
         # d.save_as_csv()
         # d.save_as_ttl()
+        d.get_json_commune_data()
+        d.get_json_voies_avec_adresses_data()
         d.save_as_json()
