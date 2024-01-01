@@ -22,8 +22,9 @@ def process_unitaire(code_insee):
         adresses.charge_numeros_osm()
         adresses.charge_numeros_ban(topo)
         points_nommes.charge_points_nommes_lieux_dits_cadastre()
-        points_nommes.charge_points_nommes_centroides_osm()
         points_nommes.charge_points_nommes_place_osm()
+        # Les centroïdes viennent en dernier (fallback). Tout point déjà affecté comme lieu-dit OSM est inchangé dans l'étape charge_points_nommes_centroides_osm()
+        points_nommes.charge_points_nommes_centroides_osm()
 
         adresses.noms_des_adresses(noms)
         points_nommes.noms_des_points_nommes(noms)
