@@ -9,6 +9,7 @@ from . import setup_db
 from . import rapprochement
 from . import boite_a_outils
 from . import export
+from . import publish
 from .sources import topo, ban, cog, cadastre_ld, ban2topo, datagouv_commune_summary as datagouv_cs,datagouv_cp
 from .constants import DEPARTEMENTS
 
@@ -134,6 +135,13 @@ def main():
     subparser.set_defaults(func=boite_a_outils.update_infos_communes)
 
     subparser = subparsers.add_parser(
+        "prepare_export",
+        help="Calculs en prévision des exports",
+        description="Calculs en prévision des exports",
+    )
+    subparser.set_defaults(func=export.prepare_export)
+
+    subparser = subparsers.add_parser(
         "export",
         help="Export par département dans différents formats",
         description="Export par département dans différents formats",
@@ -146,6 +154,27 @@ def main():
         default=DEPARTEMENTS,
     )
     subparser.set_defaults(func=export.process)
+
+    subparser = subparsers.add_parser(
+        "publish",
+        help="Publication des exports dans le dossier web de https://bano.openstreetmap.fr/data - fichiers par département",
+        description="Publication des exports dans le dossier web de https://bano.openstreetmap.fr/data - fichiers par département",
+    )
+    subparser.add_argument(
+        "departements",
+        type=str,
+        help="Départements à traiter",
+        nargs="*",
+        default=DEPARTEMENTS,
+    )
+    subparser.set_defaults(func=publish.process)
+
+    subparser = subparsers.add_parser(
+        "publish_aggregate",
+        help="Publication des exports dans un dossier web - fichiers France entière",
+        description="Publication des exports dans un dossier web - fichiers France entière",
+    )
+    subparser.set_defaults(func=publish.process_full)
 
     args = parser.parse_args()
 

@@ -8,8 +8,7 @@ SELECT id,
        city,
        departement,
        region,
-       importance,
-       housenumbers
-FROM   export_voies_adresses_json
+       importance
+FROM   export_voies_ld_sans_adresses_json
 WHERE  dep = '__dept__'
 ORDER BY 1;

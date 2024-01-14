@@ -48,3 +48,11 @@ def sql_get_dict_data(sqlfile, args):
         return cur.fetchall()
 
     return None
+
+def sql_query(sqlfile, args):
+    sqlfile = (Path(SQLDIR) / sqlfile).with_suffix(".sql")
+    with open(sqlfile) as s:
+        q = s.read()
+        for k, v in args.items():
+            q = q.replace(f"__{k}__", v)
+    return q

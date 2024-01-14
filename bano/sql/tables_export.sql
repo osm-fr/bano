@@ -17,6 +17,7 @@
 -- FROM    planet_osm_postal_code
 -- WHERE   COALESCE(postal_code,'') != '';
 
+BEGIN;
 
 DROP TABLE IF EXISTS numeros_export CASCADE;
 CREATE UNLOGGED TABLE numeros_export
@@ -160,3 +161,5 @@ FROM resultats_multi_cp
 WHERE rang_par_fantoir = 1;
 
 CREATE INDEX idx_export_voies_ld_sans_adresses_json_dep ON export_voies_ld_sans_adresses_json(dep);
+
+COMMIT;

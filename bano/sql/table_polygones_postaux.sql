@@ -1,3 +1,5 @@
+BEGIN;
+
 DROP TABLE IF EXISTS polygones_postaux CASCADE;
 CREATE UNLOGGED TABLE polygones_postaux
 AS
@@ -24,3 +26,5 @@ WHERE  boundary = 'administrative' AND
 ORDER BY ST_Area(way);
 
 CREATE INDEX gidx_polygones_postaux ON polygones_postaux USING GIST(geometrie);
+
+COMMIT;
