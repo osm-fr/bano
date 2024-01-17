@@ -33,12 +33,18 @@ cat deplist.txt        | parallel -j 4 export LANG=fr_FR.UTF-8\; bano rapprochem
 
 echo 'rapprochement ok' >> $SCRIPT_DIR/cron.log
 
+echo 'preparation export' >> $SCRIPT_DIR/cron.log
+bano prepare_export
+echo 'preparation export finie' >> $SCRIPT_DIR/cron.log
+
 # exports
-# cat deplist.txt | parallel -j 4 bano export {1}
+echo 'export' >> $SCRIPT_DIR/cron.log
+cat deplist.txt | parallel -j 4 bano export {1}
+echo 'export fini' >> $SCRIPT_DIR/cron.log
 
 # copie+zip dans le dossier web
-# cat deplist.txt | parallel -j 4 bano publish {1}
-# bano publish_aggregate
+cat deplist.txt | parallel -j 4 bano publish {1}
+bano publish_aggregate
 
 # ménage PostgreSQL
 psql -d bano -U cadastre -c "VACUUM bano_adresses;"
