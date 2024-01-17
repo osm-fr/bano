@@ -3,7 +3,7 @@ j
 AS
 (SELECT fantoir,
 	    numero,
-	    nom_voie,
+	    regexp_replace(nom_voie,'\t','') AS nom_voie,
 	    lon,
 	    lat,
 	    rep,
