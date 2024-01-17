@@ -1,7 +1,7 @@
 BEGIN;
 
 DROP TABLE IF EXISTS polygones_postaux CASCADE;
-CREATE UNLOGGED TABLE polygones_postaux
+CREATE TABLE polygones_postaux
 AS
 SELECT way AS geometrie,
        CASE postal_code
