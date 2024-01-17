@@ -20,7 +20,7 @@
 BEGIN;
 
 DROP TABLE IF EXISTS numeros_export CASCADE;
-CREATE UNLOGGED TABLE numeros_export
+CREATE TABLE numeros_export
 AS
 WITH
 cp_fantoir
@@ -41,6 +41,16 @@ AS
         row_number() OVER (PARTITION BY fantoir||num ORDER BY CASE WHEN source = 'OSM' THEN 1 ELSE 2 END) AS rang,
         *
 FROM    num_norm),
+nom_fantoir
+AS
+(SELECT fantoir,
+        nom
+FROM    (SELECT fantoir,
+                nom,
+                RANK() OVER (PARTITION BY fantoir ORDER BY CASE WHEN source = 'OSM' THEN 1 ELSE 2 END, CASE nature WHEN 'lieu-dit' THEN 1 WHEN 'place' THEN 1 WHEN 'voie' THEN 2 ELSE 3 END, nom ) AS rang
+        FROM    nom_fantoir) n
+WHERE rang = 1
+GROUP BY 1,2),
 resultats_multi_cp
 AS
 (SELECT dep,
@@ -48,7 +58,7 @@ AS
         n.fantoir,
         id_add,
         numero,
-        nom_voie,
+        nf.nom AS nom_voie,
         COALESCE(n.code_postal,pp.code_postal,min_cp) code_postal,
         cn.libelle,
         source,
@@ -57,7 +67,9 @@ AS
         n.geometrie,
         RANK() OVER (PARTITION BY id_add ORDER BY pp.id) rang_postal
 FROM    num_norm_id n
-JOIN    cog_commune cn 
+JOIN    nom_fantoir nf
+USING   (fantoir)
+JOIN    (SELECT dep, com, libelle FROM cog_commune WHERE typecom in ('ARM','COM')) cn
 ON      (cn.com = code_insee) 
 LEFT OUTER JOIN    polygones_postaux pp
 ON      ST_Contains(pp.geometrie, n.geometrie)
@@ -71,7 +83,7 @@ WHERE   rang_postal = 1;
 CREATE INDEX idx_numeros_export_dep ON numeros_export(dep);
 
 DROP TABLE IF EXISTS numeros_export_importance CASCADE;
-CREATE UNLOGGED TABLE numeros_export_importance
+CREATE TABLE numeros_export_importance
 AS
 SELECT fantoir,
        ST_Length(ST_Transform(ST_Longestline(ST_Convexhull(ST_Collect(geometrie)),ST_Convexhull(ST_Collect(geometrie))),3857)) AS longueur_max,
@@ -81,7 +93,7 @@ GROUP BY fantoir;
          
 
 DROP TABLE IF EXISTS export_voies_adresses_json CASCADE;
-CREATE UNLOGGED TABLE export_voies_adresses_json
+CREATE TABLE export_voies_adresses_json
 AS
 SELECT c.dep,
        fantoir AS id,
@@ -114,7 +126,7 @@ ORDER BY 1;
 CREATE INDEX idx_export_voies_adresses_json_dep ON export_voies_adresses_json(dep);
 
 DROP TABLE IF EXISTS export_voies_ld_sans_adresses_json CASCADE;
-CREATE UNLOGGED TABLE export_voies_ld_sans_adresses_json
+CREATE TABLE export_voies_ld_sans_adresses_json
 AS
 WITH
 set_fantoir
