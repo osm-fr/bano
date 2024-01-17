@@ -12,8 +12,8 @@ from .. import batch as b
 DICT_SOURCES = {
     "codes_postaux": [
         "codes_postaux",
-        "https://www.data.gouv.fr/fr/datasets/r/5ed9b092-a25d-49e7-bdae-0152797c7577",
-        "table_insee_cps",
+        "https://datanova.laposte.fr/data-fair/api/v1/datasets/laposte-hexasmal/raw", 
+        "table_insee_codes_postaux",
     ],
 }
 
@@ -35,7 +35,7 @@ def download(destination,url):
         headers["If-Modified-Since"] = formatdate(destination.stat().st_mtime)
 
     resp = requests.get(url, headers=headers)
-    id_batch = b.batch_start_log("download source", destination, "France")
+    id_batch = b.batch_start_log("download source", url, "France")
     if resp.status_code == 200:
         with destination.open("w") as f:
             f.write(resp.text)
