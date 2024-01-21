@@ -1,5 +1,5 @@
 DROP TABLE IF EXISTS insee_codes_postaux CASCADE;
-CREATE UNLOGGED TABLE insee_codes_postaux
+CREATE TABLE insee_codes_postaux
 AS
 SELECT insee AS code_insee,
        STRING_AGG(cp,';') AS cps
