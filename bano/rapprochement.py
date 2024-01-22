@@ -32,6 +32,9 @@ def process_unitaire(code_insee):
         noms.add_fantoir(topo)
         noms.remplit_fantoir_par_nom_sous_commune()
         points_nommes.complete_fantoir(noms)
+        # 2e passe suite au complément Fantoir
+
+        points_nommes.noms_des_points_nommes(noms)
         adresses.complete_fantoir(noms)
 
         correspondance_fantoir_ban_osm.process(noms)
