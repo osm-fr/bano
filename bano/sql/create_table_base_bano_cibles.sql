@@ -1,5 +1,6 @@
 CREATE TABLE IF NOT EXISTS bano_adresses (
     fantoir text,
+    bano_id text GENERATED ALWAYS AS (fantoir||'_'|| REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REGEXP_REPLACE(UPPER(numero),'^0*',''),'BIS','B'),'TER','T'),'QUATER','Q'),'QUAT','Q'),' ',''),'à','-'),';',','),'"','')) STORED,
     lon float,
     lat float,
     numero  text,
@@ -13,9 +14,11 @@ CREATE TABLE IF NOT EXISTS bano_adresses (
     source text,
     certification_commune integer,
     id_ban text,
-    geometrie geometry (Point, 4326) GENERATED ALWAYS AS (ST_Point(lon,lat)) STORED);
+    geometrie geometry (Point, 4326) GENERATED ALWAYS AS (ST_Point(lon,lat)) STORED,
+    geometrie_3857 geometry (Point, 3857) GENERATED ALWAYS AS (ST_Transform(ST_SetSRID(ST_Point(lon,lat),4326),3857)) STORED);
 
 CREATE INDEX IF NOT EXISTS gidx_bano_adresses ON bano_adresses USING GIST(geometrie);
+CREATE INDEX IF NOT EXISTS gidx_bano_adresses_3857 ON bano_adresses USING GIST(geometrie_3857);
 CREATE INDEX IF NOT EXISTS idx_bano_adresses_code_insee ON bano_adresses (code_insee);
 CREATE INDEX IF NOT EXISTS idx_bano_adresses_code_dept ON bano_adresses (code_dept);
 CREATE INDEX IF NOT EXISTS idx_bano_adresses_fantoir ON bano_adresses (fantoir);
@@ -32,8 +35,11 @@ CREATE TABLE IF NOT EXISTS bano_points_nommes (
     source text,
     lon float,
     lat float,
-    geometrie geometry (Point, 4326) GENERATED ALWAYS AS (ST_Point(lon,lat)) STORED);
+    geometrie geometry (Point, 4326) GENERATED ALWAYS AS (ST_Point(lon,lat)) STORED,
+    geometrie_3857 geometry (Point, 3857) GENERATED ALWAYS AS (ST_Transform(ST_SetSRID(ST_Point(lon,lat),4326),3857)) STORED);
 
+CREATE INDEX IF NOT EXISTS gidx_bano_points_nommes ON bano_points_nommes USING GIST(geometrie);
+CREATE INDEX IF NOT EXISTS gidx_bano_points_nommes_3857 ON bano_points_nommes USING GIST(geometrie_3857);
 CREATE INDEX IF NOT EXISTS idx_bano_points_nommes_code_insee ON bano_points_nommes (code_insee);
 CREATE INDEX IF NOT EXISTS idx_bano_points_nommes_code_dept ON bano_points_nommes (code_dept);
 CREATE INDEX IF NOT EXISTS idx_bano_points_nommes_fantoir ON bano_points_nommes (fantoir);
