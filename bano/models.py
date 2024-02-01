@@ -360,6 +360,9 @@ class Adresses:
             code_insee_ancienne_commune,
             nom_ancienne_commune,
         ) in data:
+            # Fix issue #378
+            if voie:
+                voie = voie.replace('\n',' ')
 
             fantoir = tags.get("ref:FR:FANTOIR")
             if fantoir:
