@@ -81,6 +81,7 @@ def import_to_pg(departement, **kwargs):
             except psycopg2.DataError as e:
                 print(f"Erreur au chargement de la BAN {departement}")
                 print(e)
+                b.batch_stop_log(id_batch, False)
                 return False
 
 
