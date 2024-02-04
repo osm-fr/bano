@@ -95,15 +95,16 @@ def save_as_json(dept):
                 jsonfile.write(f"{json.dumps(l,ensure_ascii=False,separators=(',',':'))}\n")
             for l in sql_get_dict_data('export_json_dept_voies_avec_adresses',dict(dept=dept)):
                 dict_hsnr = {}
-                for p in l['housenumbers'].split('@'):
-                    numero,lat,lon = p.split('$')
+                for p in l['housenumbers'].split('@@@'):
+                    numero,lat,lon = p.split('$$$')
                     dict_hsnr[numero] = dict(lat=float(lat),lon=float(lon))
                 l['housenumbers'] = dict_hsnr
                 jsonfile.write(f"{json.dumps(l,ensure_ascii=False,separators=(',',':'))}\n")
             for l in sql_get_dict_data('export_json_dept_voies_ld_sans_adresses',dict(dept=dept)):
                 jsonfile.write(f"{json.dumps(l,ensure_ascii=False,separators=(',',':'))}\n")
         b.batch_stop_log(id_batch, True)
-    except:
+    except Exception as e:
+        # print(p,l,e)
         b.batch_stop_log(id_batch, False)
 
 def get_target_filename(dept,filetype):
@@ -116,8 +117,13 @@ def get_webdir_full_filename(dept,filetype):
     return Path(os.environ['EXPORT_WEB_DIR']) / get_target_filename(dept,filetype)
 
 def prepare_export(**kwargs):
-    sql_process('table_polygones_postaux',dict())
-    sql_process('tables_export',dict())
+    id_batch = b.batch_start_log("Preparation export", "", "")
+    try:
+        sql_process('table_polygones_postaux',dict())
+        sql_process('tables_export',dict())
+        b.batch_stop_log(id_batch, True)
+    except:
+        b.batch_stop_log(id_batch, False)
 
 def process(departements, **kwargs):
     for dept in departements:

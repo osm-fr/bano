@@ -25,6 +25,8 @@ def process_unitaire(code_insee):
         points_nommes.charge_points_nommes_place_osm()
         # Les centroïdes viennent en dernier (fallback). Tout point déjà affecté comme lieu-dit OSM est inchangé dans l'étape charge_points_nommes_centroides_osm()
         points_nommes.charge_points_nommes_centroides_osm()
+        points_nommes.charge_points_nommes_numeros_ban()
+
 
         adresses.noms_des_adresses(noms)
         points_nommes.noms_des_points_nommes(noms)
@@ -32,8 +34,8 @@ def process_unitaire(code_insee):
         noms.add_fantoir(topo)
         noms.remplit_fantoir_par_nom_sous_commune()
         points_nommes.complete_fantoir(noms)
-        # 2e passe suite au complément Fantoir
 
+        # 2e passe suite au complément Fantoir
         points_nommes.noms_des_points_nommes(noms)
         adresses.complete_fantoir(noms)
 
@@ -60,7 +62,8 @@ def process_unitaire(code_insee):
         )
 
         b.batch_stop_log(id_batch, True)
-    except:
+    except Exception as e:
+        # print(e)
         b.batch_stop_log(id_batch, False)
 
 
