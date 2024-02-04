@@ -22,6 +22,7 @@ CREATE INDEX IF NOT EXISTS gidx_bano_adresses_3857 ON bano_adresses USING GIST(g
 CREATE INDEX IF NOT EXISTS idx_bano_adresses_code_insee ON bano_adresses (code_insee);
 CREATE INDEX IF NOT EXISTS idx_bano_adresses_code_dept ON bano_adresses (code_dept);
 CREATE INDEX IF NOT EXISTS idx_bano_adresses_fantoir ON bano_adresses (fantoir);
+CREATE INDEX IF NOT EXISTS idx_bano_adresses_bano_id ON bano_adresses (bano_id);
 CREATE INDEX IF NOT EXISTS idx_bano_adresses_pifo_code_insee_source ON bano_adresses (code_insee,source);
 
 CREATE TABLE IF NOT EXISTS bano_points_nommes (
