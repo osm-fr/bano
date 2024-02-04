@@ -561,7 +561,7 @@ class Point_nomme:
         )
 
     def _as_string(self):
-        return f"source : {self.source}, nom : {self.nom} ({self.nom_normalise}), nature : {self.nature}, sous_commune : {self.code_insee_ancienne_commune}"
+        return f"fantoir : {self.fantoir}, source : {self.source}, nom : {self.nom} ({self.nom_normalise}), nature : {self.nature}, sous_commune : {self.code_insee_ancienne_commune}"
 
     def _as_csv_format_bano(self, correspondance):
         return f"{correspondance.get(self.fantoir,self.fantoir) if self.fantoir else ''}\t{self.nom}\t{self.code_insee}\t{self.code_dept}\t{self.nature}\t{self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else ''}\t{self.nom_ancienne_commune if self.nom_ancienne_commune else ''}\t{self.source}\t{self.lon}\t{self.lat}"
@@ -656,6 +656,33 @@ class Points_nommes:
                 )
             )
 
+    def charge_points_nommes_numeros_ban(self):
+        data = sql_get_data(
+            "charge_points_nommes_numeros_BAN",
+            dict(code_insee=self.code_insee),
+        )
+        for (
+            x,
+            y,
+            nom,
+            code_insee_ancienne_commune,
+            fantoir,
+            nom_ancienne_commune,
+        ) in data:
+            self.add_point_nomme(
+                Point_nomme(
+                    self.code_insee,
+                    "BAN",
+                    "numero",
+                    x,
+                    y,
+                    nom,
+                    code_insee_ancienne_commune=code_insee_ancienne_commune,
+                    fantoir=fantoir,
+                    nom_ancienne_commune=nom_ancienne_commune,
+                )
+            )
+
     def add_point_nomme(self, ld):
         self.liste.add(ld)
 
@@ -728,7 +755,6 @@ class Points_nommes:
             "complement_points_nommes_numeros_OSM",
             dict(code_insee=self.code_insee),
         )
-
 
 class Topo:
     def __init__(self, code_insee):
