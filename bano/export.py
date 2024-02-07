@@ -94,6 +94,8 @@ def save_as_json(dept):
                     l['postcode'] = l['postcode'].split(';')
                 jsonfile.write(f"{json.dumps(l,ensure_ascii=False,separators=(',',':'))}\n")
             for l in sql_get_dict_data('export_json_dept_voies_avec_adresses',dict(dept=dept)):
+                if ';' in l['postcode']:
+                    l['postcode'] = l['postcode'].split(';')
                 dict_hsnr = {}
                 for p in l['housenumbers'].split('@@@'):
                     numero,lat,lon = p.split('$$$')
@@ -101,6 +103,8 @@ def save_as_json(dept):
                 l['housenumbers'] = dict_hsnr
                 jsonfile.write(f"{json.dumps(l,ensure_ascii=False,separators=(',',':'))}\n")
             for l in sql_get_dict_data('export_json_dept_voies_ld_sans_adresses',dict(dept=dept)):
+                if ';' in l['postcode']:
+                    l['postcode'] = l['postcode'].split(';')
                 jsonfile.write(f"{json.dumps(l,ensure_ascii=False,separators=(',',':'))}\n")
         b.batch_stop_log(id_batch, True)
     except Exception as e:
