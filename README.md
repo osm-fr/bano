@@ -22,6 +22,15 @@ Il faut pour alimenter la base OSM locale dans laquelle puise BANO :
 
 Autres outils : parallel.
 
+## Installation
+
+Mettre en place un environnement virtuel python :
+```
+virtualenv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
 ## Configuration
 
 Première étape avant de lancer les chargements de données : il faut adapter le fichier `config` à votre environnement, en déclarant différents chemins. Ce fichier est utilisé en début de plusieurs scripts pour connaître le chemin de différents répertoires.
@@ -55,6 +64,16 @@ load_osm_france_db.sh http://download.openstreetmap.fr/extracts/europe/france/fr
 
 ## Utilisation
 
-Pour connaître les commandes du module bano : `bano --help`.
+### Commande `bano`
+
+Activer l'environnement virtuel python (si pas déjà activé) :
+```
+source venv/bin/activate
+```
+
+Pour connaître les commandes du module bano :
+```
+python -m bano --help
+```
 
 Quasiment toutes les options sont utilisées dans le script `cron_bano`.
