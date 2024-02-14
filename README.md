@@ -27,6 +27,10 @@ Une fois le fichier `config` rempli, lancer la création des répertoires avec :
 arborescence.sh
 ```
 
+### Liste des départements
+
+Les départements pris en compte sont listés dans `deplist.txt`. Cette liste peut être modifiée.
+
 ### Création de la base de données
 
 La base de données qui accueille toutes les données BANO (les sources et les données produites) s'appelle 'bano' est doit être créée en début d'installation. C'est l'utilisateur 'postgres' qui doit exécuter les scripts de création de la base.
