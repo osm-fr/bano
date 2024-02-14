@@ -23,7 +23,7 @@ cd $DOWNLOAD_DIR
 wget -NS $PBF_URL
 imposm import -config $SCRIPT_DIR/imposm.config -read $DOWNLOAD_DIR/$PBF_FILE -overwritecache -diff -write -dbschema-import osm
 
-psql -d bano -U cadastre -f $SCRIPT_DIR/sql/finalisation.sql
+psql -d bano -U cadastre -v ON_ERROR_STOP=1 -f $SCRIPT_DIR/sql/finalisation.sql
 
 cp $DOWNLOAD_DIR/last.state.txt $DOWNLOAD_DIR/state.txt
 rm ${lockfile}
