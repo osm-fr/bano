@@ -10,18 +10,18 @@ source config
 
 lockfile=imposm.lock
 
-echo `date`>> $SCRIPT_DIR/cron.log
-echo debut >> $SCRIPT_DIR/cron.log
+echo `date`
+echo debut
 
 if test -f ${lockfile}
 then
   diff_age=$((`date +%s` - `stat -c %Y $lockfile`))
   if [ $diff_age -gt 7200 ];then
-    echo "Effacement du lock" >> $SCRIPT_DIR/cron.log
+    echo "Effacement du lock"
     rm ${lockfile}
   else
-    echo `date`" : Process deja en cours" >> $SCRIPT_DIR/cron.log
-    exit 0
+    echo `date`" : Process deja en cours"
+    exit 1
   fi
 fi
 
@@ -33,5 +33,5 @@ imposm diff -config imposm.config -dbschema-production osm ${DOWNLOAD_DIR}/chang
 
 rm ${lockfile}
 
-echo `date` >> $SCRIPT_DIR/cron.log
-echo fin >> $SCRIPT_DIR/cron.log
+echo `date`
+echo fin
