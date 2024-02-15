@@ -11,6 +11,7 @@ export CADASTRE_CACHE_DIR=$DATA_DIR/cadastre_cache
 export BAL_CACHE_DIR=$DATA_DIR/bal_cache
 export EXPIRE_TILES_DIR=$DATA_DIR/expire_tiles
 export CSV_DIR=$DATA_DIR/csv_insee
+export COG_DIR=$DATA_DIR/cog
 export EXPORT_SAS_DIR=/data/sas_web
 export EXPORT_WEB_DIR=/data/work/bano.openstreetmap.fr/www/web/data/
 export TMP_DIR=/data/tmp
