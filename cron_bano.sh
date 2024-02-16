@@ -2,8 +2,6 @@
 
 set -e
 
-source /data/project/bano_v3/venv_v3/bin/activate
-
 echo 'debut du cron BANO'
 
 source config
