@@ -60,7 +60,6 @@ def import_to_pg():
             if line[16:18] != '14':
                 continue
             # print(line)
-            topo_voie_to_csv(line)
             io_in_csv.write('$'.join(topo_voie_to_csv(line))+'\n') # separateur $ car on trouve des virgules dans le contenu
             # if i > 20:
             #     break
