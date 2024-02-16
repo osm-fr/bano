@@ -23,8 +23,10 @@ imposm import \
   -config imposm.config \
   -read $DOWNLOAD_DIR/$PBF_FILE \
   -overwritecache \
+  -cachedir $IMPOSM_CACHE_DIR \
   -diff \
   -write \
+  -connection postgis://cadastre@localhost/bano?prefix=NONE \
   -dbschema-import osm
 
 psql -d bano -U cadastre -v ON_ERROR_STOP=1 -f $SCRIPT_DIR/sql/finalisation.sql
