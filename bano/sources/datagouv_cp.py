@@ -41,6 +41,8 @@ def download(destination,url):
             f.write(resp.text)
         b.batch_stop_log(id_batch, True)
         return True
+    elif resp.status_code == 304:  # Not Modified
+        return True
     print(resp.status_code)
     b.batch_stop_log(id_batch, False)
     return False
