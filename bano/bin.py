@@ -10,7 +10,7 @@ from . import rapprochement
 from . import boite_a_outils
 from . import export
 from . import publish
-from .sources import topo, ban, cog, cadastre_ld, ban2topo, datagouv_commune_summary as datagouv_cs,datagouv_cp
+from .sources import ban, cog, cadastre_ld, ban2topo, datagouv_commune_summary as datagouv_cs,datagouv_cp,datagouv_cp,datagouv_topo
 from .constants import DEPARTEMENTS
 
 
@@ -30,7 +30,7 @@ def main():
         "charge_topo",
         help="Charge une version du fichier TOPO",
     )
-    subparser.set_defaults(func=topo.process_topo)
+    subparser.set_defaults(func=datagouv_topo.process)
 
     subparser = subparsers.add_parser(
         "charge_cog",
