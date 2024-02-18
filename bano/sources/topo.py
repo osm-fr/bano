@@ -4,7 +4,7 @@
 import gzip
 import io
 
-from ..constants import get_const_code_dir,CODE_VOIE_FANTOIR
+from ..constants import get_const_code_dir,CODE_VOIE_FANTOIR,DEPARTEMENTS
 
 from ..db import bano_db
 from .. import helpers as h
@@ -60,8 +60,10 @@ def import_to_pg():
             if line[16:18] != '14':
                 continue
             # print(line)
-            topo_voie_to_csv(line)
-            io_in_csv.write('$'.join(topo_voie_to_csv(line))+'\n') # separateur $ car on trouve des virgules dans le contenu
+            champs = topo_voie_to_csv(line)
+            if champs[0] not in DEPARTEMENTS:
+                continue
+            io_in_csv.write('$'.join(champs)+'\n') # separateur $ car on trouve des virgules dans le contenu
             # if i > 20:
             #     break
         io_in_csv.seek(0)
