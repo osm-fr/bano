@@ -26,8 +26,8 @@ echo 'sources ok' >> $SCRIPT_DIR/cron.log
 bano update_table_communes
 bano update_infos_communes
 
-# psql -d osm -U cadastre -v ON_ERROR_STOP=1 -f sql/create_table_polygones_postaux.sql
-# psql -d cadastre -U cadastre -v ON_ERROR_STOP=1 -f sql/post_copie_ban.sql
+# $pgsql_BANO -f sql/create_table_polygones_postaux.sql
+# $pgsql_CADASTRE -f sql/post_copie_ban.sql
 echo 'màj polygones ok' >> $SCRIPT_DIR/cron.log
 
 # BANO
@@ -49,8 +49,8 @@ cat deplist.txt | parallel -j $PARALLEL_JOBS bano publish {1}
 bano publish_aggregate
 
 # ménage PostgreSQL
-psql -d bano -U cadastre -v ON_ERROR_STOP=1 -c "VACUUM bano_adresses;"
-psql -d bano -U cadastre -v ON_ERROR_STOP=1 -c "VACUUM bano_points_nommes;"
-psql -d bano -U cadastre -v ON_ERROR_STOP=1 -c "VACUUM nom_fantoir;"
-psql -d bano -U cadastre -v ON_ERROR_STOP=1 -c "GRANT SELECT ON ALL TABLES IN SCHEMA PUBLIC TO PUBLIC";
+$pgsql_BANO -c "VACUUM bano_adresses;"
+$pgsql_BANO -c "VACUUM bano_points_nommes;"
+$pgsql_BANO -c "VACUUM nom_fantoir;"
+$pgsql_BANO -c "GRANT SELECT ON ALL TABLES IN SCHEMA PUBLIC TO PUBLIC";
 echo 'fin du cron BANO' >> $SCRIPT_DIR/cron.log

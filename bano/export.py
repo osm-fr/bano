@@ -80,7 +80,7 @@ locn:geometry [a gsp:Geometry; gsp:asWKT "POINT({lon} {lat})"^^gsp:wktLiteral ] 
 def save_as_shp(dept):
     id_batch = b.batch_start_log("export SHP", "", dept)
     try:
-        subprocess.run(['ogr2ogr', '-f',"ESRI Shapefile", '-lco', 'ENCODING=UTF-8', '-s_srs', 'EPSG:4326', '-t_srs', 'EPSG:4326', '-overwrite', get_sas_full_filename(dept,'shp'), 'PG:dbname=bano user=cadastre', '-sql', sql_query('export_csv_dept',dict(dept=dept))])
+        subprocess.run(['ogr2ogr', '-f',"ESRI Shapefile", '-lco', 'ENCODING=UTF-8', '-s_srs', 'EPSG:4326', '-t_srs', 'EPSG:4326', '-overwrite', get_sas_full_filename(dept,'shp'), 'PG:' + os.environ['PG_CADASTRE'], '-sql', sql_query('export_csv_dept',dict(dept=dept))])
         b.batch_stop_log(id_batch, True)
     except:
         b.batch_stop_log(id_batch, False)
