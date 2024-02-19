@@ -35,7 +35,12 @@ touch ${lockfile}
 echo `date`" : Osmosis" >> ${LOGFILE}
 osmosis --rri workingDirectory=${DOWNLOAD_DIR} --simc --wxc ${DOWNLOAD_DIR}/changes.osc.gz
 echo `date`" : Imposm" >> ${LOGFILE}
-imposm diff -config $SCRIPT_DIR/imposm.config -cachedir $IMPOSM_CACHE_DIR -dbschema-production osm ${DOWNLOAD_DIR}/changes.osc.gz
+imposm diff \
+  -config $SCRIPT_DIR/imposm.config \
+  -cachedir $IMPOSM_CACHE_DIR \
+  -connection postgis://$PGCON_BANO?prefix=NONE \
+  -dbschema-production osm \
+  ${DOWNLOAD_DIR}/changes.osc.gz
 echo `date`" : Osm2pgsql" >> ${LOGFILE}
 osm2pgsql -a -S osm2pgsql.style -s -l -d bano -U cadastre -p osm2pgsql $DOWNLOAD_DIR/changes.osc.gz
 
