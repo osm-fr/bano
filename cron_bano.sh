@@ -15,42 +15,44 @@ source config
 
 pip install -e .
 
+bano="python -m bano"
+
 # Sources
-cat deplist.txt | parallel -j $PARALLEL_JOBS export LANG=$LANG\; bano charge_ban {1}
-cat deplist.txt | parallel -j $PARALLEL_JOBS export LANG=$LANG\; bano charge_ld_cadastre {1}
-bano menage_noms_ban
-bano update_bis_table
-bano charge_commune_filaire
+cat deplist.txt | parallel -j $PARALLEL_JOBS export LANG=$LANG\; $bano charge_ban {1}
+cat deplist.txt | parallel -j $PARALLEL_JOBS export LANG=$LANG\; $bano charge_ld_cadastre {1}
+$bano menage_noms_ban
+$bano update_bis_table
+$bano charge_commune_filaire
 
 echo 'sources ok' >> $SCRIPT_DIR/cron.log
 
 # Mise à jour quotidienne dans la base cadastre des couches des polygones postaux d'OSM et des statuts admin de communes en vue des exports
-bano update_table_communes
-bano update_infos_communes
+$bano update_table_communes
+$bano update_infos_communes
 
 #Stats BAL
-bano download_commune_summary
+$bano download_commune_summary
 
 # Stats departementales BANO/BAN/TOPO
-bano update_stats_departementales
+$bano update_stats_departementales
 
 # BANO
-cat deplist.txt        | parallel -j $PARALLEL_JOBS export LANG=$LANG\; bano rapprochement --dept {1}
+cat deplist.txt        | parallel -j $PARALLEL_JOBS export LANG=$LANG\; $bano rapprochement --dept {1}
 
 echo 'rapprochement ok' >> $SCRIPT_DIR/cron.log
 
 echo 'preparation export' >> $SCRIPT_DIR/cron.log
-bano prepare_export
+$bano prepare_export
 echo 'preparation export finie' >> $SCRIPT_DIR/cron.log
 
 # exports
 echo 'export' >> $SCRIPT_DIR/cron.log
-cat deplist.txt | parallel -j $PARALLEL_JOBS bano export {1}
+cat deplist.txt | parallel -j $PARALLEL_JOBS $bano export {1}
 echo 'export fini' >> $SCRIPT_DIR/cron.log
 
 # copie+zip dans le dossier web
-cat deplist.txt | parallel -j $PARALLEL_JOBS bano publish {1}
-bano publish_aggregate
+cat deplist.txt | parallel -j $PARALLEL_JOBS $bano publish {1}
+$bano publish_aggregate
 
 # ménage PostgreSQL
 $pgsql_BANO -c "VACUUM bano_adresses;"
