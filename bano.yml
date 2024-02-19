@@ -118,6 +118,14 @@ tables:
       - {name: 'member_index', type: member_index}
       - {key: 'ref:FR:FANTOIR', name: 'ref:FR:FANTOIR', type: string}
       - {key: 'name', name: 'name', type: string}
+      - {key: 'name:fr', name: 'name_fr', type: string}
+      - {key: 'name:eu', name: 'name_eu', type: string}
+      - {key: 'name:br', name: 'name_br', type: string}
+      - {key: 'name:oc', name: 'name_oc', type: string}
+      - {key: 'name:de', name: 'name_de', type: string}
+      - {key: 'name:ca', name: 'name_ca', type: string}
+      - {key: 'name:gsw', name: 'name_gsw', type: string}
+      - {key: 'name:co', name: 'name_co', type: string}
       - {key: 'alt_name', name: 'alt_name', type: string}
       - {key: 'old_name', name: 'old_name', type: string}
       - {key: 'type', name: 'type', type: string}

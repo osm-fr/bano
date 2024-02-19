@@ -2,7 +2,7 @@ WITH
 pts
 AS
 (SELECT  pt.way,
-        UNNEST(ARRAY[pt.name,pt.alt_name,pt.old_name]) as name,
+        UNNEST(ARRAY[pt.name,pt.alt_name,pt.old_name,pt.name_fr,pt.name_eu,pt.name_br,pt.name_oc,pt.name_de,pt.name_ca,pt.name_gsw,pt.name_co]) as name,
         tags,
         place,
         a9.code_insee AS insee_ac,

@@ -2,7 +2,7 @@ WITH
 lignes_brutes
 AS
 (SELECT l.way,
-        unnest(array[l.name,l.alt_name,l.old_name]) AS name,
+        unnest(array[l.name,l.alt_name,l.old_name,l.name_fr,l.name_eu,l.name_br,l.name_oc,l.name_de,l.name_ca,l.name_gsw,l.name_co]) AS name,
         COALESCE(a9.code_insee,'xxxxx') as insee_jointure,
         a9.code_insee insee_ac,
         unnest(array["ref:FR:FANTOIR","ref:FR:FANTOIR:left","ref:FR:FANTOIR:right"]) AS fantoir,
@@ -19,7 +19,7 @@ WHERE   (l.highway != '' OR
         l.name != ''
 UNION ALL
 SELECT  ST_PointOnSurface(l.way),
-        unnest(array[l.name,l.alt_name,l.old_name]) AS name,
+        unnest(array[l.name,l.alt_name,l.old_name,l.name_fr,l.name_eu,l.name_br,l.name_oc,l.name_de,l.name_ca,l.name_gsw,l.name_co]) AS name,
         COALESCE(a9.code_insee,'xxxxx') as insee_jointure,
         a9.code_insee insee_ac,
         "ref:FR:FANTOIR" AS fantoir,
@@ -35,7 +35,7 @@ WHERE   (l.highway||"ref:FR:FANTOIR" != '' OR l.landuse = 'residential' OR l.ame
         l.name != ''
 UNION ALL
 SELECT l.way,
-        unnest(array[l.name,l.alt_name,l.old_name]) AS name,
+        unnest(array[l.name,l.alt_name,l.old_name,l.name_fr,l.name_eu,l.name_br,l.name_oc,l.name_de,l.name_ca,l.name_gsw,l.name_co]) AS name,
         COALESCE(a9.code_insee,'xxxxx') as insee_jointure,
         a9.code_insee insee_ac,
         "ref:FR:FANTOIR" AS fantoir,
