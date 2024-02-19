@@ -28,6 +28,7 @@ imposm import \
   -cachedir $IMPOSM_CACHE_DIR \
   -diff \
   -write \
+  -connection postgis://$PGCON_BANO?prefix=NONE \
   -dbschema-import osm
 
 $pgsql_BANO -f $SCRIPT_DIR/sql/finalisation.sql
