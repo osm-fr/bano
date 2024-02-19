@@ -14,8 +14,8 @@ source config
 pip install -e .
 
 # Sources
-cat deplist.txt | parallel -j 4 export LANG=fr_FR.UTF-8\; bano charge_ban {1}
-cat deplist.txt | parallel -j 4 export LANG=fr_FR.UTF-8\; bano charge_ld_cadastre {1}
+cat deplist.txt | parallel -j 4 export LANG=$LANG\; bano charge_ban {1}
+cat deplist.txt | parallel -j 4 export LANG=$LANG\; bano charge_ld_cadastre {1}
 bano update_bis_table
 
 echo 'sources ok' >> $SCRIPT_DIR/cron.log
@@ -29,7 +29,7 @@ bano update_infos_communes
 echo 'màj polygones ok' >> $SCRIPT_DIR/cron.log
 
 # BANO
-cat deplist.txt        | parallel -j 4 export LANG=fr_FR.UTF-8\; bano rapprochement --dept {1}
+cat deplist.txt        | parallel -j 4 export LANG=$LANG\; bano rapprochement --dept {1}
 
 echo 'rapprochement ok' >> $SCRIPT_DIR/cron.log
 
