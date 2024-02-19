@@ -25,6 +25,7 @@ imposm import \
   -config $SCRIPT_DIR/imposm.config \
   -read $DOWNLOAD_DIR/$PBF_FILE \
   -overwritecache \
+  -cachedir $IMPOSM_CACHE_DIR \
   -diff \
   -write \
   -dbschema-import osm
