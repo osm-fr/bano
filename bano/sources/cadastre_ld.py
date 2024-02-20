@@ -25,8 +25,6 @@ def process(departements, **kwargs):
         status = download(dept)
         # if status:
         import_to_pg(dept)
-        post_process(dept)
-
 
 def download(departement):
     destination = get_destination(departement)
@@ -46,7 +44,6 @@ def download(departement):
         return True
     return False
 
-
 def import_to_pg(departement, **kwargs):
     fichier_source = get_destination(departement)
     with gzip.open(fichier_source, mode="rt") as f:
@@ -59,24 +56,15 @@ def import_to_pg(departement, **kwargs):
                 a_values = []
                 str_query = f"INSERT INTO lieux_dits VALUES "
                 for l in json_source["features"]:
+                    nom = hp.escape_quotes(l['properties']['nom']).replace("\\","")
                     a_values.append(
-                        f"('{l['properties']['commune']}','{hp.escape_quotes(l['properties']['nom'])}','{l['properties']['created']}','{l['properties']['updated']}',ST_SetSRID(ST_GeomFromGeoJSON('{hp.replace_single_quotes_with_double(str(l['geometry']))}'),4326))"
+                        f"('{l['properties']['commune']}','{nom}','{l['properties']['created']}','{l['properties']['updated']}',ST_SetSRID(ST_GeomFromGeoJSON('{hp.replace_single_quotes_with_double(str(l['geometry']))}'),4326))"
                     )
                 if a_values:
                     cur_insert.execute(str_query + ",".join(a_values) + ";COMMIT;")
             except psycopg2.DataError as e:
                 print(e)
                 db.bano_db.reset()
-
-
-def post_process(departement, **kwargs):
-    sqlfile = Path(__file__).parent.parent / "sql" / "lieux_dits_post_process.sql"
-    if sqlfile.exists():
-        with open(sqlfile, "r") as fq:
-            with db.bano_db.cursor() as cur_post_process:
-                str_query = fq.read().replace("__dept__", departement)
-                cur_post_process.execute(str_query)
-
 
 def get_destination(departement):
     try:
