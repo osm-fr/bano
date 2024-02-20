@@ -15,7 +15,7 @@ def add_noms_ban_dans_topo(code_insee,noms_ban):
     sql_process('add_noms_ban_dans_topo',dict(code_insee=code_insee,noms_ban=noms_ban))
 
 def pseudo_fantoir(index,code_insee):
-    return f"{code_insee}b{str(index).ljust(3,'b')}"
+    return f"{code_insee}b{str(hex(index))[2:].ljust(3,'b')}"
 
 def process(code_insee,**kwargs):
     purge_noms_ban_dans_topo(code_insee)
