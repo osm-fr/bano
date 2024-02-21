@@ -118,6 +118,8 @@ tables:
       - {name: 'member_index', type: member_index}
       - {key: 'ref:FR:FANTOIR', name: 'ref:FR:FANTOIR', type: string}
       - {key: 'name', name: 'name', type: string}
+      - {key: 'alt_name', name: 'alt_name', type: string}
+      - {key: 'old_name', name: 'old_name', type: string}
       - {key: 'type', name: 'type', type: string}
   planet_osm_postal_code:
     type: polygon
