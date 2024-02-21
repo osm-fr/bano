@@ -6,21 +6,21 @@ SELECT  DISTINCT provenance,
         a9.nom,
         'voie'::text
 FROM    (SELECT 4::integer AS provenance,
-                UNNEST(ARRAY[l.name,l.tags->'alt_name',l.tags->'old_name']) as name,
+                UNNEST(ARRAY[l.name,l.alt_name,l.old_name]) as name,
                 l.way,
                 r.tags
          FROM   (SELECT way FROM planet_osm_polygon WHERE "ref:INSEE" = '__code_insee__')    p
-         JOIN   (SELECT name,tags,osm_id,way FROM planet_osm_line WHERE highway != '' AND name != '') l
+         JOIN   (SELECT name,alt_name,old_name,tags,osm_id,way FROM planet_osm_line WHERE highway != '' AND name != '') l
          ON     p.way && l.way AND ST_Contains(p.way, l.way)
          JOIN   planet_osm_rels r
          ON     r.osm_id = l.osm_id
          UNION ALL
          SELECT 5,
-                UNNEST(ARRAY[l.name,l.tags->'alt_name',l.tags->'old_name']) as name,
+                UNNEST(ARRAY[l.name,l.alt_name,l.old_name]) as name,
                 l.way,
                 r.tags
          FROM   (SELECT way FROM planet_osm_polygon WHERE "ref:INSEE" = '__code_insee__')    p
-         JOIN   (SELECT name,tags,osm_id,way FROM planet_osm_polygon WHERE highway != '' AND name != '') l
+         JOIN   (SELECT name,alt_name,old_name,tags,osm_id,way FROM planet_osm_polygon WHERE highway != '' AND name != '') l
          ON     p.way && l.way AND ST_Contains(p.way, l.way)
          JOIN   planet_osm_rels r
          ON     r.osm_id = l.osm_id) l
