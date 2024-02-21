@@ -101,9 +101,9 @@ def import_to_pg_subp(departement, **kwargs):
             [
                 "psql",
                 "-d",
-                "bano",
+                os.environ["POSTGRES_DB_BANO"],
                 "-U",
-                "cadastre",
+                os.environ["POSTGRES_USER"],
                 "-1",
                 "-c",
                 f"DELETE FROM ban WHERE code_insee LIKE '{departement}%';COPY ban FROM '{tmp_filename}' WITH CSV HEADER NULL '' DELIMITER ';'",
