@@ -17,3 +17,4 @@ export EXPORT_WEB_DIR=/data/work/bano.openstreetmap.fr/www/web/data/
 export TMP_DIR=/data/tmp
 export SCHEMA_CIBLE=public
 export LANG=${LANG:-fr_FR.UTF-8}
+export PARALLEL_JOBS=${PARALLEL_JOBS:-4}
