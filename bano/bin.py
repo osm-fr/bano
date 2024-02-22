@@ -116,6 +116,9 @@ def main():
         type=str,
         help="Département à traiter (toutes les communes du dept sont traitées une par une)",
     )
+    subparser.add_argument(
+        "--verbose", "-v"
+    )
     subparser.set_defaults(func=rapprochement.process)
 
     subparser = subparsers.add_parser(
