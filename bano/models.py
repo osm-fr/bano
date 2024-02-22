@@ -717,7 +717,7 @@ class Points_nommes:
         for a in self:
             if a.fantoir and a.fantoir[0:5] == self.code_insee:
                 continue
-            if a.code_insee_ancienne_commune:
+            if a.code_insee_ancienne_commune and a.nom_ancienne_commune in noms.fantoir_par_nom_sous_commune:
                 a.fantoir = noms.fantoir_par_nom_sous_commune.get(
                     a.code_insee_ancienne_commune
                 ).get(a.nom)
