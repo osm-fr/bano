@@ -121,7 +121,7 @@ def get_webdir_full_filename(dept,filetype):
     return Path(os.environ['EXPORT_WEB_DIR']) / get_target_filename(dept,filetype)
 
 def prepare_export(**kwargs):
-    id_batch = b.batch_start_log("Preparation export", "", "")
+    id_batch = b.batch_start_log("Preparation export", "", "France")
     try:
         sql_process('table_polygones_postaux',dict())
         sql_process('tables_export',dict())
