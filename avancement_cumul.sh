@@ -1,4 +1,5 @@
-psql -d cadastre -U cadastre -c "SELECT  source,etape, date_debut,date_fin,dept,cadastre_com,nom_com,nombre_adresses FROM batch ORDER BY id_batch DESC LIMIT 10;"
+psql -d bano -U cadastre -c "SELECT  * FROM batch ORDER BY timestamp_debut DESC LIMIT 10;"
+psql -d bano -U cadastre -c "SELECT  * FROM batch WHERE not ok ORDER BY timestamp_debut DESC LIMIT 10;"
 ps -eaf|grep 'bano'
 ps -eaf|grep cumul
 
