@@ -42,6 +42,11 @@ def main():
         "charge_cp",
         help="Charge une version du fichier Codes Postaux",
     )
+    subparser.add_argument(
+        "--forceload", "-f",
+        action='store_true',
+        help="Forcer le re-chargement en base même sans téléchargement"
+    )
     subparser.set_defaults(func=datagouv_cp.process)
 
     subparser = subparsers.add_parser(
@@ -117,7 +122,9 @@ def main():
         help="Département à traiter (toutes les communes du dept sont traitées une par une)",
     )
     subparser.add_argument(
-        "--verbose", "-v"
+        "--verbose", "-v",
+        action='store_true',
+        help="Mode verbose - debug"
     )
     subparser.set_defaults(func=rapprochement.process)
 

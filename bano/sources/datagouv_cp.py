@@ -18,18 +18,20 @@ DICT_SOURCES = {
 }
 
 
-def process(**kwargs):
+def process(forceload,**kwargs):
     for k,v in DICT_SOURCES.items():
         print(f"Chargement de la source {k}")
         table,url,script_post_process = v
         csv = get_destination(f"{k}.csv")
-        status = download(csv,url)
-        if status:
+        status = download(csv,url,forceload)
+        if status or forceload:
             import_to_pg(csv,table)
+        else :
+            print("Pas de rechargement en base")
         sql_process(script_post_process,dict())
 
 
-def download(destination,url):
+def download(destination,url,forceload):
     headers = {}
     if destination.exists():
         headers["If-Modified-Since"] = formatdate(destination.stat().st_mtime)
@@ -41,12 +43,16 @@ def download(destination,url):
             f.write(resp.text)
         b.batch_stop_log(id_batch, True)
         return True
+    elif resp.status_code == 304 and forceload:  # Not Modified
+        print("Pas de nouveau téléchargement")
+        return True
     print(resp.status_code)
     b.batch_stop_log(id_batch, False)
     return False
 
 
 def import_to_pg(csv,table):
+    print("Chargement en base")
     id_batch = b.batch_start_log("import source", table, "France")
     with open(csv) as f:
         f.readline()
