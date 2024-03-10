@@ -126,6 +126,11 @@ def main():
         action='store_true',
         help="Mode verbose - debug"
     )
+    subparser.add_argument(
+        "--source_pifometre", "-p",
+        action='store_true',
+        help="Marque les rapprochements commandés par Pifometre"
+    )
     subparser.set_defaults(func=rapprochement.process)
 
     subparser = subparsers.add_parser(

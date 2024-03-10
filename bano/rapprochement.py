@@ -8,8 +8,12 @@ from .models import Noms, Adresses, Topo, Points_nommes, Correspondance_fantoir_
 from .sources import ban2topo
 
 
-def process_unitaire(code_insee,verbose):
-    id_batch = b.batch_start_log("rapprochement", "toutes", code_insee)
+def process_unitaire(code_insee,verbose,source_pifometre):
+    if source_pifometre:
+        source = 'pifometre'
+    else :
+        source = 'BANO quotidien'
+    id_batch = b.batch_start_log("rapprochement", source, code_insee)
     try:
         if verbose: print('ban2topo')
         ban2topo.process(code_insee)
@@ -35,7 +39,6 @@ def process_unitaire(code_insee,verbose):
         points_nommes.charge_points_nommes_centroides_osm()
         if verbose: print('charge_points_nommes_numeros_ban')
         points_nommes.charge_points_nommes_numeros_ban()
-
 
         if verbose: print('noms_des_adresses')
         adresses.noms_des_adresses(noms)
@@ -88,7 +91,7 @@ def process_unitaire(code_insee,verbose):
         b.batch_stop_log(id_batch, False)
 
 
-def process(code_insee, dept, verbose, **kwargs):
+def process(code_insee, dept, verbose, source_pifometre, **kwargs):
     if dept:
         liste_insee = h.liste_communes_par_dept(dept)
     else:
@@ -96,4 +99,4 @@ def process(code_insee, dept, verbose, **kwargs):
     for code_insee, nom in liste_insee:
         if dept or verbose:
             print(f"{code_insee} - {nom}")
-        process_unitaire(code_insee,verbose)
+        process_unitaire(code_insee,verbose,source_pifometre)
