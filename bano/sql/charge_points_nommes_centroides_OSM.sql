@@ -15,8 +15,7 @@ LEFT OUTER JOIN (SELECT * FROM polygones_insee_a9 WHERE insee_a8 = '__code_insee
 ON      ST_Intersects(l.way, a9.geometrie)
 WHERE   (l.highway != '' OR
         l.waterway = 'dam')     AND
-        l.highway NOT IN ('bus_stop','platform') AND
-        l.name != ''
+        l.highway NOT IN ('bus_stop','platform')
 UNION ALL
 SELECT  ST_PointOnSurface(l.way),
         unnest(array[l.name,l.tags->'alt_name',l.tags->'old_name']) AS name,
@@ -31,8 +30,7 @@ ON      ST_Intersects(l.way, p.geometrie)
 LEFT OUTER JOIN (SELECT * FROM polygones_insee_a9 WHERE insee_a8 = '__code_insee__') a9
 ON      ST_Intersects(l.way, a9.geometrie)
 WHERE   (l.highway||"ref:FR:FANTOIR" != '' OR l.landuse = 'residential' OR l.amenity = 'parking') AND
-        l.highway NOT IN ('bus_stop','platform') AND
-        l.name != ''
+        l.highway NOT IN ('bus_stop','platform')
 UNION ALL
 SELECT l.way,
         unnest(array[l.name,l.tags->'alt_name',l.tags->'old_name']) AS name,
@@ -46,18 +44,17 @@ JOIN    planet_osm_rels l
 ON      ST_Intersects(l.way, p.way)
 LEFT OUTER JOIN (SELECT * FROM polygones_insee_a9 WHERE insee_a8 = '__code_insee__') a9
 ON      ST_Intersects(l.way, a9.geometrie)
-WHERE   l.member_role = 'street' AND
-        l.name != ''),
+WHERE   l.member_role = 'street'),
 lignes_noms
 AS
-(SELECT CASE 
+(SELECT CASE
             WHEN GeometryType(way) = 'POINT' THEN ST_MakeLine(ST_Translate(way,-0.000001,-0.000001),ST_Translate(way,0.000001,0.000001))
             WHEN GeometryType(way) LIKE '%POLYGON' THEN ST_ExteriorRing(way)
             ELSE way
         END AS way_line,
         *
 FROM    lignes_brutes
-WHERE   name IS NOT NULL AND
+WHERE   name != '' AND name IS NOT NULL AND
         (fantoir LIKE '__code_insee__%' OR fantoir = '')),
 lignes_noms_rang
 AS
