@@ -12,23 +12,23 @@ from .. import batch as b
 DICT_COG = {
     "commune": [
         "cog_commune",
-        "https://www.data.gouv.fr/fr/datasets/r/5d5c4384-b19a-4ddf-910b-6e9cbaa8e1d6",
+        "https://www.data.gouv.fr/fr/datasets/r/8262de72-138f-4596-ad2f-10079e5f4d7c",
     ],
     "canton": [
         "cog_canton",
-        "https://www.data.gouv.fr/fr/datasets/r/716922e8-2ab7-4806-94eb-21933c266ebf",
+        "https://www.data.gouv.fr/fr/datasets/r/56be3980-13c1-4c04-91fd-60dc92e8ceb8",
     ],
     "arrondissement": [
         "cog_arrondissement",
-        "https://www.data.gouv.fr/fr/datasets/r/9fdf41d6-2452-4f7c-a1e2-a7b104b38b77",
+        "https://www.data.gouv.fr/fr/datasets/r/21fdff26-33a9-4b8e-bfd9-ce6d2ed5659e",
     ],
     "departement": [
         "cog_departement",
-        "https://www.data.gouv.fr/fr/datasets/r/c691a0b0-6e22-4d6f-9496-3406b017d709",
+        "https://www.data.gouv.fr/fr/datasets/r/e436f772-b05d-47f8-b246-265faab8679f",
     ],
     "region": [
         "cog_region",
-        "https://www.data.gouv.fr/fr/datasets/r/6e40e6f3-7735-43a9-8f20-ce0ae53f74f7",
+        "https://www.data.gouv.fr/fr/datasets/r/53cb77ce-8a93-4924-9d5d-920bbe7c679f",
     ],
 }
 
