@@ -20,7 +20,8 @@ AS
         code_postal,
         code_insee_ancienne_commune,
         nom_ancienne_commune,
-        id
+        id,
+        certification_commune
 FROM    ban b
 LEFT OUTER JOIN rep_b_as_bis r
 USING   (fantoir,numero)
@@ -33,5 +34,6 @@ SELECT  fantoir,
         code_postal,
         code_insee_ancienne_commune,
         nom_ancienne_commune,
-        id
+        id,
+        certification_commune
 FROM    j;
