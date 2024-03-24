@@ -80,7 +80,7 @@ class Noms:
     def __iter__(self):
         return iter(self.triplets_nom_fantoir_source)
 
-    def _print(self, correspondance, pattern=None):
+    def _print(self, correspondance={}, pattern=None):
         for a in self:
             if not pattern or pattern in a._as_csv_format_bano(correspondance):
                 print(a._as_csv_format_bano(correspondance))
@@ -722,10 +722,8 @@ class Points_nommes:
         for a in self:
             if a.fantoir and a.fantoir[0:5] == self.code_insee:
                 continue
-            if a.code_insee_ancienne_commune and a.nom_ancienne_commune in noms.fantoir_par_nom_sous_commune:
-                a.fantoir = noms.fantoir_par_nom_sous_commune.get(
-                    a.code_insee_ancienne_commune
-                ).get(a.nom)
+            if a.code_insee_ancienne_commune and a.code_insee_ancienne_commune in noms.fantoir_par_nom_sous_commune:
+                a.fantoir = noms.fantoir_par_nom_sous_commune[a.code_insee_ancienne_commune].get(a.nom)
             else:
                 a.fantoir = noms.fantoir_par_nom_sous_commune.get(a.nom)
 
