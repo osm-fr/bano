@@ -515,11 +515,15 @@ class Adresses:
             )
 
     def stats_sources(self):
-        par_source = {"BAN": set(), "OSM": set()}
+        numeros_par_source = {"BAN": set(), "OSM": set()}
+        noms_addr_OSM = set()
+
         for t in self:
             if t.fantoir:
-                par_source[t.source].add(f"{t.numero}{t.fantoir}")
-        return [len(par_source["BAN"]), len(par_source["OSM"])]
+                numeros_par_source[t.source].add(f"{t.numero}{t.fantoir}")
+                if t.source == 'OSM':
+                    noms_addr_OSM.add(f"{t.fantoir}")
+        return [len(numeros_par_source["BAN"]), len(numeros_par_source["OSM"]), len(noms_addr_OSM)]
 
 
 class Point_nomme:
