@@ -70,7 +70,7 @@ def process_unitaire(code_insee,verbose,source_pifometre):
         if verbose: print('points_nommes.enregistre')
         points_nommes.enregistre(correspondance_fantoir_ban_osm.correspondance)
 
-        nb_addr_ban, nb_addr_osm, nb_noms_addr_osm = adresses.stats_sources()
+        nb_addr_ban, nb_addr_osm, nb_noms_addr_osm = adresses.stats_sources(noms)
         nb_noms_ban, nb_noms_cadastre, nb_noms_osm = noms.stats_sources()
         nb_noms_topo = topo.nb_fantoirs
         sql_process(

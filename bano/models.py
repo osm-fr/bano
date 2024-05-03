@@ -514,16 +514,19 @@ class Adresses:
                 ),
             )
 
-    def stats_sources(self):
+    def stats_sources(self,noms):
         numeros_par_source = {"BAN": set(), "OSM": set()}
-        noms_addr_OSM = set()
+        fantoirs_par_source = {"BAN": set(), "OSM": set()}
+
+        for n in noms:
+            if n.source in 'OSM BAN' :
+                fantoirs_par_source[n.source].add(n.fantoir)
 
         for t in self:
             if t.fantoir:
                 numeros_par_source[t.source].add(f"{t.numero}{t.fantoir}")
-                if t.source == 'OSM':
-                    noms_addr_OSM.add(f"{t.fantoir}")
-        return [len(numeros_par_source["BAN"]), len(numeros_par_source["OSM"]), len(noms_addr_OSM)]
+
+        return [len(numeros_par_source["BAN"]), len(numeros_par_source["OSM"]), len(fantoirs_par_source['OSM'].intersection(fantoirs_par_source['BAN']))]
 
 
 class Point_nomme:
