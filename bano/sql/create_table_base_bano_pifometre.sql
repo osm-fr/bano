@@ -64,3 +64,40 @@ VALUES (0,0,'Ok'),
 (7,7,'Adresse de lieu-dit aussi associée à une voie'),
 (8,8,'Emplacement manifestement incohérent'),
 (9,9,'Ancienne numérotation plus en vigueur');
+
+
+DROP VIEW IF EXISTS statut_numeros;
+CREATE OR REPLACE VIEW vue_statut_numeros
+AS
+SELECT row_number() OVER () AS gid,
+       r.code_insee,
+       com.libelle AS commune,
+       r.uppernumero AS numero,
+       b.nom_voie,
+       fantoir,
+       r.source,
+       labels_statuts_numero.label_statut AS commentaire,
+       to_timestamp(r.timestamp_statut) AS date_remontee,
+       b.geometrie
+ FROM  (SELECT numero,
+               fantoir,
+               source,
+               id_statut,
+               timestamp_statut,
+               code_insee,
+               translate(upper(numero), ' '::text, ''::text) AS uppernumero,
+               rank() OVER (PARTITION BY numero, fantoir, source ORDER BY timestamp_statut DESC) AS rang
+        FROM   statut_numero
+        WHERE  id_statut <> 0) r
+        JOIN   labels_statuts_numero
+        USING  (id_statut)
+        JOIN   (SELECT  geometrie,
+                        fantoir,
+                        nom_voie,
+                        translate(upper(numero), ' '::text, ''::text) AS uppernumero
+               FROM     bano_adresses
+               WHERE    source = 'BAN') b
+        USING  (fantoir, uppernumero)
+JOIN    cog_commune com
+ON      com.com = r.code_insee
+WHERE   r.rang = 1;
