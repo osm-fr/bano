@@ -79,7 +79,7 @@ def process_unitaire(code_insee,verbose,source_pifometre):
                 code_insee=code_insee,
                 nb_adresses_osm=str(nb_addr_osm),
                 nb_adresses_ban=str(nb_addr_ban),
-                nb_noms_addr_osm=str(nb_noms_addr_osm),
+                nb_noms_adr_osm=str(nb_noms_adr_osm),
                 nb_noms_osm=str(nb_noms_osm),
                 nb_noms_ban=str(nb_noms_ban),
                 nb_noms_topo=str(nb_noms_topo),
