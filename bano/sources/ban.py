@@ -13,10 +13,6 @@ from ..constants import DEPARTEMENTS
 from ..db import bano_db
 from ..sql import sql_process
 from .. import batch as b
-from .. import pre_process_suffixe
-
-# from .. import update_manager as um
-
 
 def process_ban(departements, **kwargs):
     departements = set(departements)
@@ -31,13 +27,9 @@ def process_ban(departements, **kwargs):
             if not (import_to_pg(dept)):
                 depts_en_echec.append(dept)
                 print("depts_en_echec", depts_en_echec)
-            else:
-                pre_process_suffixe.process(dept)
     for dept in depts_en_echec:
         print(f"Département {dept}")
         import_to_pg_subp(dept)
-        pre_process_suffixe.process(dept)
-
 
 def download(departement):
     destination = get_destination(departement)
@@ -69,13 +61,12 @@ def import_to_pg(departement, **kwargs):
     id_batch = b.batch_start_log("import source", "BAN", departement)
     fichier_source = get_destination(departement)
     with gzip.open(fichier_source, mode="rt") as f:
-        f.readline()  # skip CSV headers
         with bano_db.cursor() as cur_insert:
             try:
                 cur_insert.execute(
                     f"DELETE FROM ban WHERE code_insee LIKE '{departement}%'"
                 )
-                cur_insert.copy_from(f, "ban", sep=";", null="")
+                cur_insert.copy_expert("COPY ban FROM STDIN WITH CSV HEADER DELIMITER ';'",f)
                 b.batch_stop_log(id_batch, True)
                 return True
             except psycopg2.DataError as e:
@@ -83,7 +74,6 @@ def import_to_pg(departement, **kwargs):
                 print(e)
                 b.batch_stop_log(id_batch, False)
                 return False
-
 
 def import_to_pg_subp(departement, **kwargs):
     id_batch = b.batch_start_log("import source", "BAN", departement)
