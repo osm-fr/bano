@@ -102,7 +102,8 @@ CREATE TABLE IF NOT EXISTS bano_stats_communales(
     nb_nom_ban integer,
     nb_nom_cadastre integer,
     nb_nom_topo integer,
-    maj timestamp DEFAULT now());
+    maj timestamp DEFAULT now(),
+    ratio_noms_adr integer GENERATED ALWAYS AS ((100 * nb_nom_adr_osm) / greatest(nb_nom_ban,1)) STORED);
 
 CREATE INDEX IF NOT EXISTS idx_bano_stats_communales_code_insee ON bano_stats_communales (code_insee);
 
@@ -115,7 +116,8 @@ CREATE TABLE IF NOT EXISTS bano_stats_communales_cumul(
     nb_nom_ban integer,
     nb_nom_cadastre integer,
     nb_nom_topo integer,
-    maj timestamp);
+    maj timestamp,
+    ratio_noms_adr integer);
 
 CREATE INDEX IF NOT EXISTS idx_bano_stats_communales_cumul_code_insee ON bano_stats_communales_cumul (code_insee);
 
