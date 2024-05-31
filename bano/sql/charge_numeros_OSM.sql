@@ -67,6 +67,21 @@ FROM
 		JOIN	planet_osm_rels 	r
 		ON		r.osm_id = w.osm_id
 		WHERE	w."addr:housenumber" != ''
+		UNION ALL
+-- relation multipoly dans relation associatedStreet
+		SELECT	4,
+				ST_Centroid(w.way),
+				w."addr:housenumber",
+				null,
+				null,
+				r.tags,
+				w."addr:postcode"
+		FROM	(SELECT geometrie FROM polygones_insee WHERE admin_level = 8 AND code_insee = '__code_insee__') p
+		JOIN	planet_osm_polygon 	w
+		ON		ST_Intersects(w.way, p.geometrie)
+		JOIN	planet_osm_rels 	r
+		ON		-r.osm_id = w.osm_id
+		WHERE	w."addr:housenumber" != ''
 )a
 LEFT OUTER JOIN (SELECT * FROM suffixe WHERE code_insee = '__code_insee__') h
 ON		ST_Intersects(a.way, h.geometrie)
