@@ -79,7 +79,7 @@ FROM
 		FROM	(SELECT geometrie FROM polygones_insee WHERE admin_level = 8 AND code_insee = '__code_insee__') p
 		JOIN	planet_osm_polygon 	w
 		ON		ST_Intersects(w.way, p.geometrie)
-		JOIN	planet_osm_rels 	r
+		JOIN	(SELECT * FROM planet_osm_rels WHERE osm_type = 2)	r
 		ON		-r.osm_id = w.osm_id
 		WHERE	w."addr:housenumber" != ''
 )a
