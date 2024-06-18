@@ -19,7 +19,8 @@ def dowload():
     if destination.exists():
         headers['If-Modified-Since'] = formatdate(destination.stat().st_mtime)
 
-    resp = requests.get(f'https://www.data.gouv.fr/fr/datasets/r/c0d241dd-6ff5-4c6d-804e-b30fe61d3a94', headers=headers)
+    # https://www.data.gouv.fr/fr/datasets/fichier-des-entites-topographiques-topo-dgfip-1/
+    resp = requests.get(f'https://www.data.gouv.fr/fr/datasets/r/49cdb45f-87c4-40d6-92ad-5fcb955f5faa', headers=headers)
     if resp.status_code == 200:
         with destination.open('wb') as f:
             f.write(resp.content)
