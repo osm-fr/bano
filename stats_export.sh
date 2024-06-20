@@ -1,3 +1,7 @@
+#!/bin/bash
+
+set -e
+
 source config
 echo $EXPORT_SAS_DIR
 

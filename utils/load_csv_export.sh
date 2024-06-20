@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 psql -d cadastre -U cadastre -v ON_ERROR_STOP=1 -c "
   DROP TABLE IF EXISTS export_csv CASCADE; \
   CREATE TABLE export_csv(
