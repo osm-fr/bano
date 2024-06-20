@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 source config
 mkdir -p $LOG_DIR
 mkdir -p $DATA_DIR
