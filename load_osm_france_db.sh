@@ -21,7 +21,14 @@ touch ${lockfile}
 mkdir -p $DOWNLOAD_DIR
 cd $DOWNLOAD_DIR
 wget -NS $PBF_URL
-imposm import -config $SCRIPT_DIR/imposm.config -read $DOWNLOAD_DIR/$PBF_FILE -overwritecache -diff -write -dbschema-import osm
+imposm import \
+  -config $SCRIPT_DIR/imposm.config \
+  -read $DOWNLOAD_DIR/$PBF_FILE \
+  -overwritecache \
+  -cachedir $IMPOSM_CACHE_DIR \
+  -diff \
+  -write \
+  -dbschema-import osm
 
 psql -d bano -U cadastre -v ON_ERROR_STOP=1 -f $SCRIPT_DIR/sql/finalisation.sql
 
