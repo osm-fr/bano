@@ -110,8 +110,8 @@ def update_table_in_db():
 def get_destination():
     return Path(os.environ['DATA_DIR']) / 'topo.csv'
 
-def process(**kwargs):
-    if dowload():
+def process(forceload, **kwargs):
+    if dowload() or forceload:
         update_table_in_db()
 
 # stats TOPO decembre 2023

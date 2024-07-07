@@ -16,7 +16,7 @@ from .. import helpers as hp
 from .. import batch as b
 
 
-def process(departements, **kwargs):
+def process(departements, forceload, **kwargs):
     departements = set(departements)
     depts_inconnus = departements - set(DEPARTEMENTS)
     if depts_inconnus:
@@ -24,7 +24,7 @@ def process(departements, **kwargs):
     for dept in sorted(departements):
         print(f"Processing {dept}")
         status = download(dept)
-        if status:
+        if status or forceload:
             import_to_pg(dept)
 
 def download(departement):

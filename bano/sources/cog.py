@@ -33,13 +33,13 @@ DICT_COG = {
 }
 
 
-def process_cog(**kwargs):
+def process_cog(forceload, **kwargs):
     for k,v in DICT_COG.items():
         print(f"Chargement de la source COG {k}")
         table,url = v
         csv = get_destination(f"{k}.csv")
         status = download(csv,url)
-        if status:
+        if status or forceload:
             import_to_pg(csv,table)
     sql_process('cog_pyramide_admin',dict())
 

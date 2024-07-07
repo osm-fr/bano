@@ -37,6 +37,6 @@ def update_table_in_db():
 def get_destination():
     return Path(os.environ['BAN_CACHE_DIR']) / 'communes-summary.csv'
 
-def process(**kwargs):
-    if dowload():
+def process(forceload, **kwargs):
+    if dowload() or forceload:
         update_table_in_db()

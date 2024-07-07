@@ -14,7 +14,7 @@ from .. import db
 from .. import outils_de_gestion as m
 from .. import update_manager as um
 
-def process(source, departements, **kwargs):
+def process(source, departements, forceload, **kwargs):
     departements = set(departements)
     depts_inconnus =  departements - set(DEPARTEMENTS)
     if depts_inconnus:
@@ -27,7 +27,7 @@ def process(source, departements, **kwargs):
     for dept in sorted(departements):
         print(f"Processing {dept}")
         status = download(suffixe_fichier, dept,source)
-        if status:
+        if status or forceload:
             import_to_pg(suffixe_fichier, dept,source)
 
 def download(suffixe_fichier, departement,source):
@@ -64,7 +64,7 @@ def import_to_pg(suffixe_fichier, departement, source, **kwargs):
                 db.bano_cache.reset()
     m.batch_end_log(-1,batch_id)
 
-    
+
 def get_destination(suffixe_fichier, departement):
     try:
         cwd = Path(os.environ['BAL_CACHE_DIR'])
