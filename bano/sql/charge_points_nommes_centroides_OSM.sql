@@ -2,7 +2,8 @@ WITH
 lignes_brutes
 AS
 (SELECT l.way,
-        unnest(array[l.name,l.alt_name,l.old_name]) AS name,
+        name_osm.name,
+        name_osm.name_tag,
         COALESCE(a9.code_insee,'xxxxx') as insee_jointure,
         a9.code_insee insee_ac,
         unnest(array["ref:FR:FANTOIR","ref:FR:FANTOIR:left","ref:FR:FANTOIR:right"]) AS fantoir,
@@ -12,14 +13,19 @@ FROM    (SELECT way FROM planet_osm_polygon WHERE "ref:INSEE" = '__code_insee__'
 JOIN    planet_osm_line l
 ON      ST_Intersects(l.way, p.way)
 LEFT OUTER JOIN (SELECT * FROM polygones_insee_a9 WHERE insee_a8 = '__code_insee__') a9
-ON      ST_Intersects(l.way, a9.geometrie)
+ON      ST_Intersects(l.way, a9.geometrie),
+UNNEST(
+        ARRAY [l.name,l.alt_name,l.old_name],
+        ARRAY ['name','alt_name','old_name']
+) AS name_osm(name,name_tag)
 WHERE   (l.highway != '' OR
         l.waterway = 'dam')     AND
         l.highway NOT IN ('bus_stop','platform') AND
         l.name != ''
 UNION ALL
 SELECT  ST_PointOnSurface(l.way),
-        unnest(array[l.name,l.alt_name,l.old_name]) AS name,
+        name_osm.name,
+        name_osm.name_tag,
         COALESCE(a9.code_insee,'xxxxx') as insee_jointure,
         a9.code_insee insee_ac,
         "ref:FR:FANTOIR" AS fantoir,
@@ -29,13 +35,18 @@ FROM    (SELECT geometrie FROM polygones_insee WHERE code_insee = '__code_insee_
 JOIN    planet_osm_polygon l
 ON      ST_Intersects(l.way, p.geometrie)
 LEFT OUTER JOIN (SELECT * FROM polygones_insee_a9 WHERE insee_a8 = '__code_insee__') a9
-ON      ST_Intersects(l.way, a9.geometrie)
+ON      ST_Intersects(l.way, a9.geometrie),
+UNNEST(
+        ARRAY [l.name,l.alt_name,l.old_name],
+        ARRAY ['name','alt_name','old_name']
+) AS name_osm(name,name_tag)
 WHERE   (l.highway||"ref:FR:FANTOIR" != '' OR l.landuse = 'residential' OR l.amenity = 'parking') AND
         l.highway NOT IN ('bus_stop','platform') AND
         l.name != ''
 UNION ALL
 SELECT l.way,
-        unnest(array[l.name,l.alt_name,l.old_name]) AS name,
+        name_osm.name,
+        name_osm.name_tag,
         COALESCE(a9.code_insee,'xxxxx') as insee_jointure,
         a9.code_insee insee_ac,
         "ref:FR:FANTOIR" AS fantoir,
@@ -45,7 +56,11 @@ FROM    (SELECT way FROM planet_osm_polygon WHERE "ref:INSEE" = '__code_insee__'
 JOIN    planet_osm_rels l
 ON      ST_Intersects(l.way, p.way)
 LEFT OUTER JOIN (SELECT * FROM polygones_insee_a9 WHERE insee_a8 = '__code_insee__') a9
-ON      ST_Intersects(l.way, a9.geometrie)
+ON      ST_Intersects(l.way, a9.geometrie),
+UNNEST(
+        ARRAY [l.name,l.alt_name,l.old_name],
+        ARRAY ['name','alt_name','old_name']
+) AS name_osm(name,name_tag)
 WHERE   l.member_role = 'street' AND
         l.name != ''),
 lignes_noms
@@ -68,28 +83,31 @@ lignes_agregees
 AS
 (SELECT ST_LineMerge(ST_Collect(way_line)) way,
         name,
+        name_tag,
         insee_ac,
         insee_jointure,
         fantoir,
         nom_ac
 FROM    lignes_noms_rang
 WHERE   rang = 1
-GROUP BY 2,3,4,5,6),
+GROUP BY 2,3,4,5,6,7),
 centroide_lignes_agregees
 AS
 (SELECT ST_Centroid(ST_LineMerge(ST_Collect(way_line))) way,
         name,
+        name_tag,
         insee_ac,
         insee_jointure,
         fantoir,
         nom_ac
 FROM    lignes_noms_rang
 WHERE   rang = 1
-GROUP BY 2,3,4,5,6),
+GROUP BY 2,3,4,5,6,7),
 resultat
 AS
 (SELECT ST_SetSRID(ST_ClosestPoint(lignes_agregees.way,centroide_lignes_agregees.way),4326) point,
         lignes_agregees.name,
+        lignes_agregees.name_tag,
         lignes_agregees.insee_ac,
         lignes_agregees.fantoir,
         lignes_agregees.nom_ac
@@ -131,6 +149,7 @@ ON      ST_Intersects(c.point, a9.geometrie))
 SELECT  ST_x(point),
         ST_y(point),
         name,
+        name_tag,
         insee_ac,
         fantoir,
         nom_ac
@@ -139,6 +158,7 @@ UNION ALL
 SELECT  ST_x(point),
         ST_y(point),
         name,
+        'name' AS name_tag,
         insee_ac,
         fantoir,
         nom_ac
