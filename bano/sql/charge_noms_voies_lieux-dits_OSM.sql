@@ -7,7 +7,7 @@ SELECT  DISTINCT provenance,
         nature
 FROM    (SELECT  1::integer AS provenance,
                  pt.way,
-                 UNNEST(ARRAY[pt.name,pt.tags->'alt_name',pt.tags->'old_name']) as name,
+                 UNNEST(ARRAY[pt.name,pt.alt_name,pt.old_name,pt.name_fr,pt.name_eu,pt.name_br,pt.name_oc,pt.name_de,pt.name_ca,pt.name_gsw,pt.name_co]) as name,
                  tags,
                  CASE
                      WHEN pt.place='' THEN 'voie'::text
@@ -20,7 +20,7 @@ FROM    (SELECT  1::integer AS provenance,
          UNION ALL
          SELECT  2,
                  l.way,
-                 UNNEST(ARRAY[l.name,l.tags->'alt_name',l.tags->'old_name']) as name,
+                 UNNEST(ARRAY[l.name,l.alt_name,l.old_name,l.name_fr,l.name_eu,l.name_br,l.name_oc,l.name_de,l.name_ca,l.name_gsw,l.name_co]) as name,
                  tags,
                  'voie'
          FROM    (SELECT way FROM planet_osm_polygon WHERE "ref:INSEE" = '__code_insee__') p
@@ -29,7 +29,7 @@ FROM    (SELECT  1::integer AS provenance,
          UNION ALL
          SELECT  3,
                  pl.way,
-                 UNNEST(ARRAY[pl.name,pl.tags->'alt_name',pl.tags->'old_name']) as name,
+                 UNNEST(ARRAY[pl.name,pl.alt_name,pl.old_name,pl.name_fr,pl.name_eu,pl.name_br,pl.name_oc,pl.name_de,pl.name_ca,pl.name_gsw,pl.name_co]) as name,
                  tags,
                  'voie'
          FROM    (SELECT way FROM planet_osm_polygon WHERE "ref:INSEE" = '__code_insee__')                                                                    p
