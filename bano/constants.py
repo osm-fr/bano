@@ -19,10 +19,7 @@ def get_const_code_dir():
     return load_json_from_file("code_dir.json")
 
 
-DEPARTEMENTS = [
-    f"{n:>02}"
-    for n in [*range(1, 20), "2A", "2B", *range(21, 96), *range(971, 975), "976"]
-]
+DEPARTEMENTS = [n.strip() for n in open('deplist.txt').readlines()]
 
 DEPARTEMENTS_3CHAR = [("0" + s)[-3:] for s in DEPARTEMENTS]
 
