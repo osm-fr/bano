@@ -1,5 +1,6 @@
 SELECT  DISTINCT provenance,
         name,
+        'name' AS name_tag,
         tags,
         libelle_suffixe,
         a9.code_insee,

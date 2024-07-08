@@ -28,7 +28,12 @@ AS
         nom
 FROM    (SELECT fantoir,
                 nom,
-                RANK() OVER (PARTITION BY fantoir ORDER BY CASE WHEN source = 'OSM' THEN 1 ELSE 2 END, CASE nature WHEN 'lieu-dit' THEN 1 WHEN 'place' THEN 1 WHEN 'voie' THEN 2 ELSE 3 END, nom ) AS rang
+                RANK() OVER (PARTITION BY fantoir ORDER BY
+                    CASE WHEN source = 'OSM' THEN 1 ELSE 2 END,
+                    CASE nature WHEN 'lieu-dit' THEN 1 WHEN 'place' THEN 1 WHEN 'voie' THEN 2 ELSE 3 END,
+                    CASE WHEN nom_tag = 'name' THEN 1 ELSE 2 END,
+                    nom
+                ) AS rang
         FROM    nom_fantoir) n
 WHERE rang = 1
 GROUP BY 1,2),
@@ -51,7 +56,7 @@ FROM    num_norm_id n
 JOIN    nom_fantoir nf
 USING   (fantoir)
 JOIN    (SELECT dep, com, libelle FROM cog_commune WHERE typecom in ('ARM','COM')) cn
-ON      (cn.com = code_insee) 
+ON      (cn.com = code_insee)
 LEFT OUTER JOIN    polygones_postaux pp
 ON      ST_Contains(pp.geometrie, n.geometrie)
 LEFT OUTER JOIN cp_fantoir
@@ -71,7 +76,7 @@ SELECT fantoir,
        count(*) AS nombre_adresses
 FROM   numeros_export
 GROUP BY fantoir;
-         
+
 
 DROP TABLE IF EXISTS export_voies_adresses_json CASCADE;
 CREATE TABLE export_voies_adresses_json

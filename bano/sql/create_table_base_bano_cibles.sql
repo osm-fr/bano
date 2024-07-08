@@ -52,6 +52,7 @@ CREATE INDEX IF NOT EXISTS idx_bano_points_nommes_code_dept_nature ON bano_point
 CREATE TABLE IF NOT EXISTS nom_fantoir (
     fantoir text,
     nom text,
+    nom_tag text,
     code_insee text,
     code_dept text,
     nature text,
