@@ -95,7 +95,7 @@ USING  (code_insee)
 JOIN   (SELECT fantoir,
                lon,
                lat,
-               RANK() OVER (PARTITION BY fantoir ORDER BY CASE source WHEN 'OSM' THEN 1 WHEN 'BAN' THEN 3 ELSE 2 END, CASE nature WHEN 'centroide' THEN 2 ELSE 1 END) AS rang_par_fantoir
+               ROW_NUMBER() OVER (PARTITION BY fantoir ORDER BY CASE source WHEN 'OSM' THEN 1 WHEN 'BAN' THEN 3 ELSE 2 END, CASE nature WHEN 'centroide' THEN 2 ELSE 1 END) AS rang_par_fantoir
        FROM    bano_points_nommes
        WHERE   fantoir IS NOT NULL) AS pn
 USING  (fantoir)
@@ -140,7 +140,7 @@ AS
            ELSE ROUND(LOG(c.adm_weight+LOG(c.population+1)/3)::numeric*LOG(1+LOG(CASE WHEN nom like 'Boulevard%' THEN 4 WHEN nom LIKE 'Place%' THEN 4 WHEN nom LIKE 'Espl%' THEN 4 WHEN nom LIKE 'Av%' THEN 3 WHEN nom LIKE 'Rue %' THEN 2 ELSE 1 END))::numeric,4)::float
        END AS importance,
        source,
-       RANK() OVER (PARTITION BY fantoir ORDER BY CASE source WHEN 'OSM' THEN 1 ELSE 2 END, CASE nature WHEN 'centroide' THEN 2 ELSE 1 END,pp.id) AS rang_par_fantoir,
+       ROW_NUMBER() OVER (PARTITION BY fantoir ORDER BY CASE source WHEN 'OSM' THEN 1 ELSE 2 END, CASE nature WHEN 'centroide' THEN 2 ELSE 1 END,pp.id) AS rang_par_fantoir,
        c.dep
 FROM   set_fantoir
 JOIN   bano_points_nommes AS pn
