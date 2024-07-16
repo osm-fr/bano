@@ -4,6 +4,7 @@ from email.utils import formatdate, parsedate_to_datetime
 from pathlib import Path
 
 import requests
+import psycopg2
 
 from ..db import bano_db
 from ..sql import sql_process
@@ -12,7 +13,7 @@ from .. import batch as b
 DICT_SOURCES = {
     "codes_postaux": [
         "codes_postaux",
-        "https://datanova.laposte.fr/data-fair/api/v1/datasets/laposte-hexasmal/raw", 
+        "https://datanova.laposte.fr/data-fair/api/v1/datasets/laposte-hexasmal/raw",
         "table_insee_codes_postaux",
     ],
 }
