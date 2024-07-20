@@ -30,7 +30,7 @@ imposm import \
   -write \
   -dbschema-import osm
 
-psql -d bano -U cadastre -v ON_ERROR_STOP=1 -f $SCRIPT_DIR/sql/finalisation.sql
+$pgsql_BANO -f $SCRIPT_DIR/sql/finalisation.sql
 
 cp $DOWNLOAD_DIR/last.state.txt $DOWNLOAD_DIR/state.txt
 rm ${lockfile}
