@@ -24,7 +24,7 @@ then
     rm ${lockfile}
   else
     echo `date`" : Process deja en cours" >> $SCRIPT_DIR/cron.log
-    exit 0
+    exit 1
   fi
 fi
 
