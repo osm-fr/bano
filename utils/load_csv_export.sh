@@ -14,7 +14,7 @@ $pgsql_CADASTRE -c "
   lat decimal,
   lon decimal);"
 
-for dep in {01..19} 2A 2B {21..95} {971..974} 976
+for dep in `cat $BANO_DIR/deplist.txt`
 do
   cat /data/sas_web/bano-${dep}.csv| $pgsql_CADASTRE -c "COPY export_csv FROM STDIN WITH CSV"
 done
