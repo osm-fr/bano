@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+#set -e
 
 source /data/project/bano_v3/venv_v3/bin/activate
 
@@ -32,7 +32,7 @@ fi
 touch ${lockfile}
 
 osmosis --rri workingDirectory=${DOWNLOAD_DIR} --wxc ${DOWNLOAD_DIR}/changes.osc.gz
-imposm diff -config $SCRIPT_DIR/imposm.config -dbschema-production osm ${DOWNLOAD_DIR}/changes.osc.gz
+imposm diff -config $SCRIPT_DIR/imposm.config -cachedir $IMPOSM_CACHE_DIR -dbschema-production osm ${DOWNLOAD_DIR}/changes.osc.gz
 
 rm ${lockfile}
 
