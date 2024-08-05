@@ -10,7 +10,8 @@ def maj_table_communes(**kwargs):
     try:
         sql_process("create_table_polygones_communes", dict())
         b.batch_stop_log(batch_id, True)
-    except:
+    except Exception as e:
+        print(e)
         b.batch_stop_log(batch_id, False)
 
 def update_infos_communes(**kwargs):

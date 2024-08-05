@@ -17,7 +17,7 @@ ON      pt.osm_id = admin_centre.osm_id
 LEFT OUTER JOIN (SELECT * FROM polygones_insee_a9 WHERE insee_a8 = '__code_insee__') a9
 ON      ST_Intersects(pt.way, a9.geometrie)
 WHERE   admin_centre.osm_id IS NULL)
-SELECT  ST_x(way),
+SELECT  DISTINCT ST_x(way),
         ST_y(way),
         name,
         insee_ac,

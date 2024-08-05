@@ -24,8 +24,8 @@ def process(departements, **kwargs):
     for dept in sorted(departements):
         print(f"Processing {dept}")
         status = download(dept)
-        if status:
-            import_to_pg(dept)
+        # if status:
+        import_to_pg(dept)
 
 def download(departement):
     id_batch = b.batch_start_log("download source", "LD CADASTRE", departement)
