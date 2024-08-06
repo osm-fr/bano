@@ -1,0 +1,6 @@
+beautifulsoup4==4.12.3
+psycopg2-binary==2.9.9
+requests==2.31.0
+lxml
+ipdb==0.13.13
+urllib3==2.2.0
