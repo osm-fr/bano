@@ -14,7 +14,7 @@ from ..db import bano_db
 from ..sql import sql_process
 from .. import batch as b
 
-def process_ban(departements, **kwargs):
+def process_ban(departements, forceload, **kwargs):
     departements = set(departements)
     depts_inconnus = departements - set(DEPARTEMENTS)
     if depts_inconnus:
@@ -23,7 +23,7 @@ def process_ban(departements, **kwargs):
     for dept in sorted(departements):
         print(f"Département {dept}")
         status = download(dept)
-        if status:
+        if status or forceload:
             if not (import_to_pg(dept)):
                 depts_en_echec.append(dept)
                 print("depts_en_echec", depts_en_echec)

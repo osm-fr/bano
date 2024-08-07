@@ -30,11 +30,21 @@ def main():
         "charge_topo",
         help="Charge une version du fichier TOPO",
     )
+    subparser.add_argument(
+        "--forceload", "-f",
+        action='store_true',
+        help="Forcer le re-chargement en base même sans téléchargement"
+    )
     subparser.set_defaults(func=datagouv_topo.process)
 
     subparser = subparsers.add_parser(
         "charge_cog",
         help="Charge une version des fichiers COG",
+    )
+    subparser.add_argument(
+        "--forceload", "-f",
+        action='store_true',
+        help="Forcer le re-chargement en base même sans téléchargement"
     )
     subparser.set_defaults(func=cog.process_cog)
 
@@ -54,6 +64,11 @@ def main():
         help="Charge une version des fichiers BAN",
     )
     subparser.add_argument(
+        "--forceload", "-f",
+        action='store_true',
+        help="Forcer le re-chargement en base même sans téléchargement"
+    )
+    subparser.add_argument(
         "departements",
         type=str,
         help="Départements à traiter",
@@ -66,6 +81,11 @@ def main():
         "charge_ld_cadastre",
         help="Charge une version des lieux-dits du Cadastre JSON",
         description="Charge une version des lieux-dits du Cadastre JSON",
+    )
+    subparser.add_argument(
+        "--forceload", "-f",
+        action='store_true',
+        help="Forcer le re-chargement en base même sans téléchargement"
     )
     subparser.add_argument(
         "departements",

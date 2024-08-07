@@ -110,9 +110,9 @@ def update_table_in_db():
 def get_destination():
     return Path(os.environ['DATA_DIR']) / 'topo.csv'
 
-def process(**kwargs):
-    # if dowload():
-    update_table_in_db()
+def process(forceload, **kwargs):
+    if dowload() or forceload:
+        update_table_in_db()
 
 # stats TOPO decembre 2023
 # {'PROM': 1755, 'PASS': 698, 'CHEM': 31929, 'CLOS': 4986, 'VOIE': 2731, 'COUR': 1320, 'COTE': 1007, 'MAIL': 303, 'PTTE': 562, 'PONT': 623, 'PARC': 745, 'CITE': 7793, 'QUAI': 3683, 'PORT': 129, 'RUIS': 716, 'ZONE': 329, 'CITES': 453, 'PIST': 114, 'MAIS': 110, 'VCHE': 227, 'TSSE': 420, 'VOIES': 83, 'CTRE': 590, 'JARD': 49, 'PLAG': 53, 'PLAN': 354, 'CAMI': 1336, 'CALL': 112}
