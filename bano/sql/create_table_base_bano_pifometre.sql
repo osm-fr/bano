@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS statut_numero (
     timestamp_statut double precision,
     code_insee character(5));
 CREATE INDEX IF NOT EXISTS idx_statut_numero_fantoir ON statut_numero(fantoir,numero);
+CREATE INDEX IF NOT EXISTS idx_statut_numero_code_insee ON statut_numero(code_insee);
 
 CREATE TABLE IF NOT EXISTS labels_statuts_numero(
     id_statut integer primary key,

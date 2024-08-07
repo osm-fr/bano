@@ -627,18 +627,22 @@ class Points_nommes:
             fantoir,
             nom_ancienne_commune,
         ) in data:
-            self.add_point_nomme(
-                Point_nomme(
-                    self.code_insee,
-                    "OSM",
-                    "centroide",
-                    x,
-                    y,
-                    nom,
-                    code_insee_ancienne_commune=code_insee_ancienne_commune,
-                    fantoir=fantoir,
-                    nom_ancienne_commune=nom_ancienne_commune,
-                )
+            for single_fantoir in fantoir.split(';'):
+                if ';' in fantoir:
+                    print(single_fantoir,nom)
+                self.add_point_nomme(
+                    Point_nomme(
+                        self.code_insee,
+                        "OSM",
+                        "centroide",
+                        x,
+                        y,
+                        nom,
+                        code_insee_ancienne_commune=code_insee_ancienne_commune,
+                        fantoir=single_fantoir,
+                        nom_ancienne_commune=nom_ancienne_commune,
+                    )
+
             )
 
     def charge_points_nommes_place_osm(self):
