@@ -32,7 +32,12 @@ fi
 touch ${lockfile}
 
 osmosis --rri workingDirectory=${DOWNLOAD_DIR} --wxc ${DOWNLOAD_DIR}/changes.osc.gz
-imposm diff -config $SCRIPT_DIR/imposm.config -cachedir $IMPOSM_CACHE_DIR -dbschema-production osm ${DOWNLOAD_DIR}/changes.osc.gz
+imposm diff \
+  -config $SCRIPT_DIR/imposm.config \
+  -cachedir $IMPOSM_CACHE_DIR \
+  -connection postgis://$PGCON_BANO?prefix=NONE \
+  -dbschema-production osm \
+  ${DOWNLOAD_DIR}/changes.osc.gz
 
 rm ${lockfile}
 
