@@ -628,8 +628,8 @@ class Points_nommes:
             nom_ancienne_commune,
         ) in data:
             for single_fantoir in fantoir.split(';'):
-                if ';' in fantoir:
-                    print(single_fantoir,nom)
+                # if ';' in fantoir:
+                #     print(single_fantoir,nom)
                 self.add_point_nomme(
                     Point_nomme(
                         self.code_insee,
