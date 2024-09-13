@@ -10,6 +10,7 @@ from . import rapprochement
 from . import boite_a_outils
 from . import export
 from . import publish
+from . import pifometre
 from .sources import ban, cog, cadastre_ld, ban2topo, datagouv_commune_summary as datagouv_cs,datagouv_cp,datagouv_cp,datagouv_topo
 from .constants import DEPARTEMENTS
 
@@ -210,6 +211,17 @@ def main():
         description="Publication des exports dans un dossier web - fichiers France entière",
     )
     subparser.set_defaults(func=publish.process_full)
+
+    subparser = subparsers.add_parser(
+        "croisement_voies_limites",
+        help="Identifie les voies nommées croisant les limites communales",
+    )
+    subparser.add_argument(
+        "departement",
+        type=str,
+        help="Département à traiter",
+    )
+    subparser.set_defaults(func=pifometre.process_croisement_voies_limites)
 
     args = parser.parse_args()
 

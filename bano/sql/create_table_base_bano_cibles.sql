@@ -122,17 +122,32 @@ CREATE TABLE IF NOT EXISTS bano_stats_communales_cumul(
 CREATE INDEX IF NOT EXISTS idx_bano_stats_communales_cumul_code_insee ON bano_stats_communales_cumul (code_insee);
 
 CREATE TABLE IF NOT EXISTS infos_communes (
-  dep character varying(3),
-  code_insee character(5),
-  name text,
-  adm_weight integer,
-  population integer,
-  population_milliers numeric,
-  type text,
-  lon numeric,
-  lat numeric,
-  geometrie geometry(Point, 4326)
-);
+    dep character varying(3),
+    code_insee character(5),
+    name text,
+    adm_weight integer,
+    population integer,
+    population_milliers numeric,
+    type text,
+    lon numeric,
+    lat numeric,
+    geometrie geometry(Point, 4326));
 
 CREATE INDEX IF NOT EXISTS idx_infos_communes_insee ON infos_communes(code_insee);
 CREATE INDEX IF NOT EXISTS gidx_infos_communes ON infos_communes USING GIST(geometrie);
+
+
+CREATE TABLE IF NOT EXISTS croisement_voies_limites (
+    code_dept character varying(3),
+    osm_id bigint,
+    geometrie_osm geometry(LineString,4326),
+    nom_osm text,
+    geometrie_debut geometry(Point,4326),
+    nom_commune_debut text,
+    code_insee_debut character(5),
+    geometrie_fin geometry(Point,4326),
+    nom_commune_fin text,
+    code_insee_fin character(5));
+
+CREATE INDEX IF NOT EXISTS idx_croisement_voies_limites_code_dept ON croisement_voies_limites(code_dept);
+CREATE INDEX IF NOT EXISTS gidx_croisement_voies_limites ON croisement_voies_limites USING GIST(geometrie_osm);

@@ -53,4 +53,8 @@ $pgsql_BANO -c "VACUUM bano_adresses;"
 $pgsql_BANO -c "VACUUM bano_points_nommes;"
 $pgsql_BANO -c "VACUUM nom_fantoir;"
 $pgsql_BANO -c "GRANT SELECT ON ALL TABLES IN SCHEMA PUBLIC TO PUBLIC";
+
+# Pifometre - croiement voies & limites admin
+cat deplist.txt | parallel -j $PARALLEL_JOBS export LANG=$LANG\; bano croisement_voies_limites {1}
+
 echo 'fin du cron BANO' >> $SCRIPT_DIR/cron.log
