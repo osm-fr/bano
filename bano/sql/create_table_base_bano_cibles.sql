@@ -142,12 +142,28 @@ CREATE TABLE IF NOT EXISTS croisement_voies_limites (
     osm_id bigint,
     geometrie_osm geometry(LineString,4326),
     nom_osm text,
-    geometrie_debut geometry(Point,4326),
     nom_commune_debut text,
     code_insee_debut character(5),
-    geometrie_fin geometry(Point,4326),
+    rapproche_debut boolean,
     nom_commune_fin text,
-    code_insee_fin character(5));
+    code_insee_fin character(5),
+    rapproche_fin boolean,
+    point_debut_3857 geometry (Point, 3857) GENERATED ALWAYS AS (ST_Transform(ST_StartPoint(geometrie_osm),3857)) STORED,
+    point_fin_3857 geometry (Point, 3857) GENERATED ALWAYS AS (ST_Transform(ST_EndPoint(geometrie_osm),3857)) STORED,
+    geometrie_osm_3857 geometry (LineString, 3857) GENERATED ALWAYS AS (ST_Transform(geometrie_osm,3857)) STORED);
 
 CREATE INDEX IF NOT EXISTS idx_croisement_voies_limites_code_dept ON croisement_voies_limites(code_dept);
 CREATE INDEX IF NOT EXISTS gidx_croisement_voies_limites ON croisement_voies_limites USING GIST(geometrie_osm);
+CREATE INDEX IF NOT EXISTS gidx_croisement_voies_limites_3857 ON croisement_voies_limites USING GIST(geometrie_osm_3857);
+
+CREATE TABLE IF NOT EXISTS point_croisement_voies_limites (
+    code_dept character varying(3),
+    osm_id bigint,
+    geometrie geometry(Point,4326),
+    nom_osm text,
+    code_insee_debut character(5),
+    code_insee_fin character(5),
+    geometrie_3857 geometry (Point, 3857) GENERATED ALWAYS AS (ST_Transform(geometrie,3857)) STORED);
+
+CREATE INDEX IF NOT EXISTS idx_point_croisement_voies_limites_code_dept ON point_croisement_voies_limites(code_dept);
+CREATE INDEX IF NOT EXISTS gidx_point_croisement_voies_limites_3857 ON point_croisement_voies_limites USING GIST(geometrie_3857);
