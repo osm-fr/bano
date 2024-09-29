@@ -9,13 +9,6 @@ WHERE  boundary='administrative' AND
        admin_level = 8 AND
        "ref:INSEE" LIKE '__dept__%' AND
        name != '';
--- SELECT geometrie,
---        code_insee,
---        admin_level,
---        nom AS nom_com
--- FROM   polygones_insee
--- WHERE  code_insee LIKE '__dept__%' AND
---        admin_level = '8';
 CREATE INDEX gidx_poladmin ON poladmin USING GIST(geometrie);
 
 CREATE TEMP TABLE highway_name
@@ -50,8 +43,8 @@ RETURNING id,export_pbf)
 SELECT id,export_pbf
 FROM   del;
 
-DELETE FROM croisement_voies_limites
-WHERE code_dept = '__dept__';
+-- DELETE FROM croisement_voies_limites
+-- WHERE code_dept = '__dept__';
 
 INSERT INTO croisement_voies_limites
 WITH
@@ -108,9 +101,13 @@ DELETE FROM point_croisement_voies_limites
 WHERE code_dept = '__dept__';
 
 INSERT INTO point_croisement_voies_limites
-SELECT     code_dept,
+WITH
+pts
+AS
+(SELECT    code_dept,
            osm_id,
            (ST_DumpPoints(ST_Intersection(geometrie_osm,erings))).geom,
+           geometrie_osm,
            nom_osm,
            code_insee_debut,
            code_insee_fin
@@ -121,9 +118,19 @@ UNION
 SELECT     code_dept,
            osm_id,
            (ST_DumpPoints(ST_Intersection(geometrie_osm,erings))).geom,
+           geometrie_osm,
            nom_osm,
            code_insee_debut,
            code_insee_fin
 FROM       (SELECT * FROM croisement_voies_limites WHERE code_dept = '__dept__') c
 JOIN       pol_line
-ON         code_insee = code_insee_fin;
+ON         code_insee = code_insee_fin)
+SELECT     code_dept,
+           osm_id,
+           geom,
+           nom_osm,
+           code_insee_debut,
+           code_insee_fin,
+           DEGREES(ST_Azimuth(ST_LineInterpolatePoint(geometrie_osm,greatest(0.0,ST_LineLocatePoint(geometrie_osm,geom)::numeric - 0.01)),
+                        ST_LineInterpolatePoint(geometrie_osm,least(1.0,ST_LineLocatePoint(geometrie_osm,geom)::numeric + 0.01))))::integer % 180 + 90
+FROM       pts;
