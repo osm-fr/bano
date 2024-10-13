@@ -102,3 +102,7 @@ SELECT row_number() OVER () AS gid,
 JOIN    cog_commune com
 ON      com.com = r.code_insee
 WHERE   r.rang = 1;
+
+CREATE TABLE IF NOT EXISTS stats_voies_a_cheval(
+epoch integer DEFAULT EXTRACT (epoch FROM now()),
+nombre_cas_restant integer);
