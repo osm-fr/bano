@@ -26,7 +26,7 @@ FROM
 		UNION
 -- way dans relation associatedStreet
 		SELECT	6,
-				ST_Centroid(w.way),
+				ST_PointOnSurface(w.way),
 				w."addr:housenumber",
 				null,
 				r.tags,
