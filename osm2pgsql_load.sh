@@ -13,6 +13,6 @@ cd $DOWNLOAD_DIR
 wget -NS $PBF_URL
 
 cd $SCRIPT_DIR
-osm2pgsql -S osm2pgsql.style -s -l -d bano -U cadastre -p osm2pgsql $DOWNLOAD_DIR/$PBF_FILE
+osm2pgsql -S osm2pgsql.style -s -l "postgresql://${PGCON_BANO}" -p osm2pgsql $DOWNLOAD_DIR/$PBF_FILE
 
 $pgsql_BANO -f $SCRIPT_DIR/sql/finalisation_osm2pgsql.sql
