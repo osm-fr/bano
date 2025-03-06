@@ -88,5 +88,5 @@ Statistiques entre deux versions différentes de la BANO pour évaluer la diffé
 Compare les publications en format JSON. Avec optionnellement un JSON spécifique à comparer dans répertoire (département).
 
 ```
-./bano-diff.sh ancienne_bano/data/work/bano.openstreetmap.fr/www/web/data nouvelle_bano/data/work/bano.openstreetmap.fr/www/web/data [full.sjson.gz]
+./bano-diff.sh ancienne_bano/data/work/bano.openstreetmap.fr/www/web/data/full.sjson.gz nouvelle_bano/data/work/bano.openstreetmap.fr/www/web/data/full.sjson.gz
 ```
