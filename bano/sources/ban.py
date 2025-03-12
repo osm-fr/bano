@@ -44,7 +44,7 @@ def download(departement):
     id_batch = b.batch_start_log("download source", "BAN", departement)
     if resp.status_code == 200:
         mtime = parsedate_to_datetime(resp.headers["Last-Modified"]).timestamp()
-        if mtime <= destination.stat().st_mtime:
+        if destination.exists() and mtime <= destination.stat().st_mtime:
             b.batch_stop_log(id_batch, True)
             return False
         else:
