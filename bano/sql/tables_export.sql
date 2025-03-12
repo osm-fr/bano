@@ -89,7 +89,10 @@ SELECT c.dep,
        code_postal AS postcode,
        ROUND(pn.lat::numeric,6)::float AS lat,
        ROUND(pn.lon::numeric,6)::float AS lon,
-       nom_com AS city,
+       CASE
+            WHEN pa.libelle IS NOT NULL THEN ARRAY[pa.libelle, cog.nom_com]
+            ELSE ARRAY[cog.nom_com]
+       END AS city,
        nom_dep AS departement,
        nom_reg AS region,
        ROUND(LOG(c.adm_weight+LOG(c.population+1)/3)::numeric*LOG(1+LOG(nombre_adresses+1)+LOG(longueur_max+1)+LOG(CASE WHEN nom_voie like 'Boulevard%' THEN 4 WHEN nom_voie LIKE 'Place%' THEN 4 WHEN nom_voie LIKE 'Espl%' THEN 4 WHEN nom_voie LIKE 'Av%' THEN 3 WHEN nom_voie LIKE 'Rue %' THEN 2 ELSE 1 END))::numeric,4)::float AS importance,
@@ -108,6 +111,11 @@ JOIN   infos_communes c
 USING  (code_insee)
 JOIN   numeros_export_importance
 USING  (fantoir)
+LEFT JOIN cog_commune AS a ON
+    cog.typecom = 'ARM' AND
+    cog.code_insee = a.com
+LEFT JOIN cog_commune AS pa ON
+    pa.com = a.comparent
 WHERE  pn.rang_par_fantoir = 1
 GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
 ORDER BY 1;
@@ -137,7 +145,10 @@ AS
        code_postal AS postcode,
        ROUND(pn.lat::numeric,6)::float AS lat,
        ROUND(pn.lon::numeric,6)::float AS lon,
-       nom_com AS city,
+       CASE
+            WHEN pa.libelle IS NOT NULL THEN ARRAY[pa.libelle, cog.nom_com]
+            ELSE ARRAY[cog.nom_com]
+       END AS city,
        nom_dep AS departement,
        nom_reg AS region,
        CASE
@@ -155,7 +166,13 @@ USING  (code_insee)
 JOIN   infos_communes c
 USING  (code_insee)
 JOIN    polygones_postaux pp
-ON      ST_Contains(pp.geometrie, pn.geometrie))
+ON      ST_Contains(pp.geometrie, pn.geometrie)
+LEFT JOIN cog_commune AS a ON
+    cog.typecom = 'ARM' AND
+    cog.code_insee = a.com
+LEFT JOIN cog_commune AS pa ON
+    pa.com = a.comparent
+)
 SELECT *
 FROM resultats_multi_cp
 WHERE rang_par_fantoir = 1;
