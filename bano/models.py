@@ -68,11 +68,11 @@ class Nom:
         )
 
     def _as_csv_format_bano(self, correspondance):
-        if self.source == "BAN":
-            fantoir = remplace_fantoir_ban(correspondance, self.niveau, self.fantoir)
+        if self.source == "BAN" or (self.fantoir and is_pseudo_fantoir(self.fantoir)):
+            fantoir = remplace_fantoir(correspondance, self.niveau, self.fantoir)
         else:
             fantoir = self.fantoir
-        return f"{fantoir}\t{self.nom}\t{self.nom_tag if self.nom_tag else ''}\t{self.nature}\t{self.code_insee}\t{self.code_dept}\t{self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else ''}\t{self.nom_ancienne_commune if self.nom_ancienne_commune else ''}\t{self.source}"
+        return f"{fantoir if fantoir else ''}\t{self.nom}\t{self.nom_tag if self.nom_tag else ''}\t{self.nature}\t{self.code_insee}\t{self.code_dept}\t{self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else ''}\t{self.nom_ancienne_commune if self.nom_ancienne_commune else ''}\t{self.source}"
 
     def add_fantoir(self, topo):
         if not self.fantoir:
@@ -324,8 +324,8 @@ class Adresse:
         )
 
     def _as_csv_format_bano(self, correspondance):
-        if self.source == "BAN":
-            fantoir = remplace_fantoir_ban(correspondance, self.niveau, self.fantoir)
+        if self.source == "BAN" or (self.fantoir and is_pseudo_fantoir(self.fantoir)):
+            fantoir = remplace_fantoir(correspondance, self.niveau, self.fantoir)
         else:
             fantoir = self.fantoir
         return f"{fantoir if fantoir else ''}\t{self.x}\t{self.y}\t{self.numero}\t{self.voie if self.voie else ''}\t{self.place if self.place else ''}\t{self.code_postal}\t{self.code_insee}\t{self.code_dept}\t{self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else ''}\t{self.nom_ancienne_commune if self.nom_ancienne_commune else ''}\t{self.source}\t{self.id_ban if self.id_ban else ''}\t{self.certification_commune if isinstance(self.certification_commune, int) else ''}"
@@ -649,7 +649,12 @@ class Point_nomme:
         return f"fantoir : {self.fantoir}, source : {self.source}, nom : {self.nom} ({self.nom_normalise}), nature : {self.nature}, sous_commune : {self.code_insee_ancienne_commune}"
 
     def _as_csv_format_bano(self, correspondance):
-        return f"{correspondance.get(self.fantoir,self.fantoir) if self.fantoir else ''}\t{self.nom}\t{self.nom_tag if self.nom_tag else ''}\t{self.code_insee}\t{self.code_dept}\t{self.nature}\t{self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else ''}\t{self.nom_ancienne_commune if self.nom_ancienne_commune else ''}\t{self.source}\t{self.lon}\t{self.lat}"
+        if self.fantoir and is_pseudo_fantoir(self.fantoir):
+            fantoir = remplace_fantoir(correspondance, self.niveau, self.fantoir)
+        else:
+            fantoir = self.fantoir
+
+        return f"{fantoir if fantoir else ''}\t{self.nom}\t{self.nom_tag if self.nom_tag else ''}\t{self.code_insee}\t{self.code_dept}\t{self.nature}\t{self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else ''}\t{self.nom_ancienne_commune if self.nom_ancienne_commune else ''}\t{self.source}\t{self.lon}\t{self.lat}"
 
 
 class Points_nommes:
@@ -929,6 +934,6 @@ class Correspondance_fantoir_ban_osm:
                     ] = self.dic_fantoir[n][f]["OSM"]
 
 
-def remplace_fantoir_ban(correspondance, niveau, fantoir):
+def remplace_fantoir(correspondance, niveau, fantoir):
     cle = f"{niveau} {fantoir}"
     return correspondance.get(cle, fantoir)
