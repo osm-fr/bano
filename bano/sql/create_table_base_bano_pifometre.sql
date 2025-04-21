@@ -104,5 +104,13 @@ ON      com.com = r.code_insee
 WHERE   r.rang = 1;
 
 CREATE TABLE IF NOT EXISTS stats_voies_a_cheval(
-epoch integer DEFAULT EXTRACT (epoch FROM now()),
-nombre_cas_restant integer);
+    epoch integer DEFAULT EXTRACT (epoch FROM now()),
+    nombre_cas_restant integer
+);
+
+CREATE TABLE IF NOT EXISTS pifometre_schema_adresse_point (
+    code_insee character(5),
+    nom_voie text
+);
+
+CREATE INDEX IF NOT EXISTS idx_pifometre_schema_adresse_point_code_insee ON pifometre_schema_adresse_point(code_insee);

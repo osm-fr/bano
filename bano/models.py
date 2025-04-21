@@ -340,6 +340,7 @@ class Adresses:
         self.liste = []
         self.index_voie = defaultdict(list)
         self.noms_de_voies = set()
+        self.voies_en_schema_point = set()
 
     # def __contains__(self, item):
     #     return item in self.a
@@ -408,6 +409,9 @@ class Adresses:
             "charge_numeros_OSM", dict(code_insee=self.code_insee)
         ) + sql_get_data("charge_numeros_bbox_OSM", dict(code_insee=self.code_insee))
 
+        set_point = set()
+        set_relation = set()
+
         for (
             lon,
             lat,
@@ -435,6 +439,7 @@ class Adresses:
                 1,
                 2,
             ):
+                set_point.add(voie)
                 for num_unique in numero.split(';'):
                     self.add_adresse(
                         Adresse(
@@ -455,6 +460,7 @@ class Adresses:
                 3,
                 4,
             ) and tags.get("name"):
+                set_relation.add(tags["name"])
                 for num_unique in numero.split(';'):
                     self.add_adresse(
                         Adresse(
@@ -481,6 +487,7 @@ class Adresses:
                 and tags.get("ref:FR:FANTOIR")
             ):
                 if tags["ref:FR:FANTOIR"][0:5] == self.code_insee:
+                    set_relation.add(tags["name"])
                     for num_unique in numero.split(';'):
                         self.add_adresse(
                             Adresse(
@@ -497,6 +504,7 @@ class Adresses:
                                 nom_ancienne_commune=nom_ancienne_commune,
                             )
                         )
+        self.voies_en_schema_point = set_point - set_relation
 
     def noms_des_adresses(self, noms):
         for a in self:
@@ -543,6 +551,10 @@ class Adresses:
 
     def enregistre(self, correspondance):
         sql_process(
+            "suppression_voies_en_schema_point_commune",
+            dict(code_insee=self.code_insee),
+        )
+        sql_process(
             "suppression_adresses_commune",
             dict(code_insee=self.code_insee),
         )
@@ -575,6 +587,22 @@ class Adresses:
                     "source",
                     "id_ban",
                     "certification_commune",
+                ),
+            )
+
+        io_in_csv = io.StringIO()
+
+        for a in self.voies_en_schema_point:
+            io_in_csv.write(f"{self.code_insee}\t{a}\n")
+        io_in_csv.seek(0)
+        with bano_db.cursor() as cur_insert:
+            cur_insert.copy_from(
+                io_in_csv,
+                "pifometre_schema_adresse_point",
+                null="",
+                columns=(
+                    "code_insee",
+                    "nom_voie",
                 ),
             )
 
