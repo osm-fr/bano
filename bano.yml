@@ -68,6 +68,7 @@ tables:
     filters:
     mapping:
       boundary: ['administrative']
+      landuse: ['residential']
       amenity: [__any__]
       highway: [__any__]
       place: [__any__]
