@@ -62,6 +62,10 @@ def format_toponyme(s):
             if a_s[m] in dic_replace_hors_premier_mot:
                 a_s[m] = dic_replace_hors_premier_mot[a_s[m]]
 
+    # Permutation des articles en fin de nom
+    if len(a_s) > 1 and a_s[-1] in ['le','la','les']:
+        a_s = [a_s[-1]]+a_s[0:-1]
+
     # Appostrophes initiale
     dic_ajoute_apostrophe = {}
     dic_ajoute_apostrophe["d"] = "d'"
