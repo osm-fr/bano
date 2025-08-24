@@ -2,6 +2,10 @@
 # coding: UTF-8
 
 import json
+from time import time,sleep
+from random import random
+import os
+from pathlib import Path
 
 from . import db_helpers as h
 from . import batch as b
@@ -11,6 +15,9 @@ from .sources import ban2topo
 
 
 def process_unitaire(code_insee,verbose,source_pifometre):
+    if source_pifometre and not set_lock(code_insee):
+        return False
+
     if source_pifometre:
         source = 'pifometre'
     else :
@@ -100,7 +107,36 @@ def process_unitaire(code_insee,verbose,source_pifometre):
         if verbose:
             print(e)
         b.batch_stop_log(id_batch, False)
+    if source_pifometre:
+        release_lock(code_insee)
 
+def get_lockfile(lock_name):
+    try:
+        lock_dir = Path(os.environ["LOCK_DIR"])
+    except KeyError:
+        raise ValueError(f"La variable LOCK_DIR n'est pas définie")
+    if not lock_dir.exists():
+        raise ValueError(f"Le répertoire {lock_dir} n'existe pas")
+    return lock_dir / f"{lock_name}.lock"
+
+def is_active_lock(lock_name):
+    lock_file = get_lockfile(lock_name)
+
+    if lock_file.exists() and (time() - lock_file.stat().st_mtime) < 300:
+        return True
+    return False
+
+def set_lock(lock_name):
+    lock_file = get_lockfile(lock_name)
+    try :
+        lock_file.touch(exist_ok=False)
+        return True
+    except:
+        return False
+
+def release_lock(lock_name):
+    lock_file = get_lockfile(lock_name)
+    lock_file.unlink(missing_ok=True)
 
 def process(code_insee, dept, verbose, source_pifometre, **kwargs):
     if dept:
@@ -110,4 +146,8 @@ def process(code_insee, dept, verbose, source_pifometre, **kwargs):
     for code_insee, nom in liste_insee:
         if dept or verbose:
             print(f"{code_insee} - {nom}")
-        process_unitaire(code_insee,verbose,source_pifometre)
+        # temporisation aléatoire pour ventiler les possibles appels concurrents provenants d'un même clic
+        if source_pifometre:
+            sleep(3 * random())
+        if  not (source_pifometre and is_active_lock(code_insee)):
+            process_unitaire(code_insee,verbose,source_pifometre)

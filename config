@@ -2,6 +2,7 @@
 
 export BANO_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 export LOG_DIR=$BANO_DIR/log
+export LOCK_DIR=$BANO_DIR/lock
 export DATA_DIR=/data/project/bano_data
 export DOWNLOAD_DIR=/data/download
 export IMPOSM_CACHE_DIR=/data/bano_imposm_cache

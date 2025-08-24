@@ -4,6 +4,7 @@ set -e
 
 source config
 mkdir -p $LOG_DIR
+mkdir -p $LOCK_DIR
 mkdir -p $DATA_DIR
 mkdir -p $BANO_CACHE_DIR
 mkdir -p $BAN_CACHE_DIR
