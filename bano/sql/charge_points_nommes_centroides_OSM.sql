@@ -1,7 +1,12 @@
 WITH
+p
+AS
+(SELECT way FROM osm2pgsql_polygon WHERE "ref:INSEE" = '__code_insee__'),
 lignes_brutes
 AS
-(SELECT l.way,
+(SELECT 'l'||l.osm_id AS id,
+        osm_id,
+        l.way,
         l.name AS main_name,
         name_osm.name,
         name_osm.name_tag,
@@ -10,7 +15,7 @@ AS
         unnest(array["ref:FR:FANTOIR","ref:FR:FANTOIR:left","ref:FR:FANTOIR:right"]) AS fantoir,
         ST_Within(l.way,p.way)::integer as within,
         a9.nom AS nom_ac
-FROM    (SELECT way FROM planet_osm_polygon WHERE "ref:INSEE" = '__code_insee__') p
+FROM    p
 JOIN    planet_osm_line l
 ON      ST_Intersects(l.way, p.way)
 LEFT OUTER JOIN (SELECT * FROM polygones_insee_a9 WHERE insee_a8 = '__code_insee__') a9
@@ -24,18 +29,20 @@ WHERE   (l.highway != '' OR
         l.highway NOT IN ('bus_stop','platform') AND
         l.name != ''
 UNION ALL
-SELECT  ST_PointOnSurface(l.way),
+SELECT  'p'||l.osm_id,
+        osm_id,
+        ST_PointOnSurface(l.way),
         l.name AS main_name,
         name_osm.name,
         name_osm.name_tag,
         COALESCE(a9.code_insee,'xxxxx') as insee_jointure,
         a9.code_insee insee_ac,
         "ref:FR:FANTOIR" AS fantoir,
-        ST_Within(l.way,p.geometrie)::integer as within,
+        ST_Within(l.way,p.way)::integer as within,
         a9.nom AS nom_ac
-FROM    (SELECT geometrie FROM polygones_insee WHERE code_insee = '__code_insee__') p
+FROM    p
 JOIN    planet_osm_polygon l
-ON      ST_Intersects(l.way, p.geometrie)
+ON      ST_Intersects(l.way, p.way)
 LEFT OUTER JOIN (SELECT * FROM polygones_insee_a9 WHERE insee_a8 = '__code_insee__') a9
 ON      ST_Intersects(l.way, a9.geometrie),
 UNNEST(
@@ -46,7 +53,9 @@ WHERE   (l.highway||"ref:FR:FANTOIR" != '' OR l.landuse = 'residential' OR l.ame
         l.highway NOT IN ('bus_stop','platform') AND
         l.name != ''
 UNION ALL
-SELECT  l.way,
+SELECT  'r'||l.osm_id,
+        osm_id,
+        l.way,
         l.name AS main_name,
         name_osm.name,
         name_osm.name_tag,
@@ -55,7 +64,7 @@ SELECT  l.way,
         "ref:FR:FANTOIR" AS fantoir,
         ST_Within(l.way,p.way)::integer as within,
         a9.nom AS nom_ac
-FROM    (SELECT way FROM planet_osm_polygon WHERE "ref:INSEE" = '__code_insee__') p
+FROM    p
 JOIN    planet_osm_rels l
 ON      ST_Intersects(l.way, p.way)
 LEFT OUTER JOIN (SELECT * FROM polygones_insee_a9 WHERE insee_a8 = '__code_insee__') a9
@@ -66,6 +75,15 @@ UNNEST(
 ) AS name_osm(name,name_tag)
 WHERE   l.member_role = 'street' AND
         l.name != ''),
+lignes_hors_commune
+AS
+(SELECT l.id
+FROM    (SELECT id,osm_id,fantoir FROM lignes_brutes WHERE within = 0) l
+JOIN    osm2pgsql_line o
+USING   (osm_id)
+CROSS JOIN p
+WHERE   ST_Relate(o.way,p.way) = 'FF1F00212' AND
+        fantoir NOT LIKE '__code_insee__%'),
 lignes_noms
 AS
 (SELECT CASE
@@ -75,8 +93,11 @@ AS
         END AS way_line,
         *
 FROM    lignes_brutes
+LEFT OUTER JOIN lignes_hors_commune lhc
+USING   (id)
 WHERE   COALESCE(name,'') != '' AND
-        (fantoir LIKE '__code_insee__%' OR fantoir = '')),
+        (fantoir LIKE '__code_insee__%' OR fantoir = '') AND
+        lhc.id IS NULL),
 lignes_noms_rang
 AS
 (SELECT *,
