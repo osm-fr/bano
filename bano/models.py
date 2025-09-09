@@ -606,13 +606,17 @@ class Adresses:
                 ),
             )
 
-    def stats_sources(self,noms):
+    def stats_sources(self,noms,correspondance):
         numeros_par_source = {"BAN": set(), "OSM": set()}
         fantoirs_par_source = {"BAN": set(), "OSM": set()}
 
         for n in noms:
             if n.source in 'OSM BAN' :
-                fantoirs_par_source[n.source].add(n.fantoir)
+                if n.fantoir and is_pseudo_fantoir(n.fantoir):
+                    fantoir = remplace_fantoir(correspondance, n.niveau, n.fantoir)
+                else:
+                    fantoir = n.fantoir
+                fantoirs_par_source[n.source].add(fantoir)
 
         for t in self:
             if t.fantoir:
