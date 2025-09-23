@@ -45,6 +45,17 @@ def main():
         "publish_topo",
         help="Bascule la version de TOPO au profit de celle dans le sas",
     )
+    group = subparser.add_mutually_exclusive_group(required=True)
+    group.add_argument(
+        "--diff", "-d",
+        action='store_true',
+        help="Chargement differentiel"
+    )
+    group.add_argument(
+        "--full", "-f",
+        action='store_true',
+        help="Chargement complet"
+    )
     subparser.set_defaults(func=datagouv_topo.publish)
 
     subparser = subparsers.add_parser(
