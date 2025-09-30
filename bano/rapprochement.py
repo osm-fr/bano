@@ -11,7 +11,7 @@ from . import db_helpers as h
 from . import batch as b
 from .sql import sql_process
 from .models import Noms, Adresses, Topo, Points_nommes, Correspondance_fantoir_ban_osm
-from .sources import ban2topo
+from .sources import pseudotopo
 
 
 def process_unitaire(code_insee,verbose,source_pifometre):
@@ -24,8 +24,8 @@ def process_unitaire(code_insee,verbose,source_pifometre):
         source = 'BANO quotidien'
     id_batch = b.batch_start_log("rapprochement", source, code_insee)
     try:
-        if verbose: print('ban2topo')
-        ban2topo.process(code_insee)
+        if verbose: print('pseudotopo')
+        pseudotopo.process(code_insee)
         if verbose: print('topo')
         topo = Topo(code_insee)
         if verbose: print('adresses')

@@ -54,7 +54,8 @@ CREATE TABLE IF NOT EXISTS lieux_dits (
     created date,
     updated date,
     geometrie geometry(Polygon,4326),
-    geom_centroid geometry (Point, 4326) GENERATED ALWAYS AS (ST_Centroid(geometrie)) STORED);
+    geom_centroid geometry (Point, 4326) GENERATED ALWAYS AS (ST_Centroid(geometrie)) STORED,
+    nom_nettoye text GENERATED ALWAYS AS (regexp_replace(regexp_replace(regexp_replace(regexp_replace(nom,'     ',' ','g'),'    ',' ','g'),'   ',' ','g'),'  ',' ','g')) STORED);
 
 CREATE INDEX IF NOT EXISTS gidx_lieux_dits ON lieux_dits USING gist(geometrie);
 CREATE INDEX IF NOT EXISTS gidx__centroid_lieux_dits ON lieux_dits USING gist(geom_centroid);

@@ -11,7 +11,7 @@ from . import boite_a_outils
 from . import export
 from . import publish
 from . import pifometre
-from .sources import ban, cog, cadastre_ld, cadastre_communes, ban2topo, datagouv_commune_summary as datagouv_cs,datagouv_cp,datagouv_cp,datagouv_topo
+from .sources import ban, cog, cadastre_ld, cadastre_communes, pseudotopo, datagouv_commune_summary as datagouv_cs,datagouv_cp,datagouv_cp,datagouv_topo
 from .constants import DEPARTEMENTS
 
 
@@ -211,14 +211,14 @@ def main():
     subparser.set_defaults(func=rapprochement.process)
 
     subparser = subparsers.add_parser(
-        "ban2topo",
-        help="Ajoute dans TOPO des libellés BAN",
-        description="Ajoute dans TOPO des libellés BAN"
+        "pseudotopo",
+        help="Ajoute dans TOPO des libellés BAN et Cadastre",
+        description="Ajoute dans TOPO des libellés BAN et Cadastre"
     )
     subparser.add_argument(
         "--code_insee", type=str, help="Code INSEE de la commune à traiter"
     )
-    subparser.set_defaults(func=ban2topo.process)
+    subparser.set_defaults(func=pseudotopo.process)
 
     subparser = subparsers.add_parser(
         "update_infos_communes",
