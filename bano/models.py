@@ -943,10 +943,10 @@ class Correspondance_fantoir_ban_osm:
     def process(self, noms):
         niveaux = set()
         for n in noms:
-            if n.source not in ("BAN", "OSM") or not n.fantoir:
+            if not n.fantoir:
                 continue
             niveaux.add(n.niveau)
-            if n.fantoir and n.source in ("BAN", "OSM"):
+            if n.fantoir :
                 if not n.niveau in self.dic_fantoir:
                     self.dic_fantoir[n.niveau] = {}
                 if not n.nom_normalise in self.dic_fantoir[n.niveau]:
@@ -956,14 +956,16 @@ class Correspondance_fantoir_ban_osm:
             self.correspondance[n] = {}
 
             for f in self.dic_fantoir[n]:
-                if (
-                    "BAN" in self.dic_fantoir[n][f]
-                    and "OSM" in self.dic_fantoir[n][f]
-                    and self.dic_fantoir[n][f]["BAN"] != self.dic_fantoir[n][f]["OSM"]
-                ):
-                    self.correspondance[
-                        f"{n} {self.dic_fantoir[n][f]['BAN']}"
-                    ] = self.dic_fantoir[n][f]["OSM"]
+                for src in ["BAN","CADASTRE"]:
+                    if (
+                        src in self.dic_fantoir[n][f]
+                        and "OSM" in self.dic_fantoir[n][f]
+                        and self.dic_fantoir[n][f][src] != self.dic_fantoir[n][f]["OSM"]
+                    ):
+                        self.correspondance[
+                            f"{n} {self.dic_fantoir[n][f][src]}"
+                        ] = self.dic_fantoir[n][f]["OSM"]
+        # print(self.dic_fantoir)
 
 
 def remplace_fantoir(correspondance, niveau, fantoir):
