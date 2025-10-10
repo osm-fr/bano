@@ -160,7 +160,7 @@ class Noms:
 
     def remplit_fantoir_par_nom_sous_commune(self):
         # privilège pour la source OSM
-        for source in ['OSM','BAN','CADASTRE']:
+        for source in ['OSM','BAN','CADASTRE','BDTOPO']:
             for t in self.triplets_nom_fantoir_source:
                 if t.source != source or not t.fantoir:
                     continue
@@ -253,7 +253,7 @@ class Noms:
     def stats_sources(self):
         par_source = {"BAN": set(), "OSM": set(), "CADASTRE": set()}
         for t in self:
-            if t.fantoir:
+            if t.fantoir and t.source in par_source:
                 par_source[t.source].add(t.fantoir)
         return [
             len(par_source["BAN"]),
@@ -705,6 +705,28 @@ class Points_nommes:
             if not pattern or pattern in a._as_string():
                 print(a._as_string())
 
+    def charge_points_nommes_voies_bdtopo(self):
+        data = sql_get_data(
+            "charge_points_nommes_voies_BDTOPO",
+            dict(code_insee=self.code_insee),
+        )
+        for x, y, nom, fantoir, code_insee_ancienne_commune,nom_ancienne_commune in data:
+            self.add_point_nomme(
+                Point_nomme(
+                    self.code_insee,
+                    "BDTOPO",
+                    "voie-nommee",
+                    x,
+                    y,
+                    hp.format_toponyme(nom),
+                    hp.format_toponyme(nom),
+                    'nom_bdtopo',
+                    fantoir,
+                    code_insee_ancienne_commune=code_insee_ancienne_commune,
+                    nom_ancienne_commune=nom_ancienne_commune,
+                )
+            )
+
     def charge_points_nommes_lieux_dits_cadastre(self):
         data = sql_get_data(
             "charge_points_nommes_lieux-dits_CADASTRE",
@@ -828,12 +850,12 @@ class Points_nommes:
 
     def noms_des_points_nommes(self, noms):
         for a in self:
-            if a.source == "CADASTRE":
+            if a.source in ("CADASTRE","BDTOPO"):
                 noms.add_nom(
                     Nom(
                         a.nom,
                         a.nom,
-                        'nom_cadastre',
+                        a.nom_tag,
                         a.fantoir,
                         a.nature,
                         a.source,

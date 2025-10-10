@@ -44,6 +44,8 @@ def process_unitaire(code_insee,verbose,source_pifometre):
         if verbose: print('charge_numeros_ban')
         adresses.charge_numeros_ban(topo)
         if verbose: print('charge_points_nommes_lieux_dits_cadastre')
+        points_nommes.charge_points_nommes_voies_bdtopo()
+        if verbose: print('charge_points_nommes_voies_bdtopo')
         points_nommes.charge_points_nommes_lieux_dits_cadastre()
         if verbose: print('charge_points_nommes_place_osm')
         points_nommes.charge_points_nommes_place_osm()
@@ -85,9 +87,12 @@ def process_unitaire(code_insee,verbose,source_pifometre):
         if verbose: print('points_nommes.enregistre')
         points_nommes.enregistre(correspondance_fantoir_ban_osm.correspondance)
 
+        if verbose: print('adresses.stats_sources')
         nb_addr_ban, nb_addr_osm, nb_noms_adr_osm = adresses.stats_sources(noms,correspondance_fantoir_ban_osm.correspondance)
+        if verbose: print('noms.stats_sources')
         nb_noms_ban, nb_noms_cadastre, nb_noms_osm = noms.stats_sources()
         nb_noms_topo = topo.nb_fantoirs
+        if verbose: print('update_table_bano_stats_communales')
         sql_process(
             "update_table_bano_stats_communales",
             dict(
