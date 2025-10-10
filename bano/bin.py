@@ -11,7 +11,7 @@ from . import boite_a_outils
 from . import export
 from . import publish
 from . import pifometre
-from .sources import ban, cog, cadastre_ld, cadastre_communes, pseudotopo, datagouv_commune_summary as datagouv_cs,datagouv_cp,datagouv_cp,datagouv_topo
+from .sources import ban, cog, cadastre_ld, cadastre_communes, pseudotopo, datagouv_commune_summary as datagouv_cs,datagouv_cp,datagouv_cp,datagouv_topo,ign_bdtopo
 from .constants import DEPARTEMENTS
 
 
@@ -79,6 +79,17 @@ def main():
         help="Forcer le re-chargement en base même sans téléchargement"
     )
     subparser.set_defaults(func=datagouv_cp.process)
+
+    subparser = subparsers.add_parser(
+        "charge_bdtopo",
+        help="Charge une version de fichiers de la BD TOPO",
+    )
+    subparser.add_argument(
+        "--forceload", "-f",
+        action='store_true',
+        help="Forcer le re-chargement en base même sans téléchargement"
+    )
+    subparser.set_defaults(func=ign_bdtopo.process)
 
     subparser = subparsers.add_parser(
         "charge_ban",
