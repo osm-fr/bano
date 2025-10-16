@@ -223,7 +223,7 @@ def main():
 
     subparser = subparsers.add_parser(
         "pseudotopo",
-        help="Ajoute dans TOPO des libellés BAN et Cadastre",
+        help="Ajoute dans TOPO des libellés BAN, Cadastre et BD Topo",
         description="Ajoute dans TOPO des libellés BAN et Cadastre"
     )
     subparser.add_argument(

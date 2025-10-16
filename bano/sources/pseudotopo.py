@@ -5,21 +5,21 @@ from ..helpers import normalize,get_code_dept_from_insee
 # from . import topo
 
 
-def get_noms_ban_cadastre(code_insee):
-    return sql_get_data('noms_ban_cadastre_non_rapproches_par_commune',dict(code_insee=code_insee))
+def get_noms_hors_topo(code_insee):
+    return sql_get_data('noms_hors_topo_non_rapproches_par_commune',dict(code_insee=code_insee))
 
-def purge_noms_ban_cadastre_dans_topo(code_insee):
-    sql_process('purge_noms_ban_cadastre_dans_topo',dict(code_insee=code_insee))
+def purge_noms_hors_topo_dans_topo(code_insee):
+    sql_process('purge_noms_hors_topo_dans_topo',dict(code_insee=code_insee))
 
-def add_noms_ban_cadastre_dans_topo(code_insee,noms_bc):
-    sql_process('add_noms_ban_cadastre_dans_topo',dict(code_insee=code_insee,noms_bc=noms_bc))
+def add_noms_hors_topo_dans_topo(code_insee,noms_bc):
+    sql_process('add_noms_hors_topo_dans_topo',dict(code_insee=code_insee,noms_bc=noms_bc))
 
 def pseudo_fantoir(index,code_insee):
     return f"{code_insee}b{str(hex(index))[2:].ljust(3,'z')}"
 
 def process(code_insee,**kwargs):
-    purge_noms_ban_cadastre_dans_topo(code_insee)
-    noms_bc = get_noms_ban_cadastre(code_insee)
+    purge_noms_hors_topo_dans_topo(code_insee)
+    noms_bc = get_noms_hors_topo(code_insee)
     if len(noms_bc) > 0:
         topo = models.Topo(code_insee)
         dept = get_code_dept_from_insee(code_insee)
@@ -34,4 +34,4 @@ def process(code_insee,**kwargs):
             noms_bc_norm.append(f"'{dept}','{code_insee}','{pseudo_fantoir(i,code_insee)}',' ','{nom_norm[0]}','{nom_norm[1]}','{nom_norm[1]}','0000000'")
 
         if len(noms_bc_norm)>0:
-            add_noms_ban_cadastre_dans_topo(code_insee, f"({'),('.join(noms_bc_norm)})")
+            add_noms_hors_topo_dans_topo(code_insee, f"({'),('.join(noms_bc_norm)})")
