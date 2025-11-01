@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS nom_fantoir (
     fantoir text,
     nom text,
     nom_tag text,
+    nom_brut text,
     code_insee text,
     code_dept text,
     nature text,

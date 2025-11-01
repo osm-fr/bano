@@ -21,6 +21,7 @@ class Nom:
         nom_principal,
         nom,
         nom_tag,
+        nom_brut,
         fantoir,
         nature,
         source,
@@ -33,6 +34,7 @@ class Nom:
         self.code_insee_ancienne_commune = code_insee_ancienne_commune
         self.nom = nom.replace("\t", " ")
         self.nom_tag = nom_tag
+        self.nom_brut = nom_brut
         self.nom_ancienne_commune = nom_ancienne_commune
         self.fantoir = fantoir[0:9] if fantoir else None
         self.nature = nature
@@ -72,7 +74,7 @@ class Nom:
             fantoir = remplace_fantoir(correspondance, self.niveau, self.fantoir)
         else:
             fantoir = self.fantoir
-        return f"{fantoir if fantoir else ''}\t{self.nom}\t{self.nom_tag if self.nom_tag else ''}\t{self.nature}\t{self.code_insee}\t{self.code_dept}\t{self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else ''}\t{self.nom_ancienne_commune if self.nom_ancienne_commune else ''}\t{self.source}"
+        return f"{fantoir if fantoir else ''}\t{self.nom}\t{self.nom_tag if self.nom_tag else ''}\t{self.nom_brut}\t{self.nature}\t{self.code_insee}\t{self.code_dept}\t{self.code_insee_ancienne_commune if self.code_insee_ancienne_commune else ''}\t{self.nom_ancienne_commune if self.nom_ancienne_commune else ''}\t{self.source}"
 
     def add_fantoir(self, topo):
         if not self.fantoir:
@@ -126,6 +128,7 @@ class Noms:
                         nom_principal,
                         name,
                         name_tag,
+                        name,
                         tags.get("ref:FR:FANTOIR"),
                         nature,
                         "OSM",
@@ -140,6 +143,7 @@ class Noms:
                         nom_principal,
                         name,
                         name_tag,
+                        name,
                         tags["ref:FR:FANTOIR"],
                         nature,
                         "OSM",
@@ -160,7 +164,7 @@ class Noms:
 
     def remplit_fantoir_par_nom_sous_commune(self):
         # privilège pour la source OSM
-        for source in ['OSM','BAN','CADASTRE','BDTOPO']:
+        for source in ['OSM','BAN','CADASTRE','BDTOPO','COMMUNE']:
             for t in self.triplets_nom_fantoir_source:
                 if t.source != source or not t.fantoir:
                     continue
@@ -241,6 +245,7 @@ class Noms:
                     "fantoir",
                     "nom",
                     "nom_tag",
+                    "nom_brut",
                     "nature",
                     "code_insee",
                     "code_dept",
@@ -514,6 +519,7 @@ class Adresses:
                         a.voie,
                         a.voie,
                         'name',
+                        a.voie,
                         a.fantoir,
                         "voie",
                         a.source,
@@ -528,6 +534,7 @@ class Adresses:
                         a.place,
                         a.place,
                         'name',
+                        a.place,
                         a.fantoir,
                         "place",
                         a.source,
@@ -633,6 +640,7 @@ class Point_nomme:
         nature,
         lon,
         lat,
+        nom_brut,
         nom_principal,
         nom,
         nom_tag,
@@ -646,6 +654,7 @@ class Point_nomme:
         self.lon = round(lon, 6)
         self.lat = round(lat, 6)
         self.nature = nature
+        self.nom_brut = nom_brut
         self.nom = nom.replace("\t", " ")
         self.nom_tag = nom_tag
         self.nom_normalise = hp.normalize(nom)
@@ -705,6 +714,29 @@ class Points_nommes:
             if not pattern or pattern in a._as_string():
                 print(a._as_string())
 
+    def charge_points_nommes_filaire_communes(self):
+        data = sql_get_data(
+            "charge_points_nommes_filaire_COMMUNES",
+            dict(code_insee=self.code_insee),
+        )
+        for x, y, nom, fantoir, code_insee_ancienne_commune,nom_ancienne_commune in data:
+            self.add_point_nomme(
+                Point_nomme(
+                    self.code_insee,
+                    "COMMUNE",
+                    "filaire",
+                    x,
+                    y,
+                    nom,
+                    hp.format_toponyme(nom),
+                    hp.format_toponyme(nom),
+                    'nom_filaire_commune',
+                    fantoir,
+                    code_insee_ancienne_commune=code_insee_ancienne_commune,
+                    nom_ancienne_commune=nom_ancienne_commune,
+                )
+            )
+
     def charge_points_nommes_voies_bdtopo(self):
         data = sql_get_data(
             "charge_points_nommes_voies_BDTOPO",
@@ -718,6 +750,7 @@ class Points_nommes:
                     "voie-nommee",
                     x,
                     y,
+                    nom,
                     hp.format_toponyme(nom),
                     hp.format_toponyme(nom),
                     'nom_bdtopo',
@@ -740,6 +773,7 @@ class Points_nommes:
                     "lieu-dit",
                     x,
                     y,
+                    nom,
                     hp.format_toponyme(nom),
                     hp.format_toponyme(nom),
                     'nom_cadastre',
@@ -773,6 +807,7 @@ class Points_nommes:
                         "centroide",
                         x,
                         y,
+                        nom,
                         nom_principal,
                         nom,
                         nom_tag,
@@ -807,6 +842,7 @@ class Points_nommes:
                         "place",
                         x,
                         y,
+                        nom,
                         nom_principal,
                         nom,
                         nom_tag,
@@ -838,6 +874,7 @@ class Points_nommes:
                     y,
                     nom,
                     nom,
+                    nom,
                     'nom_ban',
                     code_insee_ancienne_commune=code_insee_ancienne_commune,
                     fantoir=fantoir,
@@ -850,12 +887,13 @@ class Points_nommes:
 
     def noms_des_points_nommes(self, noms):
         for a in self:
-            if a.source in ("CADASTRE","BDTOPO"):
+            if a.source in ("CADASTRE","BDTOPO","COMMUNE"):
                 noms.add_nom(
                     Nom(
                         a.nom,
                         a.nom,
                         a.nom_tag,
+                        a.nom_brut,
                         a.fantoir,
                         a.nature,
                         a.source,
@@ -870,6 +908,7 @@ class Points_nommes:
                         a.nom_principal,
                         a.nom,
                         a.nom_tag,
+                        a.nom_brut,
                         a.fantoir,
                         a.nature,
                         a.source,
@@ -978,7 +1017,7 @@ class Correspondance_fantoir_ban_osm:
             self.correspondance[n] = {}
 
             for f in self.dic_fantoir[n]:
-                for src in ["BAN","CADASTRE"]:
+                for src in ["BAN","CADASTRE","BDTOPO","COMMUNE"]:
                     if (
                         src in self.dic_fantoir[n][f]
                         and "OSM" in self.dic_fantoir[n][f]

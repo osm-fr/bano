@@ -1,3 +1,3 @@
 DELETE FROM topo
 WHERE       code_insee = '__code_insee__' AND
-            type_voie in ('B','C','T');
+            type_voie in ('B','C','T','F');
