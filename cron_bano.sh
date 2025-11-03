@@ -20,6 +20,7 @@ cat deplist.txt | parallel -j $PARALLEL_JOBS export LANG=$LANG\; bano charge_ban
 cat deplist.txt | parallel -j $PARALLEL_JOBS export LANG=$LANG\; bano charge_ld_cadastre {1}
 bano menage_noms_ban
 bano update_bis_table
+bano charge_commune_filaire
 
 echo 'sources ok' >> $SCRIPT_DIR/cron.log
 
