@@ -26,6 +26,9 @@ def replace_single_quotes_with_double(s):
 def format_toponyme(s):
     a_s = s.replace("'", " ").split(" ")
 
+    # espaces superflus
+    a_s = [s for s in a_s if s != '']
+
     # Accents
     dic_replace_accents = {}
     dic_replace_accents["DERRIERE"] = "DERRIÈRE"
@@ -64,7 +67,7 @@ def format_toponyme(s):
 
     # Permutation des articles en fin de nom
     if len(a_s) > 1 and a_s[-1] in ['le','la','les']:
-        a_s = [a_s[-1]]+a_s[0:-1]
+        a_s = [a_s[-1].capitalize()]+a_s[0:-1]
 
     # Appostrophes initiale
     dic_ajoute_apostrophe = {}
@@ -79,6 +82,7 @@ def format_toponyme(s):
     s = " ".join(a_s).replace("' ", "'")
     if len(s.strip()) > 1 and s.strip()[-1] == "'":
         s = s.strip()[0:-1]
+
     return s
 
 
@@ -114,7 +118,8 @@ def get_sql_like_dept_string(dept):
     return (dept + "___")[0:5]
 
 
-def normalize(s):
+def normalize(s,skip_mots_a_blanc=False):
+    # print('***',s)
     s = s.upper()  # tout en majuscules
     # s = s.split(' (')[0]        # parenthèses : on coupe avant
     s = s.replace("(", "").replace(
@@ -161,10 +166,16 @@ def normalize(s):
         s = s.replace(" " + r[0] + " ", " " + r[1] + " ")
         if s[-len(r[0]) :] == r[0]:
             s = s.replace(" " + r[0], " " + r[1])
+    # for r in constants.ABREV_LIEUX_DITS:
+    #     a = s
+    #     if s.startswith(r[0]):
+    #         s = s.replace(r[0], r[1]).strip()
+    #         print(a,s)
 
     # articles
-    for c in constants.MOT_A_BLANC:
-        s = s.replace(" " + c + " ", " ")
+    if not skip_mots_a_blanc:
+        for c in constants.MOT_A_BLANC:
+            s = s.replace(" " + c + " ", " ")
 
     # chiffres romains
     sp = s.split()
@@ -176,6 +187,7 @@ def normalize(s):
     # substitution complete
     if s in constants.SUBSTITUTION_COMPLETE:
         s = constants.SUBSTITUTION_COMPLETE[s]
+    # print(s)
     return s[0:30]
 
 

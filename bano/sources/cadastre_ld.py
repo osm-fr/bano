@@ -66,9 +66,13 @@ def import_to_pg(departement, **kwargs):
                 a_values = []
                 str_query = f"INSERT INTO lieux_dits VALUES "
                 for l in json_source["features"]:
+                    if l['properties']['nom'].strip().strip("'") == '':
+                        continue
                     nom = hp.escape_quotes(l['properties']['nom']).replace("\\","")
+                    nom_format = hp.escape_quotes(hp.format_toponyme(nom))
+                    nom_normalise = hp.normalize(nom_format,skip_mots_a_blanc=True)
                     a_values.append(
-                        f"('{l['properties']['commune']}','{nom}','{l['properties']['created']}','{l['properties']['updated']}',ST_SetSRID(ST_GeomFromGeoJSON('{hp.replace_single_quotes_with_double(str(l['geometry']))}'),4326))"
+                        f"('{l['properties']['commune']}','{nom}','{nom_format}','{nom_normalise}','{l['properties']['created']}','{l['properties']['updated']}',ST_SetSRID(ST_GeomFromGeoJSON('{hp.replace_single_quotes_with_double(str(l['geometry']))}'),4326))"
                     )
                 if a_values:
                     cur_insert.execute(str_query + ",".join(a_values) + ";COMMIT;")
