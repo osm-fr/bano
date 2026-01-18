@@ -17,8 +17,8 @@ from .. import batch as b
 DICT_SOURCES = {
     "voie_nommee": [
         "bdtopo_voie_nommee",
-        "https://files.opendatarchives.fr/professionnels.ign.fr/bdtopo/latest_gpkg/ADRESSES/voie_nommee.gpkg",
-        None,
+        "https://files.opendatarchives.fr/professionnels.ign.fr/bdtopo/latest_gpkg/voie_nommee.gpkg",
+        "post_chargement_bdtopo_voie_nommee",
     ],
     # "lieu_dit_non_habite": [
     #     "bdtopo_lieu_dit_non_habite",

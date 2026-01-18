@@ -13,7 +13,7 @@ AS
         a9.code_insee insee_ac,
         a9.nom nom_ac,
         b.geometrie
-FROM    (SELECT * FROM bdtopo_voie_nommee WHERE code_insee = '__code_insee__' AND COALESCE(identifiant_voie_ban,'') = '' )b
+FROM    (SELECT * FROM bdtopo_voie_nommee_utile WHERE code_insee = '__code_insee__' AND utile)b
 LEFT OUTER JOIN (SELECT * FROM polygones_insee_a9 WHERE insee_a8 = '__code_insee__') a9
 ON      ST_Intersects(b.geometrie, a9.geometrie)),
 lignes_agregees
