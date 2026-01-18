@@ -12,9 +12,9 @@ WHERE  t.nom IS NULL),
 noms_t
 AS
 (SELECT nom_collaboratif
-FROM    bdtopo_voie_nommee
+FROM    bdtopo_voie_nommee_utile
 WHERE   code_insee = '__code_insee__' AND
-        COALESCE(identifiant_voie_ban,'') = '' ),
+        utile),
 noms_b
 AS
 (SELECT nom_voie
