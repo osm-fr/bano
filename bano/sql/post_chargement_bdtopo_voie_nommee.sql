@@ -31,7 +31,7 @@ AS
        ('R','Rue'),
        ('Q','Quai'),
        ('QU','Quai'),
-       ('QUA','Quai'),
+       ('QUA','Quartier'),
        ('RES','Résidence'),
        ('RLE','Ruelle'),
        ('RPT','Rond-point'),
