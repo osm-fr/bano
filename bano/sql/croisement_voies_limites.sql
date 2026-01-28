@@ -34,7 +34,8 @@ WHERE   ST_Touches(d.way,p.way) AND
         "ref:INSEE" NOT LIKE '__dept__%' AND
         name IS NOT NULL;
 
-CREATE TEMP TABLE highway_name
+DROP TABLE IF EXISTS highway_name__dept__ CASCADE;
+CREATE UNLOGGED TABLE highway_name__dept__
 as
 SELECT uniqid,
        osm_id,
@@ -53,8 +54,8 @@ FROM   (SELECT uniqid,
 JOIN poladmin
 ON   way && geometrie;
 
-CREATE INDEX gidx_highway_name_from ON highway_name USING GIST(way_from);
-CREATE INDEX gidx_highway_name_to ON highway_name USING GIST(way_to);
+CREATE INDEX gidx_highway_name__dept___from ON highway_name__dept__ USING GIST(way_from);
+CREATE INDEX gidx_highway_name__dept___to ON highway_name__dept__ USING GIST(way_to);
 
 CREATE INDEX gidx_poladmin ON poladmin USING GIST(geometrie);
 
@@ -85,7 +86,7 @@ AS
                  pf.code_insee AS code_insee_debut,
                  pt.nom_com    AS nom_commune_fin,
                  pt.code_insee AS code_insee_fin
-FROM  highway_name n
+FROM  highway_name__dept__ n
 JOIN  poladmin AS pf
 ON    n.way_from && pf.geometrie AND
       ST_Contains(pf.geometrie,way_from)
@@ -160,3 +161,4 @@ SELECT     code_dept,
            DEGREES(ST_Azimuth(ST_LineInterpolatePoint(geometrie_osm,greatest(0.0,ST_LineLocatePoint(geometrie_osm,geom)::numeric - 0.01)),
                         ST_LineInterpolatePoint(geometrie_osm,least(1.0,ST_LineLocatePoint(geometrie_osm,geom)::numeric + 0.01))))::integer % 180 + 90
 FROM       pts;
+DROP TABLE IF EXISTS highway_name__dept__ CASCADE;

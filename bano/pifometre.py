@@ -11,6 +11,6 @@ def process_croisement_voies_limites(departement, **kwargs):
     try:
         sql_process("croisement_voies_limites", dict(dept=departement))
         b.batch_stop_log(batch_id, True)
-    except e:
+    except Exception as e:
         print(e)
         b.batch_stop_log(batch_id, False)
