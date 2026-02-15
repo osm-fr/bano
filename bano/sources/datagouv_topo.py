@@ -42,15 +42,16 @@ def update_table_in_db(version):
         io_in_csv = io.StringIO()
         dic_res = {}
         for i,line in enumerate(csv):
-            if line[16:18] != '14':
+            if line[20:24] != ';14;':
                 continue
             try:
-                code_topo,nature_de_voie,libelle,type_commune_actuel_r_ou_n,type_commune_fip_rounfip,rur_actuel,rur_fip,caractere_voie,annulation,date_annulation,date_cra_c_ation_de_article,type_voie,mot_classant,date_derniere_transition = line.split(';')
-            except:
-                print('Erreur unpack')
-                print(line[0:50])
+                code_pays,code_region,code_dep,code_commune,code_voie,code_type_topo,nature_de_voie,libelle,type_commune_actuel_r_ou_n,type_commune_fip_rounfip,rur_actuel,rur_fip,caractere_voie,annulation,date_annulation,date_cra_c_ation_de_article,type_voie,mot_classant,date_derniere_transition = line.split(';')
+            except Exception as e:
+                print(e)
+                print(line)
                 continue
-            fantoir,code_insee,code_dep = code_topo[7:16],code_topo[7:12],code_topo[7:10] if code_topo[7:9] == '97' else code_topo[7:9]
+            fantoir = f"{code_dep}{code_commune}{code_voie}"
+            code_insee = f"{code_dep}{code_commune}"
 
             if code_dep not in DEPARTEMENTS:
                 continue
@@ -67,6 +68,20 @@ def update_table_in_db(version):
             cur.copy_from(io_in_csv,f"{TABLE_CIBLE}",sep='$',null='')
     sql_process('topo_comparaison',{})
 
+    # stats pour le forum (https://forum.openstreetmap.fr/t/la-gazette-de-bano-mises-a-jour-mensuelles-topo/29095)
+    tableau = sql_get_data("topo_tableau_forum",{})
+    changes = 0
+    with open('./tableau_forum.txt','w') as tab:
+        tab.write(f"|Département | Commune | Nombre de nouveautés TOPO | Lien|\n|--- | --- | --- | ---|\n")
+        for index,(dep,com,libelle,count) in enumerate(tableau):
+            if index == len(tableau) - 1:
+                date_max = libelle
+                continue
+            changes += count
+            if count > 9 and index < 100:
+                tab.write(f"|{dep}|{libelle}|{count}|[Pifomètre](https://bano.openstreetmap.fr/pifometre/index.html?insee={com}) [Pifomap](https://bano.openstreetmap.fr/pifometre/pifomap.html?insee={com})\n")
+        tab.write(f"\n{len(tableau)} communes\n{changes} modifications\ndate max {date_max}")
+
 def get_destination(version):
     return Path(os.environ['DATA_DIR']) / f'{version}.csv'
 
@@ -82,5 +97,5 @@ def publish(diff,full,**kwargs):
 
 
 def process(version, forceload, **kwargs):
-    if dowload(version) or forceload:
+    if forceload or dowload(version):
         update_table_in_db(version)
