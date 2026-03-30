@@ -30,6 +30,14 @@ DICT_COG = {
         "cog_region",
         "https://www.data.gouv.fr/api/1/datasets/r/f7057d4e-0078-45de-95b7-2a0ce6594807",
     ],
+    "commune_comtom": [
+        "cog_commune_comtom",
+        "https://www.data.gouv.fr/api/1/datasets/r/f47969be-310d-4871-b6c4-6005dbf46a00",
+    ],
+    "collectivite_comtom": [
+        "cog_collectivite_comtom",
+        "https://www.data.gouv.fr/api/1/datasets/r/62cf1ca1-f3db-4f49-bfa1-69aca93d34f1",
+    ],
 }
 
 
@@ -41,6 +49,7 @@ def process_cog(forceload, **kwargs):
         status = download(csv,url)
         if status or forceload:
             import_to_pg(csv,table)
+    sql_process('cog_complement_comtom',dict())
     sql_process('cog_pyramide_admin',dict())
 
 def download(destination,url):
