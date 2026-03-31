@@ -17,9 +17,9 @@ GROUP BY dep),
 nb_adresses_osm
 AS
 (SELECT dep, count(*) nb_adresses_osm
-FROM    (SELECT * FROM bano_adresses WHERE source = 'OSM') o
+FROM    (SELECT code_insee AS com FROM bano_adresses WHERE source = 'OSM') o
 JOIN    cog_commune
-ON      code_insee = com
+USING   (com)
 GROUP BY 1),
 nb_adresses_ban_par_rue
 AS
@@ -60,14 +60,13 @@ FROM public.communes_summary
 WHERE nb_numeros = nb_numeros_certifies AND nb_numeros > 0
 GROUP BY 1)
 SELECT d.dep,
---       d.libelle,
-	   nb_communes,
-	   nb_adresses_osm,
-	   nb_adresses_ban_par_dep,
-	   nb_voies_ban_par_dep,
-	   nb_voies_ban_rapprochees,
-	   nb_bal,
-	   nb_bal_100pct_certif
+       nb_communes,
+	COALESCE(nb_adresses_osm,0),
+	nb_adresses_ban_par_dep,
+	nb_voies_ban_par_dep,
+	COALESCE(nb_voies_ban_rapprochees,0),
+	COALESCE(nb_bal,0),
+	COALESCE(nb_bal_100pct_certif,0)
 FROM   cog_departement d
 JOIN   nb_communes
 USING (dep)

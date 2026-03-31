@@ -109,7 +109,7 @@ def is_valid_dept(dept):
 
 def get_code_dept_from_insee(code_insee):
     code_dept = code_insee[0:2]
-    if code_dept == "97":
+    if code_dept in ("97","98"):
         code_dept = code_insee[0:3]
     return code_dept
 
@@ -119,7 +119,6 @@ def get_sql_like_dept_string(dept):
 
 
 def normalize(s,skip_mots_a_blanc=False):
-    # print('***',s)
     s = s.upper()  # tout en majuscules
     # s = s.split(' (')[0]        # parenthèses : on coupe avant
     s = s.replace("(", "").replace(
