@@ -67,6 +67,7 @@ SELECT insee_commune AS code_insee,
        geometrie
 FROM   bdtopo_voie_nommee
 LEFT OUTER JOIN nom_collaboratif_type_voie
-USING (nom_collaboratif);
+USING (nom_collaboratif)
+WHERE COALESCE(TRIM(BOTH FROM nom_collaboratif),'') != '';
 
 CREATE INDEX idx_bdtopo_voie_nommee_utile_code_insee ON bdtopo_voie_nommee_utile (code_insee);
