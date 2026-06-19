@@ -17,6 +17,7 @@ SELECT way,
 FROM planet_osm_polygon
 WHERE boundary='administrative' AND
       admin_level in (8,9) AND
+      "ref:INSEE" != '' AND
       name != '';
 
 CREATE TABLE IF NOT EXISTS polygones_insee_a9 (
