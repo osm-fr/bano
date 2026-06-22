@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS ban (
     -- id_ban_toponyme text,
     -- id_ban_district text,
     id_fantoir text,
-    fantoir text GENERATED ALWAYS AS (substr(id_fantoir,0,6)||substr(id_fantoir,7,10)) STORED,
+    fantoir text GENERATED ALWAYS AS (substr(id_fantoir,0,6)||substr(id_fantoir,7,10)),
     numero  text,
     rep text,
     nom_voie text,

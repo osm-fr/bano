@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS bano_adresses (
     fantoir text,
-    bano_id text GENERATED ALWAYS AS (fantoir||'_'|| REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REGEXP_REPLACE(UPPER(numero),'^0*',''),'BIS','B'),'TER','T'),'QUATER','Q'),'QUAT','Q'),' ',''),'à','-'),';',','),'"','')) STORED,
+    bano_id text GENERATED ALWAYS AS (fantoir||'_'|| REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REGEXP_REPLACE(UPPER(numero),'^0*',''),'BIS','B'),'TER','T'),'QUATER','Q'),'QUAT','Q'),' ',''),'à','-'),';',','),'"','')),
     lon float,
     lat float,
     numero  text,
