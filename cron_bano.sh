@@ -39,6 +39,11 @@ cat deplist.txt        | parallel -j $PARALLEL_JOBS export LANG=$LANG\; bano rap
 
 echo 'rapprochement ok' >> $SCRIPT_DIR/cron.log
 
+# ménage PostgreSQL
+$pgsql_BANO -c "VACUUM bano_adresses;"
+$pgsql_BANO -c "VACUUM bano_points_nommes;"
+$pgsql_BANO -c "VACUUM nom_fantoir;"
+
 echo 'preparation export' >> $SCRIPT_DIR/cron.log
 bano prepare_export
 echo 'preparation export finie' >> $SCRIPT_DIR/cron.log
@@ -52,10 +57,6 @@ echo 'export fini' >> $SCRIPT_DIR/cron.log
 cat deplist.txt | parallel -j $PARALLEL_JOBS bano publish {1}
 bano publish_aggregate
 
-# ménage PostgreSQL
-$pgsql_BANO -c "VACUUM bano_adresses;"
-$pgsql_BANO -c "VACUUM bano_points_nommes;"
-$pgsql_BANO -c "VACUUM nom_fantoir;"
 $pgsql_BANO -c "GRANT SELECT ON ALL TABLES IN SCHEMA PUBLIC TO PUBLIC";
 
 echo 'fin du cron BANO' >> $SCRIPT_DIR/cron.log
