@@ -155,7 +155,7 @@ class Noms:
 
     # On ajoute un triplet nom s'il n'a pas de FANTOIR ou si son FANTOIR appartient à la commune
     def add_nom(self, nom=Nom):
-        if not nom.fantoir or nom.fantoir[0:5] == self.code_insee:
+        if not nom.fantoir or hp.fantoir_valide(nom.fantoir,self.code_insee):
             self.triplets_nom_fantoir_source.append(nom)
 
     def add_fantoir(self, topo):
