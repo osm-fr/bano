@@ -22,21 +22,43 @@ AS
         row_number() OVER (PARTITION BY fantoir||num ORDER BY CASE WHEN source = 'OSM' THEN 1 ELSE 2 END) AS rang,
         *
 FROM    num_norm),
+nom_fantoir_rank
+AS
+(
+    SELECT
+        fantoir,
+        REPLACE(REPLACE(REGEXP_REPLACE(nom,'\t',' '),'"',chr(39)),'’',chr(39)) AS nom,
+        (
+            CASE WHEN source = 'OSM' THEN 1 ELSE 2 END * 100 +
+            CASE nature WHEN 'lieu-dit' THEN 1 WHEN 'place' THEN 1 WHEN 'voie' THEN 2 ELSE 3 END * 10 +
+            CASE WHEN nom_tag = 'name' THEN 1 ELSE 2 END
+        ) AS rank
+    FROM
+        nom_fantoir
+),
+nom_fantoir_uniq_rank
+AS (
+    SELECT
+        fantoir,
+        nom,
+        min(rank) AS rank
+    FROM
+        nom_fantoir_rank
+    GROUP BY
+        fantoir,
+        nom
+),
 nom_fantoir
 AS
-(SELECT fantoir,
-        nom
-FROM    (SELECT fantoir,
-                nom,
-                RANK() OVER (PARTITION BY fantoir ORDER BY
-                    CASE WHEN source = 'OSM' THEN 1 ELSE 2 END,
-                    CASE nature WHEN 'lieu-dit' THEN 1 WHEN 'place' THEN 1 WHEN 'voie' THEN 2 ELSE 3 END,
-                    CASE WHEN nom_tag = 'name' THEN 1 ELSE 2 END,
-                    nom
-                ) AS rang
-        FROM    nom_fantoir) n
-WHERE rang = 1
-GROUP BY 1,2),
+(
+    SELECT
+        fantoir,
+        array_agg(nom ORDER BY rank, nom) AS noms
+    FROM
+        nom_fantoir_uniq_rank
+    GROUP BY
+        fantoir
+),
 resultats_multi_cp
 AS
 (SELECT dep,
@@ -44,7 +66,7 @@ AS
         n.fantoir,
         id_add,
         numero,
-        nf.nom AS nom_voie,
+        nf.noms AS nom_voie,
         COALESCE(n.code_postal,pp.code_postal,min_cp) code_postal,
         cn.libelle,
         source,
@@ -85,7 +107,7 @@ SELECT c.dep,
        fantoir AS id,
        ne.code_insee AS citycode,
        'street' AS type,
-       REPLACE(REPLACE(REGEXP_REPLACE(nom_voie,'\t',' '),'"',chr(39)),'’',chr(39)) AS name,
+       nom_voie AS name,
        code_postal AS postcode,
        ROUND(pn.lat::numeric,6)::float AS lat,
        ROUND(pn.lon::numeric,6)::float AS lon,
@@ -95,7 +117,7 @@ SELECT c.dep,
        END AS city,
        nom_dep AS departement,
        nom_reg AS region,
-       ROUND(LOG(c.adm_weight+LOG(c.population+1)/3)::numeric*LOG(1+LOG(nombre_adresses+1)+LOG(longueur_max+1)+LOG(CASE WHEN nom_voie like 'Boulevard%' THEN 4 WHEN nom_voie LIKE 'Place%' THEN 4 WHEN nom_voie LIKE 'Espl%' THEN 4 WHEN nom_voie LIKE 'Av%' THEN 3 WHEN nom_voie LIKE 'Rue %' THEN 2 ELSE 1 END))::numeric,4)::float AS importance,
+       ROUND(LOG(c.adm_weight+LOG(c.population+1)/3)::numeric*LOG(1+LOG(nombre_adresses+1)+LOG(longueur_max+1)+LOG(CASE WHEN nom_voie[1] like 'Boulevard%' THEN 4 WHEN nom_voie[1] LIKE 'Place%' THEN 4 WHEN nom_voie[1] LIKE 'Espl%' THEN 4 WHEN nom_voie[1] LIKE 'Av%' THEN 3 WHEN nom_voie[1] LIKE 'Rue %' THEN 2 ELSE 1 END))::numeric,4)::float AS importance,
        string_agg(numero||'$$$'||ROUND(ne.lat::numeric,6)::text||'$$$'||ROUND(ne.lon::numeric,6)::text,'@@@' ORDER BY numero) AS housenumbers
 FROM   numeros_export ne
 JOIN   cog_pyramide_admin AS cog
