@@ -2,8 +2,6 @@
 
 #set -e
 
-source /data/project/bano_v3/venv_v3/bin/activate
-
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 cd $SCRIPT_DIR
