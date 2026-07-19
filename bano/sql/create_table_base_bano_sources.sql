@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS lieux_dits (
     created date,
     updated date,
     geometrie geometry(Polygon,4326),
-    geom_centroid geometry (Point, 4326) GENERATED ALWAYS AS (ST_Centroid(geometrie)) STORED);
+    geom_centroid geometry (Point, 4326) GENERATED ALWAYS AS (ST_PointOnSurface(geometrie)) STORED);
 
 CREATE INDEX IF NOT EXISTS gidx_lieux_dits ON lieux_dits USING gist(geometrie);
 CREATE INDEX IF NOT EXISTS gidx_centroid_lieux_dits ON lieux_dits USING gist(geom_centroid);
@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS cadastre_communes (
     created date,
     updated date,
     geometrie geometry(MultiPolygon,4326),
-    geom_centroid geometry (Point, 4326) GENERATED ALWAYS AS (ST_Centroid(geometrie)) STORED,
+    geom_centroid geometry (Point, 4326) GENERATED ALWAYS AS (ST_PointOnSurface(geometrie)) STORED,
     geom_3857 geometry (MultiPolygon, 3857) GENERATED ALWAYS AS (ST_Transform(geometrie,3857)) STORED);
 
 CREATE INDEX IF NOT EXISTS gidx_cadastre_communes ON cadastre_communes USING gist(geometrie);

@@ -26,7 +26,7 @@ FROM
 		UNION ALL
 -- way avec addr:street ou addr:place
 		SELECT	2,
-				ST_Centroid(w.way),
+				ST_PointOnSurface(w.way),
 				w."addr:housenumber",
 				w."addr:street",
 				w."addr:place",
@@ -55,7 +55,7 @@ FROM
 		UNION ALL
 -- way dans relation associatedStreet
 		SELECT	4,
-				ST_Centroid(w.way),
+				ST_PointOnSurface(w.way),
 				w."addr:housenumber",
 				null,
 				null,
@@ -70,7 +70,7 @@ FROM
 		UNION ALL
 -- relation multipoly dans relation associatedStreet
 		SELECT	4,
-				ST_Centroid(w.way),
+				ST_PointOnSurface(w.way),
 				w."addr:housenumber",
 				null,
 				null,
