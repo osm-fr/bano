@@ -163,3 +163,37 @@ tables:
       - {key: 'admin_level', name: 'admin_level', type: integer}
       - {key: 'population', name: 'population_member', from_member: true, type: integer}
       - {key: 'population', name: 'population_rel', from_member: false, type: integer}
+
+  osm2pgsql_line:
+    type: linestring
+    mapping:
+      boundary: [__any__]
+      highway: [__any__]
+    filters:
+      require:
+        name: [__any__]
+        highway: [__any__]
+    columns:
+      - {name: osm_id, type: id}
+      - {name: way, type: geometry}
+      - {name: boundary, type: string}
+      - {name: admin_level, type: string}
+      - {name: highway, type: string}
+      - {name: name, type: string}
+      - {key: 'ref:INSEE', name: 'ref:INSEE', type: string}
+
+  osm2pgsql_polygon:
+    type: polygon
+    relation_types: [boundary]
+    mapping:
+      boundary: [__any__]
+    filters:
+      require:
+        'ref:INSEE': [__any__]
+    columns:
+      - {name: osm_id, type: id}
+      - {name: way, type: geometry}
+      - {name: boundary, type: string}
+      - {name: admin_level, type: string}
+      - {name: name, type: string}
+      - {key: 'ref:INSEE', name: 'ref:INSEE', type: string}

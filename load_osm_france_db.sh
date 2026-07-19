@@ -45,6 +45,7 @@ imposm import \
   -dbschema-import osm
 
 $pgsql_BANO -f $SCRIPT_DIR/sql/finalisation.sql
+$pgsql_BANO -f $SCRIPT_DIR/sql/finalisation_osm2pgsql.sql
 
 cp $DOWNLOAD_DIR/last.state.txt $DOWNLOAD_DIR/state.txt
 rm ${lockfile}
