@@ -97,8 +97,8 @@ def save_as_json(dept):
                 if ';' in l['postcode']:
                     l['postcode'] = l['postcode'].split(';')
                 dict_hsnr = {}
-                for p in l['housenumbers'].split('@@@'):
-                    numero,lat,lon = p.split('$$$')
+                for p in l['housenumbers']:
+                    numero,lat,lon = p
                     dict_hsnr[numero] = dict(lat=float(lat),lon=float(lon))
                 l['housenumbers'] = dict_hsnr
                 jsonfile.write(f"{json.dumps(l,ensure_ascii=False,separators=(',',':'))}\n")
